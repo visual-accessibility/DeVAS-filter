@@ -1,0 +1,53 @@
+---------------------------------------------------------------------
+To build the software for Linux:
+
+1. Install the packages cmake, fftw3-devel, and libfftw-3-3 from the
+   appropriate repository.
+
+2. Run the following commands from the top level of the deva-filter
+   directory tree:
+
+     cd build
+     cmake ..
+     make
+     cd ..
+
+     Copy the executable file "build/deva-filter" to wherever you want it.
+
+---------------------------------------------------------------------
+To build the software for MacOS:
+
+1. Install the package CMake <http://www.cmake.org/>
+
+   Download and unpack Unix/Linux source from
+   <http://www.cmake.org/download/>.
+
+   In directory where source has been unpacked:
+
+   ./bootstrap
+   make
+   sudo make install
+
+2. Install the package FFTW3 <http://www.fftw.org/>.
+
+   Download and unpack the latest stable release of FFTW from
+   <http://www.fftw.org/download.html>
+
+   ./configure
+   make
+   sudo make install 
+   ./configure --enable-float
+   make
+   sudo make install 
+
+3. Run the following commands from the top level of the deva-filter
+   directory tree:
+
+     cd build
+     cmake ..
+     make
+     cd ..
+
+     Copy the executable file "build/deva-filter" to wherever you want it.
+
+---------------------------------------------------------------------

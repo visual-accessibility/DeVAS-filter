@@ -1,0 +1,27 @@
+The deva-filter simulates visibility under reduced acuity and contrast
+sensitivity.  It is intended to assist architects and lighting designers
+identify mobility hazards and important navigational landmarks that may
+not be visible to those with low vision.
+
+The current version only accepts RADIANCE HDR files with correct VIEW
+records as input.  It only outputs RADIANCE HDR files.
+
+The software can be built on either Linux or MacOS.  No Windows version
+currently exits.
+
+The deva-filter is based on the algorithm described in E. Peli,
+"Contrast in complex images," Journal of the Optical Society of America
+A, 7, 2032-2040 (1990), augmented with parameterization based on
+standard clinical measures of acuity and contrast sensitivity, a
+reduction in one type of artifact produced by that algorithm, limited
+support for color, and the use of HDR imagery.
+
+---------------------------------------------------------------------
+
+Documentation is at "man/deva-filter.pdf".
+
+Open source license is at "deva-license.h".
+
+This product includes Radiance software (http://radsite.lbl.gov/)
+developed by the Lawrence Berkeley National Laboratory
+(http://www.lbl.gov/).
