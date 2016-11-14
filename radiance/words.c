@@ -1,5 +1,7 @@
 #ifndef lint
+/***** The MAC build complains about this...
 static const char RCSid[] = "$Id: words.c,v 2.11 2011/04/28 17:46:25 greg Exp $";
+ *****/
 #endif
 /*
  * Routines for recognizing and moving about words in strings.

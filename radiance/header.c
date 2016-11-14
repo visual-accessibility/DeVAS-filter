@@ -1,5 +1,7 @@
 #ifndef lint
+/***** The MAC build complains about this...
 static const char	RCSid[] = "$Id: header.c,v 2.29 2014/05/30 23:43:48 greg Exp $";
+ *****/
 #endif
 /*
  *  header.c - routines for reading and writing information headers.

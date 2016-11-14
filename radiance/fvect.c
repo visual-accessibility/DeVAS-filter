@@ -1,5 +1,7 @@
 #ifndef lint
+/***** The MAC build complains about this...
 static const char	RCSid[] = "$Id: fvect.c,v 2.19 2013/06/29 21:03:44 greg Exp $";
+ *****/
 #endif
 /*
  *  fvect.c - routines for floating-point vector calculations

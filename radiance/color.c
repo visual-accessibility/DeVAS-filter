@@ -1,5 +1,7 @@
 #ifndef lint
+/***** The MAC build complains about this...
 static const char	RCSid[] = "$Id: color.c,v 2.17 2014/05/31 20:13:31 greg Exp $";
+ *****/
 #endif
 /*
  *  color.c - routines for color calculations.
