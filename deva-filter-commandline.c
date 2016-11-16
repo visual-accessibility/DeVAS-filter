@@ -434,7 +434,7 @@ main ( int argc, char *argv[] )
 
 	    case mild:
 
-		acuity_type = Snellen;
+		acuity_format = Snellen;
 		acuity = MILD_SNELLEN;
 
 		sensitivity_type = pelli_robson;
@@ -460,7 +460,7 @@ main ( int argc, char *argv[] )
 
 	    case moderate:
 
-		acuity_type = Snellen;
+		acuity_format = Snellen;
 		acuity = MODERATE_SNELLEN;
 
 		sensitivity_type = pelli_robson;
@@ -486,7 +486,7 @@ main ( int argc, char *argv[] )
 
 	    case significant:
 
-		acuity_type = Snellen;
+		acuity_format = Snellen;
 		acuity = SIGNIFICANT_SNELLEN;
 
 		sensitivity_type = pelli_robson;
@@ -512,7 +512,7 @@ main ( int argc, char *argv[] )
 
 	    case severe:
 
-		acuity_type = Snellen;
+		acuity_format = Snellen;
 		acuity = SEVERE_SNELLEN;
 
 		sensitivity_type = pelli_robson;
@@ -840,6 +840,7 @@ main ( int argc, char *argv[] )
 	case undefined_filter:
 	default:
 
+	    filtered_image = NULL;	/* quiet Mac OS warning */
 	    internal_error ( );
 
 	    break;
