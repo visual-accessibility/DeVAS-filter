@@ -31,7 +31,7 @@
  *
  * Returned value:
  *
- *   In-memory xyY values filtered to remove image structuer predicted
+ *   In-memory xyY values filtered to remove image structure predicted
  *   to be below the detectability threshold.
  */
 
@@ -53,6 +53,9 @@
 /*
  * Misc. defines private to these routines:
  */
+
+#define	MAX_PLAUSIBLE_ACUITY	4.0
+#define	MAX_PLAUSIBLE_CONTRAST	4.0
 
 #define	MIN_AVERAGE_LUMINANCE	0.01	/* avoid divide by 0 in normalization */
 
@@ -198,13 +201,41 @@ deva_filter ( DEVA_xyY_image *input_image, double acuity,
     						/* not always used */
     DEVA_xyY_image	*filtered_image;	/* full xyY output image */
 
-    disassemble_input ( input_image, &luminance, &x, &y );
-    	/* break input into separate luminance and chromaticity channels */
-    	/* allocates luminance, x, and y images */
+    /*
+     * Check argument validity.
+     */
+
+    if ( DEVA_image_view ( input_image ) . type == 0 ) {
+	fprintf ( stderr, "missing or invalid view record in input image!\n" );
+	exit ( EXIT_FAILURE );
+    }
+
+    if ( ( acuity <= 0.0 ) || ( acuity > MAX_PLAUSIBLE_ACUITY ) ) {
+	fprintf ( stderr, "invalid or implausible acuity value (%f)!\n",
+		acuity );
+	exit ( EXIT_FAILURE );
+    }
+
+    if ( ( contrast_sensitivity <= 0.0 ) ||
+	    ( contrast_sensitivity > MAX_PLAUSIBLE_CONTRAST ) ) {
+	fprintf ( stderr, "invalid or implausible contrast value (%f)!\n",
+		contrast_sensitivity );
+	exit ( EXIT_FAILURE );
+    }
+
+    if ( ( saturation < 0.0 ) || ( saturation > 1.0 ) ) {
+	fprintf ( stderr, "invalid or implausible saturation value (%f)!\n",
+		saturation );
+	exit ( EXIT_FAILURE );
+    }
 
     /*
      * One-time jobs:
      */
+
+    disassemble_input ( input_image, &luminance, &x, &y );
+    	/* break input into separate luminance and chromaticity channels */
+    	/* allocates luminance, x, and y images */
 
     fov = fmax ( DEVA_image_view ( luminance ) . vert,
 	    DEVA_image_view ( luminance ) . horiz );
@@ -241,8 +272,8 @@ deva_filter ( DEVA_xyY_image *input_image, double acuity,
      * Local_luminance and filtered_luminance are iteratively computed
      * across bands.  This sets the starting values.
      */
-    DEVA_float_image_set_value ( local_luminance, DC );
-    DEVA_float_image_set_value ( filtered_luminance, DC );
+    DEVA_float_image_setvalue ( local_luminance, DC );
+    DEVA_float_image_setvalue ( filtered_luminance, DC );
 
     /* get a bit of speed by reusing for every band */
     log2r = log2r_prep ( frequency_space );
@@ -269,7 +300,8 @@ deva_filter ( DEVA_xyY_image *input_image, double acuity,
 
     if ( DEVA_veryverbose ) {
 	fprintf ( stderr,
-      "\nband peak_frequency_image peak_frequency_angle peak_sensitivity\n" );
+      "\nband  frequency     wavelength    peak\n"
+        "     image angle   image angle sensitivity\n" );
     }
 
     for ( band = 0; band < n_bands_max; band++ ) {
@@ -286,8 +318,10 @@ deva_filter ( DEVA_xyY_image *input_image, double acuity,
 
 	if ( DEVA_veryverbose ) {
 	    fprintf ( stderr,
-		"%2d:       %9.2f,         %9.2f,         %9.2f\n",
-		    band, peak_frequency_image, peak_frequency_angle,
+		"%2d: %6.2f %5.2f  %6.2f %5.2f  %6.2f\n",
+		    band,
+		    peak_frequency_image, peak_frequency_angle,
+		    1.0 / peak_frequency_image, 1.0 / peak_frequency_angle,
 		    peak_sensitivity );
 	}
 
@@ -562,7 +596,7 @@ apply_threshold ( double sensitivity, float peak_frequency_image,
  * threshold_mask_initial_negative: used to help in smoothing
  * threshold_mask_positive:	    used to help in smoothing
  * threshold_mask_negative:	    used to help in smoothing
- * smoothing_flag:		    TRUE is smoothing should be done
+ * smoothing_flag:		    TRUE if smoothing should be done
  */
 {
     int	    row, col;
@@ -572,7 +606,7 @@ apply_threshold ( double sensitivity, float peak_frequency_image,
 
     if ( sensitivity < 1.0 ) {	
 	/* nothing will be visible! (should not happen) */
-	DEVA_float_image_set_value ( thresholded_contrast_band, 0.0 );
+	DEVA_float_image_setvalue ( thresholded_contrast_band, 0.0 );
 	return;
     } else {
 	threshold = 1.0 / sensitivity;

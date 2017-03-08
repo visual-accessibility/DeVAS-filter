@@ -1,4 +1,4 @@
-/* RCSid $Id: resolu.h,v 2.11 2009/05/21 18:08:43 greg Exp $ */
+/* RCSid $Id$ */
 /*
  * Definitions for resolution line in image file.
  *

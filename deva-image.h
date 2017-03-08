@@ -1,6 +1,3 @@
-#ifndef __DEVAIMAGE_H
-#define __DEVAIMAGE_H
-
 /*
  * Establishes data types for a variety of fixed point and floating point
  * image pixel types.
@@ -10,6 +7,9 @@
  * deva-filter.
  */
 
+#ifndef __DEVAIMAGE_H
+#define __DEVAIMAGE_H
+
 #include <stdlib.h>
 #include <stdio.h>		/* needed indirectly for view.h */
 #include <stdint.h>		/* for uint8_t */
@@ -17,12 +17,13 @@
 #include "radiance/view.h"	/* for VIEW structure */
 #include "deva-license.h"	/* DEVA open source license */
 
-#define	USE_FFTW3_ALLOCATORS	/* for better alignment -- applies only to */
-				/* float/double and complexf/complexd */
-
-#ifdef USE_FFTW3_ALLOCATORS
+#ifdef DEVA_USE_FFTW3_ALLOCATORS
+/*
+ * For better alignment -- applies only to float/double and complexf/complexd.
+ * To use, define DEVA_USE_FFTW3_ALLOCATORS before including deva-image.h.
+ */
 #include <fftw3.h>
-#endif	/* USE_FFTW3_ALLOCATORS */
+#endif	/* DEVA_USE_FFTW3_ALLOCATORS */
 
 #define	DEVA_WHTEFFICACY	179.0	/* uniform white light */
 					/* (from Radiance color.h) */
@@ -118,7 +119,8 @@ DEVA_DEFINE_IMAGE_TYPE ( DEVA_complexf ) /* make sure to link against fftw3f! */
 #ifdef	DEVA_CHECK_BOUNDS
 #define DEVA_image_data(deva_image,row,col)				\
 	    (deva_image)->data[DEVA_image_check_bounds (		\
-		(DEVA_gray_image *) deva_image, row, col ), row][col] 
+		(DEVA_gray_image *) deva_image, row, col,		\
+		    __LINE__, __FILE__ ) , row][col] 
 #else
 #define	DEVA_image_data(deva_image,row,col)	(deva_image)->data[row][col]
     			/* read/write */
@@ -129,6 +131,12 @@ DEVA_DEFINE_IMAGE_TYPE ( DEVA_complexf ) /* make sure to link against fftw3f! */
 
 #define	DEVA_image_n_cols(deva_image)		(deva_image)->n_cols
     			/* read only (but not enforced ) */
+
+#define	DEVA_image_samesize(deva_image_1,deva_image_2)			\
+		( ( DEVA_image_n_rows ( deva_image_1 ) ==		\
+		    DEVA_image_n_rows ( deva_image_2 ) ) &&		\
+		  ( DEVA_image_n_cols ( deva_image_1 ) ==		\
+		    DEVA_image_n_cols ( deva_image_2 ) ) )
 
 #define	DEVA_image_info(deva_image)		(deva_image)->image_info
     			/* read/write */
@@ -174,7 +182,7 @@ DEVA_PROTOTYPE_IMAGE_NEW ( DEVA_complexf )
 /* DEVA_PROTOTYPE_IMAGE_NEW ( DEVA_complexd ) */
 
 #define DEVA_PROTOTYPE_IMAGE_DELETE( TYPE )				\
-void    TYPE##_image_delete ( TYPE##_image *a );
+void    TYPE##_image_delete ( TYPE##_image *i );
 
 DEVA_PROTOTYPE_IMAGE_DELETE ( DEVA_gray )
 DEVA_PROTOTYPE_IMAGE_DELETE ( DEVA_float )
@@ -187,7 +195,35 @@ DEVA_PROTOTYPE_IMAGE_DELETE ( DEVA_complexf )
 /* DEVA_PROTOTYPE_IMAGE_DELETE ( DEVA_complexd ) */
 
 void	DEVA_image_check_bounds ( DEVA_gray_image *deva_image, int row,
-	    int col );
+	    int col, int lineno, char *file );
+
+#define DEVA_PROTOTYPE_IMAGE_SAMESIZE( TYPE )				\
+int	TYPE##_image_samesize ( TYPE##_image *i1, TYPE##_image *i2 );
+
+DEVA_PROTOTYPE_IMAGE_SAMESIZE ( DEVA_gray )
+DEVA_PROTOTYPE_IMAGE_SAMESIZE ( DEVA_float )
+DEVA_PROTOTYPE_IMAGE_SAMESIZE ( DEVA_double )
+DEVA_PROTOTYPE_IMAGE_SAMESIZE ( DEVA_RGB )
+DEVA_PROTOTYPE_IMAGE_SAMESIZE ( DEVA_RGBf )
+DEVA_PROTOTYPE_IMAGE_SAMESIZE ( DEVA_XYZ )
+DEVA_PROTOTYPE_IMAGE_SAMESIZE ( DEVA_xyY )
+DEVA_PROTOTYPE_IMAGE_SAMESIZE ( DEVA_complexf )
+/* DEVA_PROTOTYPE_IMAGE_SAMESIZE ( DEVA_complexd ) */
+
+
+#define DEVA_PROTOTYPE_IMAGE_SETVALUE( TYPE )				\
+void	TYPE##_image_setvalue ( TYPE##_image *image, TYPE value );
+
+DEVA_PROTOTYPE_IMAGE_SETVALUE ( DEVA_gray )
+DEVA_PROTOTYPE_IMAGE_SETVALUE ( DEVA_float )
+DEVA_PROTOTYPE_IMAGE_SETVALUE ( DEVA_double )
+DEVA_PROTOTYPE_IMAGE_SETVALUE ( DEVA_RGB )
+DEVA_PROTOTYPE_IMAGE_SETVALUE ( DEVA_RGBf )
+DEVA_PROTOTYPE_IMAGE_SETVALUE ( DEVA_XYZ )
+DEVA_PROTOTYPE_IMAGE_SETVALUE ( DEVA_xyY )
+DEVA_PROTOTYPE_IMAGE_SETVALUE ( DEVA_complexf )
+/* DEVA_PROTOTYPE_IMAGE_SETVALUE ( DEVA_complexd ) */
+
 
 #ifdef __cplusplus
 }

@@ -1,7 +1,5 @@
 #ifndef lint
-/***** The MAC build complains about this...
-static const char	RCSid[] = "$Id: image.c,v 2.40 2013/04/03 00:35:09 greg Exp $";
- *****/
+/* static const char	RCSid[] = "$Id$"; */
 #endif
 /*
  *  image.c - routines for image generation.
@@ -10,9 +8,6 @@ static const char	RCSid[] = "$Id: image.c,v 2.40 2013/04/03 00:35:09 greg Exp $"
  */
 
 #include "copyright.h"
-
-#include <stdlib.h>	/* DEVA addition */
-// #include  "fvect.h"	/* DEVA addition */
 
 #include  <ctype.h>
 #include  "rtio.h"

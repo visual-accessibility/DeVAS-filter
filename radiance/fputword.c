@@ -1,7 +1,5 @@
 #ifndef lint
-/***** The MAC build complains about this...
-static const char	RCSid[] = "$Id: fputword.c,v 3.9 2011/06/22 16:55:35 greg Exp $";
- *****/
+/* static const char	RCSid[] = "$Id$"; */
 #endif
 /*
  * Write word to stream, quoting as necessary

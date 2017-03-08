@@ -11,14 +11,17 @@ INCLUDE_DIRECTORIES (
 	${FFTW_INCLUDE_DIR}
 	)
 
+ADD_DEFINITIONS ( -DDEVA_USE_FFTW3_ALLOCATORS )
+
 ADD_EXECUTABLE ( deva-filter deva-filter-commandline.c
 	deva-filter.c
 	KLT-filter.c
 	ChungLeggeCSF.c
+	dilate.c
 	deva-image.c
 	deva-utils.c
-	dilate.c
 	radianceIO.c
+	radiance-header.c
 	acuity-conversion.c
 	radiance/badarg.c
 	radiance/color.c
@@ -29,6 +32,7 @@ ADD_EXECUTABLE ( deva-filter deva-filter-commandline.c
 	radiance/resolu.c
 	radiance/spec_rgb.c
 	radiance/words.c
+	radiance/timegm.c
 	)
 TARGET_LINK_LIBRARIES ( deva-filter
 	${FFTW_LIBRARIES}

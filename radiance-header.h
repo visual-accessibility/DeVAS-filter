@@ -1,0 +1,36 @@
+#ifndef __DEVA_RADIANCEHEADER_H
+#define __DEVA_RADIANCEHEADER_H
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include "radiance/color.h"
+#include "radiance/platform.h"
+#include "radiance/resolu.h"
+#include "radiance/fvect.h"	/* must preceed include of view.h */
+#include "radiance/view.h"
+#include "deva-license.h"	/* DEVA open source license */
+
+typedef enum { unknown, rgbe, xyze } RadianceColorFormat;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void
+DEVA_read_radiance_header ( FILE *radiance_fp, int *n_rows_p, int *n_cols_p,
+	RadianceColorFormat *color_format_p, VIEW *view_p, double *exposure_p,
+	char **header_text_p );
+
+void
+DEVA_write_radiance_header ( FILE *radiance_fp, int n_rows, int n_cols,
+	RadianceColorFormat color_format, VIEW view, double exposure,
+	char *other_info );
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif	/* __DEVA_RADIANCEHEADER_H */

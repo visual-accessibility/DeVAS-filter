@@ -6,9 +6,8 @@
 #define __DEVA_RADIANCEIO_H
 
 #include "deva-image.h"
+#include "radiance-header.h"
 #include "deva-license.h"       /* DEVA open source license */
-
-typedef	enum { unknown, rgbe, xyze } RadianceColorFormat;
 
 #ifdef __cplusplus
 extern "C" {

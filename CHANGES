@@ -1,0 +1,34 @@
+version 2.6.00
+
+DEVA_USE_FFTW3_ALLOCATORS flag now passed through CMAKE command.
+
+A bit more argument sanity checking.
+
+Fixed misc. typos in comments.
+
+Misc. renaming of support functions.
+
+Added (and used!) a setvalue function for DEVA_image objects.
+Added (and used!) a scalar multiplication function for DEVA_image objects.
+
+Misc. changes to formatting of debugging output.
+
+Modified bounds checking of in-memory DEVA_image objects to print source
+file name and line number if an error is detected.
+
+Added a generic samesize check function for DEVA_image objects.
+
+Exposed dt_euclid_sq for potential use by other functions.
+
+Removed left over SVN info string.
+
+Cleaned up reading of RADIANCE file headers, with improved management of
+the global variabiles necessitated by the way the getheader ( ) function
+works.
+
+Reading of RADIANCE files now processes EXPOSURE records.
+
+Updated included RADIANCE source code to version 5.0.a.12, which has
+fixes for Windows build.
+
+version 2.5.03

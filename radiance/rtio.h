@@ -1,4 +1,4 @@
-/* RCSid $Id: rtio.h,v 3.9 2006/12/23 17:27:45 greg Exp $ */
+/* RCSid $Id$ */
 /*
  *	Radiance i/o and string routines
  */
@@ -10,6 +10,13 @@
 #include  <sys/types.h>
 #include  <fcntl.h>
 #include  <string.h>
+
+#ifdef getc_unlocked		/* avoid horrendous overhead of flockfile */
+#undef getc
+#undef putc
+#define getc    getc_unlocked
+#define putc    putc_unlocked
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,7 +41,7 @@ extern FILE	*frlibopen(char *fname);
 					/* defined in getlibpath.c */
 extern char	*getrlibpath(void);
 					/* defined in gethomedir.c */
-extern char *gethomedir(char *uname, char *path, int plen);
+extern char	*gethomedir(char *uname, char *path, int plen);
 					/* defined in getpath.c */
 extern char	*getpath(char *fname, char *searchpath, int mode);
 					/* defined in byteswap.c */
@@ -45,9 +52,11 @@ extern void	swap64(char *wp, int n);
 extern void	putstr(char *s, FILE *fp);
 extern void	putint(long i, int siz, FILE *fp);
 extern void	putflt(double f, FILE *fp);
+extern int	putbinary(const void *s, int elsiz, int nel, FILE *fp);
 extern char	*getstr(char *s, FILE *fp);
 extern long	getint(int siz, FILE *fp);
 extern double	getflt(FILE *fp);
+extern int	getbinary(void *s, int elsiz, int nel, FILE *fp);
 					/* defined in rexpr.c */
 extern int	ecompile(char *sp, int iflg, int wflag);
 extern char	*expsave(void);
@@ -61,8 +70,8 @@ extern int	shash(char *s);
 extern char	*savqstr(char *s);
 extern void	freeqstr(char *s);
 					/* defined in wordfile.c */
-extern int	wordfile(char **words, char *fname);
-extern int	wordstring(char **avl, char *str);
+extern int	wordfile(char **words, int nargs, char *fname);
+extern int	wordstring(char **avl, int nargs, char *str);
 					/* defined in words.c */
 extern char	*atos(char *rs, int nb, char *s);
 extern char	*nextword(char *cp, int nb, char *s);

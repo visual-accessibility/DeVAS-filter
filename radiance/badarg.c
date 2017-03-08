@@ -1,7 +1,5 @@
 #ifndef lint
-/***** The MAC build complains about this...
-static const char	RCSid[] = "$Id: badarg.c,v 2.11 2014/03/07 17:32:12 greg Exp $";
- *****/
+/* static const char	RCSid[] = "$Id$"; */
 #endif
 /*
  * Check argument list against format string.

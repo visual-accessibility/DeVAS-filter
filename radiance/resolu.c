@@ -1,7 +1,5 @@
 #ifndef lint
-/***** The MAC build complains about this...
-static const char	RCSid[] = "$Id: resolu.c,v 2.6 2006/06/07 17:52:03 schorsch Exp $";
- *****/
+/* static const char	RCSid[] = "$Id$"; */
 #endif
 /*
  * Read and write image resolutions.

@@ -17,15 +17,13 @@
 
 #define	SQ(x)	((x)*(x))
 
-static int		*v;	/* temporary work space */
-static float		*z;	/* temporary work space */
-static float		*f;	/* temporary work space */
-static float		*D_f;	/* temporary work space */
-static float		inf;	/* larger than any valid distance^2 */
+static int	*v;	/* temporary work space */
+static float	*z;	/* temporary work space */
+static float	*f;	/* temporary work space */
+static float	*D_f;	/* temporary work space */
+static float	inf;	/* larger than any valid distance^2 */
 
-static DEVA_float_image	*dt_euclid_sq ( DEVA_gray_image *input );
-static void		dt_euclid_sq_1d ( int size, float *input,
-				float *output );
+static void	dt_euclid_sq_1d ( int size, float *input, float *output );
 
 DEVA_gray_image *
 DEVA_gray_dilate ( DEVA_gray_image *input, double radius )
@@ -84,12 +82,15 @@ DEVA_gray_dilate2 ( DEVA_gray_image *input, DEVA_gray_image *output,
     DEVA_float_image_delete ( euclid_sq );
 }
 
-static DEVA_float_image *
+DEVA_float_image *
 dt_euclid_sq ( DEVA_gray_image *input )
 /*
  * Compute 2D squared Euclidean distance transform of binary image using
  * the method described in Felzenszwalb and Huttenlocher (2012), "Distance
  * Transforms of Sampled Functions," Theory of Computing, 8(1).
+ *
+ * input:   TRUE if point from which distance should be evaluated,
+ * 	    FALSE otherwise
  */
 {
     DEVA_float_image	*dt;

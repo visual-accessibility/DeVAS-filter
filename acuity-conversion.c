@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 #include <math.h>
 #include "acuity-conversion.h"
 #include "deva-license.h"	/* DEVA open source license */
@@ -166,7 +167,7 @@ convert_double_value ( char *snellen_string )
 	exit ( EXIT_FAILURE );
     }
 
-    cpt = index ( tmp_string, '/' );
+    cpt = strchr ( tmp_string, '/' );
     if ( cpt == NULL ) {
 	fprintf ( stderr, "parse_snellen: internal error!\n" );
 	exit ( EXIT_FAILURE );

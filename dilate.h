@@ -12,9 +12,10 @@
 extern "C" {
 #endif
 
-DEVA_gray_image	*DEVA_gray_dilate ( DEVA_gray_image *input, double radius );
-void		DEVA_gray_dilate2 ( DEVA_gray_image *input,
-		    DEVA_gray_image *output, double radius );
+DEVA_gray_image     *DEVA_gray_dilate ( DEVA_gray_image *input, double radius );
+void		    DEVA_gray_dilate2 ( DEVA_gray_image *input,
+		        DEVA_gray_image *output, double radius );
+DEVA_float_image    *dt_euclid_sq ( DEVA_gray_image *input );
 
 #ifdef __cplusplus
 }

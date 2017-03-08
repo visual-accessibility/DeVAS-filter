@@ -229,7 +229,7 @@ DEVA_IMAGE_NEW ( DEVA_RGB )
 DEVA_IMAGE_NEW ( DEVA_RGBf )
 DEVA_IMAGE_NEW ( DEVA_XYZ )
 DEVA_IMAGE_NEW ( DEVA_xyY )
-#ifndef	USE_FFTW3_ALLOCATORS
+#ifndef	DEVA_USE_FFTW3_ALLOCATORS
 DEVA_IMAGE_NEW ( DEVA_float )
 DEVA_IMAGE_NEW ( DEVA_complexf )
 /* DEVA_IMAGE_NEW ( DEVA_complexd ) */
@@ -237,7 +237,7 @@ DEVA_IMAGE_NEW ( DEVA_complexf )
 DEVA_IMAGE_NEW_FFTW_SINGLE ( DEVA_float )
 DEVA_IMAGE_NEW_FFTW_SINGLE ( DEVA_complexf )
 /* DEVA_IMAGE_NEW_FFTW_DOUBLE ( DEVA_complexd ) */
-#endif	/* USE_FFTW3_ALLOCATORS */
+#endif	/* DEVA_USE_FFTW3_ALLOCATORS */
 
 #define DEVA_IMAGE_DELETE( TYPE )					\
 void									\
@@ -271,7 +271,7 @@ DEVA_IMAGE_DELETE ( DEVA_RGB )
 DEVA_IMAGE_DELETE ( DEVA_RGBf )
 DEVA_IMAGE_DELETE ( DEVA_XYZ )
 DEVA_IMAGE_DELETE ( DEVA_xyY )
-#ifndef	USE_FFTW3_ALLOCATORS
+#ifndef	DEVA_USE_FFTW3_ALLOCATORS
 DEVA_IMAGE_DELETE ( DEVA_float )
 DEVA_IMAGE_DELETE ( DEVA_complexf )
 /* DEVA_IMAGE_DELETE ( DEVA_complexd ) */
@@ -279,14 +279,57 @@ DEVA_IMAGE_DELETE ( DEVA_complexf )
 DEVA_IMAGE_DELETE_FFTW_SINGLE ( DEVA_float )
 DEVA_IMAGE_DELETE_FFTW_SINGLE ( DEVA_complexf )
 /* DEVA_IMAGE_DELETE_FFTW_SINGLE ( DEVA_complexd ) */
-#endif	/* USE_FFTW3_ALLOCATORS */
+#endif	/* DEVA_USE_FFTW3_ALLOCATORS */
 
 void
-DEVA_image_check_bounds ( DEVA_gray_image *deva_image, int row, int col )
+DEVA_image_check_bounds ( DEVA_gray_image *deva_image, int row, int col,
+       int line, char *file )
 {
     if ( ( row < 0 ) || ( row >= DEVA_image_n_rows ( deva_image ) ) ||
 	    ( col < 0 ) || ( col >= DEVA_image_n_cols ( deva_image ) ) ) {
 	fprintf ( stderr, "DEVA_image_data out-of-bounds reference!\n" );
+	fprintf ( stderr, "line %d in file %s\n", line, file );
 	exit ( EXIT_FAILURE );
     }
 }
+
+#define	DEVA_IMAGE_SAMESIZE( TYPE )					\
+int									\
+TYPE##_image_samesize ( TYPE##_image *i1, TYPE##_image *i2 )		\
+{									\
+    return ( ( DEVA_image_n_rows ( i1 ) == DEVA_image_n_rows ( i2 ) ) && \
+	    ( DEVA_image_n_cols ( i1 ) == DEVA_image_n_cols ( i2 ) ) );	\
+}
+
+DEVA_IMAGE_SAMESIZE ( DEVA_gray )
+DEVA_IMAGE_SAMESIZE ( DEVA_double )
+DEVA_IMAGE_SAMESIZE ( DEVA_RGB )
+DEVA_IMAGE_SAMESIZE ( DEVA_RGBf )
+DEVA_IMAGE_SAMESIZE ( DEVA_XYZ )
+DEVA_IMAGE_SAMESIZE ( DEVA_xyY )
+DEVA_IMAGE_SAMESIZE ( DEVA_float )
+DEVA_IMAGE_SAMESIZE ( DEVA_complexf )
+/* DEVA_IMAGE_SAMESIZE ( DEVA_complexd ) */
+
+#define	DEVA_IMAGE_SETVALUE( TYPE )					\
+void									\
+TYPE##_image_setvalue ( TYPE##_image *image, TYPE value )		\
+{									\
+    int	    row, col;							\
+									\
+    for ( row = 0; row < DEVA_image_n_rows ( image ); row++ ) {		\
+	for ( col = 0; col < DEVA_image_n_cols ( image ); col++ ) {	\
+	    DEVA_image_data ( image, row, col ) = value;		\
+	}								\
+    }									\
+}
+
+DEVA_IMAGE_SETVALUE ( DEVA_gray )
+DEVA_IMAGE_SETVALUE ( DEVA_double )
+DEVA_IMAGE_SETVALUE ( DEVA_RGB )
+DEVA_IMAGE_SETVALUE ( DEVA_RGBf )
+DEVA_IMAGE_SETVALUE ( DEVA_XYZ )
+DEVA_IMAGE_SETVALUE ( DEVA_xyY )
+DEVA_IMAGE_SETVALUE ( DEVA_float )
+DEVA_IMAGE_SETVALUE ( DEVA_complexf )
+/* DEVA_IMAGE_SETVALUE ( DEVA_complexd ) */

@@ -43,20 +43,6 @@ strcat_safe ( char *dest, char *src )
     return ( returned_string );
 }
 
-int
-DEVA_float_image_samesize ( DEVA_float_image *i1, DEVA_float_image *i2 )
-{
-    return ( ( DEVA_image_n_rows ( i1 ) == DEVA_image_n_rows ( i2 ) ) &&
-	    ( DEVA_image_n_cols ( i1 ) == DEVA_image_n_cols ( i2 ) ) );
-}
-
-int
-DEVA_gray_image_samesize ( DEVA_gray_image *i1, DEVA_gray_image *i2 )
-{
-    return ( ( DEVA_image_n_rows ( i1 ) == DEVA_image_n_rows ( i2 ) ) &&
-	    ( DEVA_image_n_cols ( i1 ) == DEVA_image_n_cols ( i2 ) ) );
-}
-
 DEVA_float_image *
 DEVA_float_image_dup ( DEVA_float_image *original_image )
 /*
@@ -92,18 +78,6 @@ DEVA_float_image_dup ( DEVA_float_image *original_image )
 }
 
 void
-DEVA_float_image_set_value ( DEVA_float_image *image, DEVA_float value )
-{
-    unsigned int    row, col;
-
-    for ( row = 0; row < DEVA_image_n_rows ( image ); row++ ) {
-	for ( col = 0; col < DEVA_image_n_cols ( image ); col++ ) {
-	    DEVA_image_data ( image, row, col ) = value;
-	}
-    }
-}
-
-void
 DEVA_float_image_addto ( DEVA_float_image *i1, DEVA_float_image *i2 )
 /*
  * Add values of i2 to values of i1
@@ -121,6 +95,21 @@ DEVA_float_image_addto ( DEVA_float_image *i1, DEVA_float_image *i2 )
 	for ( col = 0; col < DEVA_image_n_cols ( i1 ); col++ ) {
 	    DEVA_image_data ( i1, row, col ) +=
 		DEVA_image_data ( i2, row, col );
+	}
+    }
+}
+
+void
+DEVA_float_image_scalarmult ( DEVA_float_image *i, float m )
+/*
+ * Multiply values of i by m;
+ */
+{
+    int     row, col;
+
+    for ( row = 0; row < DEVA_image_n_rows ( i ); row++ ) {
+	for ( col = 0; col < DEVA_image_n_cols ( i ); col++ ) {
+	    DEVA_image_data ( i, row, col ) *= m;
 	}
     }
 }
