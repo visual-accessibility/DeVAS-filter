@@ -25,6 +25,13 @@
 #include <fftw3.h>
 #endif	/* DEVA_USE_FFTW3_ALLOCATORS */
 
+#ifndef	TRUE
+#define	TRUE		1
+#endif	/* TRUE */
+#ifndef	FALSE
+#define	FALSE		0
+#endif	/* FALSE */
+
 #define	DEVA_WHTEFFICACY	179.0	/* uniform white light */
 					/* (from Radiance color.h) */
 
@@ -97,6 +104,11 @@ typedef struct {
 typedef struct {							      \
     int		    n_rows, n_cols;	/* order reversed from x,y! */	      \
     					/* Radiance treats these as signed */ \
+    int		    exposure_set;	/* exposure not set is not quite */   \
+    					/* the same as exposure=1.0! */	      \
+    double	    exposure;		/* as in Radiance file */	      \
+    					/* 1.0 if exposure not explicitly */  \
+					/* set */			      \
     DEVA_Image_Info image_info;		/* info needed by deva-filter */      \
     TYPE            *start_data;        /* start of allocated data block */   \
     TYPE            **data;             /* array of pointers to array rows */ \
@@ -145,6 +157,12 @@ DEVA_DEFINE_IMAGE_TYPE ( DEVA_complexf ) /* make sure to link against fftw3f! */
     			/* read/write */
 
 #define	DEVA_image_description(deva_image) (deva_image)->image_info.description
+    			/* read/write */
+
+#define	DEVA_image_exposure_set(deva_image)	(deva_image)->exposure_set
+    			/* read/write */
+
+#define	DEVA_image_exposure(deva_image)		(deva_image)->exposure
     			/* read/write */
 
 /*
@@ -210,7 +228,6 @@ DEVA_PROTOTYPE_IMAGE_SAMESIZE ( DEVA_xyY )
 DEVA_PROTOTYPE_IMAGE_SAMESIZE ( DEVA_complexf )
 /* DEVA_PROTOTYPE_IMAGE_SAMESIZE ( DEVA_complexd ) */
 
-
 #define DEVA_PROTOTYPE_IMAGE_SETVALUE( TYPE )				\
 void	TYPE##_image_setvalue ( TYPE##_image *image, TYPE value );
 
@@ -223,7 +240,6 @@ DEVA_PROTOTYPE_IMAGE_SETVALUE ( DEVA_XYZ )
 DEVA_PROTOTYPE_IMAGE_SETVALUE ( DEVA_xyY )
 DEVA_PROTOTYPE_IMAGE_SETVALUE ( DEVA_complexf )
 /* DEVA_PROTOTYPE_IMAGE_SETVALUE ( DEVA_complexd ) */
-
 
 #ifdef __cplusplus
 }

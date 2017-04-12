@@ -152,6 +152,9 @@ TYPE##_image_new ( unsigned int n_rows, unsigned int n_cols  )		\
     new_image->n_rows = n_rows;						\
     new_image->n_cols = n_cols;						\
 									\
+    new_image->exposure_set = FALSE;					\
+    new_image->exposure = 1.0;	/* default value */			\
+									\
     new_image->image_info.view = nullview;				\
     new_image->image_info.description = NULL;				\
 									\
@@ -197,6 +200,9 @@ TYPE##_image_new ( unsigned int n_rows, unsigned int n_cols  )		\
 									\
     new_image->n_rows = n_rows;						\
     new_image->n_cols = n_cols;						\
+									\
+    new_image->exposure_set = FALSE;					\
+    new_image->exposure = 1.0;	/* default value */			\
 									\
     new_image->image_info.view = nullview;				\
     new_image->image_info.description = NULL;				\

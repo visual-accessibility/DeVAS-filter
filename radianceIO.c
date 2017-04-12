@@ -55,13 +55,14 @@ DEVA_brightness_from_radfile ( FILE *radiance_fp )
     COLOR		*radiance_scanline;
     RadianceColorFormat	color_format;
     VIEW		view;
+    int			exposure_set;
     double		exposure;
     int			row, col;
     int			n_rows, n_cols;
     char		*description;
 
     DEVA_read_radiance_header ( radiance_fp, &n_rows, &n_cols,
-	            &color_format, &view, &exposure, &description );
+	    &color_format, &view, &exposure_set, &exposure, &description );
 
     radiance_scanline = (COLOR *) malloc ( n_cols * sizeof ( COLOR ) );
     if ( radiance_scanline == NULL ) {
@@ -72,6 +73,8 @@ DEVA_brightness_from_radfile ( FILE *radiance_fp )
     brightness = DEVA_float_image_new ( n_rows, n_cols );
     DEVA_image_view ( brightness ) = view;
     DEVA_image_description ( brightness ) = description;
+    DEVA_image_exposure_set ( brightness ) = exposure_set;
+    DEVA_image_exposure ( brightness ) = exposure;
 
     for ( row = 0; row < n_rows; row++ ) {
 	if ( freadscan( radiance_scanline, n_cols, radiance_fp ) < 0 ) {
@@ -81,12 +84,12 @@ DEVA_brightness_from_radfile ( FILE *radiance_fp )
 	}
 	if ( color_format == rgbe ) {
 	    for ( col = 0; col < n_cols; col++ ) {
-		DEVA_image_data ( brightness, row, col ) = exposure *
-					bright ( radiance_scanline[col] );
+		DEVA_image_data ( brightness, row, col ) =
+		    bright ( radiance_scanline[col] );
 	    }
 	} else if ( color_format == xyze ) {
 	    for ( col = 0; col < n_cols; col++ ) {
-		DEVA_image_data ( brightness, row, col ) = exposure *
+		DEVA_image_data ( brightness, row, col ) =
 		    colval ( radiance_scanline[col], CIEY ) / DEVA_WHTEFFICACY;
 	    }
 	} else {
@@ -142,6 +145,8 @@ DEVA_brightness_to_radfile ( FILE *radiance_fp, DEVA_float_image *brightness )
     int			row, col;
     VIEW		view;
     RadianceColorFormat	color_format;
+    int			exposure_set;
+    double		exposure;
     char		*description;
     COLOR		*radiance_scanline;
 
@@ -150,12 +155,15 @@ DEVA_brightness_to_radfile ( FILE *radiance_fp, DEVA_float_image *brightness )
 
     view = DEVA_image_view ( brightness );
 
+    exposure_set = DEVA_image_exposure_set ( brightness );
+    exposure = DEVA_image_exposure ( brightness );
+
     description = DEVA_image_description ( brightness );
 
     color_format = rgbe;
 
     DEVA_write_radiance_header ( radiance_fp, n_rows, n_cols, color_format,
-	    view, -1.0, description );
+	    view, exposure_set, exposure, description );
 
     radiance_scanline = (COLOR *) malloc ( n_cols * sizeof ( COLOR ) );
     if ( radiance_scanline == NULL ) {
@@ -224,13 +232,14 @@ DEVA_luminance_from_radfile ( FILE *radiance_fp )
     COLOR		*radiance_scanline;
     RadianceColorFormat	color_format;
     VIEW		view;
+    int			exposure_set;
     double		exposure;
     int			row, col;
     int			n_rows, n_cols;
     char		*description;
 
     DEVA_read_radiance_header ( radiance_fp, &n_rows, &n_cols,
-	    &color_format, &view, &exposure, &description );
+	    &color_format, &view, &exposure_set, &exposure, &description );
 
     radiance_scanline = (COLOR *) malloc ( n_cols * sizeof ( COLOR ) );
     if ( radiance_scanline == NULL ) {
@@ -313,11 +322,16 @@ DEVA_luminance_to_radfile ( FILE *radiance_fp, DEVA_float_image *luminance )
     int			row, col;
     VIEW		view;
     RadianceColorFormat color_format;
+    int			exposure_set;
+    double		exposure;
     char		*description;
     COLOR		*radiance_scanline;
 
     n_rows = DEVA_image_n_rows ( luminance );
     n_cols = DEVA_image_n_cols ( luminance );
+
+    exposure_set = DEVA_image_exposure_set ( luminance );
+    exposure = DEVA_image_exposure ( luminance );
 
     view = DEVA_image_view ( luminance );
 
@@ -326,7 +340,7 @@ DEVA_luminance_to_radfile ( FILE *radiance_fp, DEVA_float_image *luminance )
     color_format = rgbe;
 
     DEVA_write_radiance_header ( radiance_fp, n_rows, n_cols, color_format,
-	    view, -1.0, description );
+	    view, exposure_set, exposure, description );
 
     radiance_scanline = (COLOR *) malloc ( n_cols * sizeof ( COLOR ) );
     if ( radiance_scanline == NULL ) {
@@ -389,13 +403,14 @@ DEVA_RGBf_from_radfile ( FILE *radiance_fp )
     COLOR		RGBf_rad_pixel;
     RadianceColorFormat	color_format;
     VIEW		view;
+    int			exposure_set;
     double		exposure;
     int			row, col;
     int			n_rows, n_cols;
     char		*description;
 
     DEVA_read_radiance_header ( radiance_fp, &n_rows, &n_cols,
-	    &color_format, &view, &exposure, &description );
+	    &color_format, &view, &exposure_set, &exposure, &description );
 
     radiance_scanline = (COLOR *) malloc ( n_cols * sizeof ( COLOR ) );
     if ( radiance_scanline == NULL ) {
@@ -406,6 +421,8 @@ DEVA_RGBf_from_radfile ( FILE *radiance_fp )
     RGBf = DEVA_RGBf_image_new ( n_rows, n_cols );
     DEVA_image_view ( RGBf ) = view;
     DEVA_image_description ( RGBf ) = description;
+    DEVA_image_exposure_set ( RGBf ) = exposure_set;
+    DEVA_image_exposure ( RGBf ) = exposure;
 
     for ( row = 0; row < n_rows; row++ ) {
 	if ( freadscan( radiance_scanline, n_cols, radiance_fp ) < 0 ) {
@@ -415,22 +432,22 @@ DEVA_RGBf_from_radfile ( FILE *radiance_fp )
 	}
 	if ( color_format == rgbe ) {
 	    for ( col = 0; col < n_cols; col++ ) {
-		DEVA_image_data ( RGBf, row, col ) . red = exposure *
+		DEVA_image_data ( RGBf, row, col ) . red =
 		    		colval ( radiance_scanline[col], RED );
-		DEVA_image_data ( RGBf, row, col ) . green = exposure *
+		DEVA_image_data ( RGBf, row, col ) . green =
 		    		colval ( radiance_scanline[col], GRN );
-		DEVA_image_data ( RGBf, row, col ) . blue = exposure *
+		DEVA_image_data ( RGBf, row, col ) . blue =
 		    		colval ( radiance_scanline[col], BLU );
 	    }
 	} else if ( color_format == xyze ) {
 	    for ( col = 0; col < n_cols; col++ ) {
 		colortrans ( RGBf_rad_pixel, xyz2rgbmat,
 			radiance_scanline[col] );
-		DEVA_image_data ( RGBf, row, col ) . red = exposure *
+		DEVA_image_data ( RGBf, row, col ) . red =
 		    colval ( RGBf_rad_pixel, RED ) / DEVA_WHTEFFICACY;
-		DEVA_image_data ( RGBf, row, col ) . green = exposure *
+		DEVA_image_data ( RGBf, row, col ) . green =
 		    colval ( RGBf_rad_pixel, GRN ) / DEVA_WHTEFFICACY;
-		DEVA_image_data ( RGBf, row, col ) . blue = exposure *
+		DEVA_image_data ( RGBf, row, col ) . blue =
 		    colval ( RGBf_rad_pixel, BLU ) / DEVA_WHTEFFICACY;
 	    }
 	} else {
@@ -475,6 +492,8 @@ DEVA_RGBf_to_radfile ( FILE *radiance_fp, DEVA_RGBf_image *RGBf )
     int			row, col;
     VIEW		view;
     RadianceColorFormat	color_format;
+    int			exposure_set;
+    double		exposure;
     char		*description;
     COLOR		*radiance_scanline;
 
@@ -483,12 +502,15 @@ DEVA_RGBf_to_radfile ( FILE *radiance_fp, DEVA_RGBf_image *RGBf )
 
     view = DEVA_image_view ( RGBf );
 
+    exposure_set = DEVA_image_exposure_set ( RGBf );
+    exposure = DEVA_image_exposure ( RGBf );
+
     description = DEVA_image_description ( RGBf );
 
     color_format = rgbe;
 
     DEVA_write_radiance_header ( radiance_fp, n_rows, n_cols, color_format,
-	    view, -1.0, description );
+	    view, exposure_set, exposure, description );
 
     radiance_scanline = (COLOR *) malloc ( n_cols * sizeof ( COLOR ) );
     if ( radiance_scanline == NULL ) {
@@ -551,13 +573,14 @@ DEVA_XYZ_from_radfile ( FILE *radiance_fp )
     COLOR		XYZ_rad_pixel;
     RadianceColorFormat	color_format;
     VIEW		view;
+    int			exposure_set;
     double		exposure;
     int			row, col;
     int			n_rows, n_cols;
     char		*description;
 
     DEVA_read_radiance_header ( radiance_fp, &n_rows, &n_cols,
-	    &color_format, &view, &exposure, &description );
+	    &color_format, &view, &exposure_set, &exposure, &description );
 
     SET_FILE_BINARY ( radiance_fp );	/* only affects Windows systems */
 
@@ -570,6 +593,8 @@ DEVA_XYZ_from_radfile ( FILE *radiance_fp )
     XYZ = DEVA_XYZ_image_new ( n_rows, n_cols );
     DEVA_image_view ( XYZ ) = view;
     DEVA_image_description ( XYZ ) = description;
+    DEVA_image_exposure_set ( XYZ ) = exposure_set;
+    DEVA_image_exposure ( XYZ ) = exposure;
 
     for ( row = 0; row < n_rows; row++ ) {
 	if ( freadscan( radiance_scanline, n_cols, radiance_fp ) < 0 ) {
@@ -581,20 +606,20 @@ DEVA_XYZ_from_radfile ( FILE *radiance_fp )
 	    for ( col = 0; col < n_cols; col++ ) {
 		colortrans ( XYZ_rad_pixel, rgb2xyzmat,
 			radiance_scanline[col] );
-		DEVA_image_data ( XYZ, row, col ) . X = exposure *
+		DEVA_image_data ( XYZ, row, col ) . X =
 		    colval ( XYZ_rad_pixel, CIEX ) * DEVA_WHTEFFICACY;
-		DEVA_image_data ( XYZ, row, col ) . Y = exposure *
+		DEVA_image_data ( XYZ, row, col ) . Y =
 		    colval ( XYZ_rad_pixel, CIEY ) * DEVA_WHTEFFICACY;
-		DEVA_image_data ( XYZ, row, col ) . Z = exposure *
+		DEVA_image_data ( XYZ, row, col ) . Z =
 		    colval ( XYZ_rad_pixel, CIEZ ) * DEVA_WHTEFFICACY;
 	    }
 	} else if ( color_format == xyze ) {
 	    for ( col = 0; col < n_cols; col++ ) {
-		DEVA_image_data ( XYZ, row, col ) . X = exposure *
+		DEVA_image_data ( XYZ, row, col ) . X =
 		    colval ( radiance_scanline[col], CIEX );
-		DEVA_image_data ( XYZ, row, col ) . Y = exposure *
+		DEVA_image_data ( XYZ, row, col ) . Y =
 		    colval ( radiance_scanline[col], CIEY );
-		DEVA_image_data ( XYZ, row, col ) . Z = exposure *
+		DEVA_image_data ( XYZ, row, col ) . Z =
 		    colval ( radiance_scanline[col], CIEZ );
 	    }
 	} else {
@@ -639,6 +664,8 @@ DEVA_XYZ_to_radfile ( FILE *radiance_fp, DEVA_XYZ_image *XYZ )
     int			row, col;
     VIEW		view;
     RadianceColorFormat	color_format;
+    int			exposure_set;
+    double		exposure;
     char		*description;
     COLOR		*radiance_scanline;
     COLOR		XYZ_rad_pixel;
@@ -648,12 +675,15 @@ DEVA_XYZ_to_radfile ( FILE *radiance_fp, DEVA_XYZ_image *XYZ )
 
     view = DEVA_image_view ( XYZ );
 
+    exposure_set = DEVA_image_exposure_set ( XYZ );
+    exposure = DEVA_image_exposure ( XYZ );
+
     description = DEVA_image_description ( XYZ );
 
     color_format = rgbe;
 
     DEVA_write_radiance_header ( radiance_fp, n_rows, n_cols, color_format,
-	    view, -1.0, description );
+	    view, exposure_set, exposure, description );
 
     radiance_scanline = (COLOR *) malloc ( n_cols * sizeof ( COLOR ) );
     if ( radiance_scanline == NULL ) {
@@ -722,13 +752,14 @@ DEVA_xyY_from_radfile ( FILE *radiance_fp )
     DEVA_XYZ		XYZ_DEVA_pixel;
     RadianceColorFormat	color_format;
     VIEW		view;
+    int			exposure_set;
     double		exposure;
     int			row, col;
     int			n_rows, n_cols;
     char		*description;
 
     DEVA_read_radiance_header ( radiance_fp, &n_rows, &n_cols,
-	    &color_format, &view, &exposure, &description );
+	    &color_format, &view, &exposure_set, &exposure, &description );
 
     radiance_scanline = (COLOR *) malloc ( n_cols * sizeof ( COLOR ) );
     if ( radiance_scanline == NULL ) {
@@ -739,6 +770,8 @@ DEVA_xyY_from_radfile ( FILE *radiance_fp )
     xyY = DEVA_xyY_image_new ( n_rows, n_cols );
     DEVA_image_view ( xyY ) = view;
     DEVA_image_description ( xyY ) = description;
+    DEVA_image_exposure_set ( xyY ) = exposure_set;
+    DEVA_image_exposure ( xyY ) = exposure;
 
     for ( row = 0; row < n_rows; row++ ) {
 	if ( freadscan( radiance_scanline, n_cols, radiance_fp ) < 0 ) {
@@ -751,11 +784,11 @@ DEVA_xyY_from_radfile ( FILE *radiance_fp )
 		colortrans ( XYZ_rad_pixel, rgb2xyzmat,
 			radiance_scanline[col] );
 
-		XYZ_DEVA_pixel.X = exposure *
+		XYZ_DEVA_pixel.X =
 		    colval ( XYZ_rad_pixel, CIEX ) * DEVA_WHTEFFICACY;
-		XYZ_DEVA_pixel.Y = exposure *
+		XYZ_DEVA_pixel.Y =
 		    colval ( XYZ_rad_pixel, CIEY ) * DEVA_WHTEFFICACY;
-		XYZ_DEVA_pixel.Z = exposure *
+		XYZ_DEVA_pixel.Z =
 		    colval ( XYZ_rad_pixel, CIEZ ) * DEVA_WHTEFFICACY;
 
 		DEVA_image_data ( xyY, row, col ) =
@@ -763,11 +796,11 @@ DEVA_xyY_from_radfile ( FILE *radiance_fp )
 	    }
 	} else if ( color_format == xyze ) {
 	    for ( col = 0; col < n_cols; col++ ) {
-		XYZ_DEVA_pixel.X = exposure *
+		XYZ_DEVA_pixel.X =
 		    colval ( radiance_scanline[col], CIEX );
-		XYZ_DEVA_pixel.Y = exposure *
+		XYZ_DEVA_pixel.Y =
 		    colval ( radiance_scanline[col], CIEY );
-		XYZ_DEVA_pixel.Z = exposure *
+		XYZ_DEVA_pixel.Z =
 		    colval ( radiance_scanline[col], CIEZ );
 
 		DEVA_image_data ( xyY, row, col ) =
@@ -815,6 +848,8 @@ DEVA_xyY_to_radfile ( FILE *radiance_fp, DEVA_xyY_image *xyY )
     int			row, col;
     VIEW		view;
     RadianceColorFormat	color_format;
+    int			exposure_set;
+    double		exposure;
     char		*description;
     DEVA_XYZ		XYZ_DEVA_pixel;
     COLOR		XYZ_rad_pixel;
@@ -825,12 +860,15 @@ DEVA_xyY_to_radfile ( FILE *radiance_fp, DEVA_xyY_image *xyY )
 
     view = DEVA_image_view ( xyY );
 
+    exposure_set = DEVA_image_exposure_set ( xyY );
+    exposure = DEVA_image_exposure ( xyY );
+
     description = DEVA_image_description ( xyY );
 
     color_format = rgbe;
 
     DEVA_write_radiance_header ( radiance_fp, n_rows, n_cols, color_format,
-	    view, -1.0, description );
+	    view, exposure_set, exposure, description );
 
     radiance_scanline = (COLOR *) malloc ( n_cols * sizeof ( COLOR ) );
     if ( radiance_scanline == NULL ) {

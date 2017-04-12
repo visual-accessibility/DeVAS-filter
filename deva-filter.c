@@ -402,8 +402,14 @@ deva_filter ( DEVA_xyY_image *input_image, double acuity,
 	/* reassemble separate luminance and chromaticity channels into */
 	/* single output image */
 
+    /* keep exposure values as before */
+    DEVA_image_exposure_set ( filtered_image ) =
+	DEVA_image_exposure_set ( input_image );
+    DEVA_image_exposure ( filtered_image ) =
+	DEVA_image_exposure ( input_image );
+
+    /* nothing's changed in the view */
     DEVA_image_view ( filtered_image ) = DEVA_image_view ( input_image );
-    					/* nothing's changed in the view */
 
     cleanup ( frequency_space,
 		log2r,

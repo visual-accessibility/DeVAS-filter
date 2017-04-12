@@ -30,7 +30,15 @@ static int		    header_line_number;
 static RadianceColorFormat  color_format;
 static VIEW		    view;
 static char		    *header_text;
-static double		    exposure;
+static int		    exposure_set;	/* TRUE is exposure set */
+						/* in file (needed because */
+						/* missing EXPOSURE value */
+						/* may have different */
+						/* implications than */
+						/* EXPOSURE = 1.0 */
+static double		    exposure;		/* actual exposure value */
+						/* if set in file or 1.0 */
+						/* otherwise */
 
 static void	initialize_headline ( void );
 static int	headline ( char *s, void *p );
@@ -38,8 +46,8 @@ static char	*strcat_safe ( char *dest, char *src );
 
 void
 DEVA_read_radiance_header ( FILE *radiance_fp, int *n_rows_p, int *n_cols_p,
-	RadianceColorFormat *color_format_p, VIEW *view_p, double *exposure_p,
-	char **header_text_p )
+	RadianceColorFormat *color_format_p, VIEW *view_p, int *exposure_set_p,
+	double *exposure_p, char **header_text_p )
 /*
  * Read Radiance image file header and return potentially relevant information.
  * Leaves file at the start of the first scan line.
@@ -87,6 +95,10 @@ DEVA_read_radiance_header ( FILE *radiance_fp, int *n_rows_p, int *n_cols_p,
 	*view_p = view;
     }
 
+    if ( exposure_set_p != NULL ) {
+	*exposure_set_p = exposure_set;
+    }
+
     if ( exposure_p != NULL ) {
 	*exposure_p = exposure;
     }
@@ -108,6 +120,7 @@ initialize_headline ( void )
  * 	color_format
  * 	view
  * 	header_text
+ * 	exposure_set
  * 	exposure
  */
 {
@@ -118,6 +131,7 @@ initialize_headline ( void )
 	free ( header_text );
     }
     header_text = NULL;
+    exposure_set = FALSE;
     exposure = 1.0;
 }
 
@@ -171,7 +185,8 @@ headline ( char *s, void *p )
     if ( strncmp ( s, "VIEW=", strlen ( "VIEW=" ) ) == 0 ) {
 	sscanview ( &view, s );
     } else if ( isexpos ( s ) ) {
-	exposure /= exposval ( s );
+	exposure_set = TRUE;
+	exposure *= exposval ( s );
     } else {
 	header_text = strcat_safe ( header_text, s );
     }
@@ -216,8 +231,8 @@ strcat_safe ( char *dest, char *src )
 
 void
 DEVA_write_radiance_header ( FILE *radiance_fp, int n_rows, int n_cols,
-	RadianceColorFormat color_format, VIEW view, double exposure, 
-	char *other_info )
+	RadianceColorFormat color_format, VIEW view, int exposure_set,
+	double exposure, char *other_info )
 {
     SET_FILE_BINARY ( radiance_fp );	/* only affects Windows systems */
 
@@ -232,7 +247,7 @@ DEVA_write_radiance_header ( FILE *radiance_fp, int n_rows, int n_cols,
 	}
     }
 
-    if ( exposure > 0.0 ) {
+    if ( exposure_set ) {
 	fprintf ( radiance_fp, "%s%f\n", EXPOSSTR, exposure );
     }
 

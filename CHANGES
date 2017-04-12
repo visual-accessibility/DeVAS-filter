@@ -1,3 +1,10 @@
+version 2.7.00
+
+Add Radiance-style exposure value to in-memory DEVA_image objects. This
+supports creating output image files with the same exposure setting as
+the input image files, which in turn facilitates tone mapping the output
+files for display purposes.
+
 version 2.6.00
 
 DEVA_USE_FFTW3_ALLOCATORS flag now passed through CMAKE command.
