@@ -82,12 +82,12 @@ DEVA_brightness_from_radfile ( FILE *radiance_fp )
 		"DEVA_brightness_from_radfile: error reading Radiance file!" );
 	    exit ( EXIT_FAILURE );
 	}
-	if ( color_format == rgbe ) {
+	if ( color_format == radcolor_rgbe ) {
 	    for ( col = 0; col < n_cols; col++ ) {
 		DEVA_image_data ( brightness, row, col ) =
 		    bright ( radiance_scanline[col] );
 	    }
-	} else if ( color_format == xyze ) {
+	} else if ( color_format == radcolor_xyze ) {
 	    for ( col = 0; col < n_cols; col++ ) {
 		DEVA_image_data ( brightness, row, col ) =
 		    colval ( radiance_scanline[col], CIEY ) / DEVA_WHTEFFICACY;
@@ -160,7 +160,7 @@ DEVA_brightness_to_radfile ( FILE *radiance_fp, DEVA_float_image *brightness )
 
     description = DEVA_image_description ( brightness );
 
-    color_format = rgbe;
+    color_format = radcolor_rgbe;
 
     DEVA_write_radiance_header ( radiance_fp, n_rows, n_cols, color_format,
 	    view, exposure_set, exposure, description );
@@ -257,12 +257,12 @@ DEVA_luminance_from_radfile ( FILE *radiance_fp )
 		"DEVA_luminance_from_radfile: error reading Radiance file!" );
 	    exit ( EXIT_FAILURE );
 	}
-	if ( color_format == rgbe ) {
+	if ( color_format == radcolor_rgbe ) {
 	    for ( col = 0; col < n_cols; col++ ) {
 		DEVA_image_data ( luminance, row, col ) = exposure *
 			luminance ( radiance_scanline[col] );
 	    }
-	} else if ( color_format == xyze ) {
+	} else if ( color_format == radcolor_xyze ) {
 	    for ( col = 0; col < n_cols; col++ ) {
 		DEVA_image_data ( luminance, row, col ) = exposure *
 		    	colval ( radiance_scanline[col], CIEY );
@@ -337,7 +337,7 @@ DEVA_luminance_to_radfile ( FILE *radiance_fp, DEVA_float_image *luminance )
 
     description = DEVA_image_description ( luminance );
 
-    color_format = rgbe;
+    color_format = radcolor_rgbe;
 
     DEVA_write_radiance_header ( radiance_fp, n_rows, n_cols, color_format,
 	    view, exposure_set, exposure, description );
@@ -430,7 +430,7 @@ DEVA_RGBf_from_radfile ( FILE *radiance_fp )
 		"DEVA_RGBf_from_radfile: error reading Radiance file!" );
 	    exit ( EXIT_FAILURE );
 	}
-	if ( color_format == rgbe ) {
+	if ( color_format == radcolor_rgbe ) {
 	    for ( col = 0; col < n_cols; col++ ) {
 		DEVA_image_data ( RGBf, row, col ) . red =
 		    		colval ( radiance_scanline[col], RED );
@@ -439,7 +439,7 @@ DEVA_RGBf_from_radfile ( FILE *radiance_fp )
 		DEVA_image_data ( RGBf, row, col ) . blue =
 		    		colval ( radiance_scanline[col], BLU );
 	    }
-	} else if ( color_format == xyze ) {
+	} else if ( color_format == radcolor_xyze ) {
 	    for ( col = 0; col < n_cols; col++ ) {
 		colortrans ( RGBf_rad_pixel, xyz2rgbmat,
 			radiance_scanline[col] );
@@ -507,7 +507,7 @@ DEVA_RGBf_to_radfile ( FILE *radiance_fp, DEVA_RGBf_image *RGBf )
 
     description = DEVA_image_description ( RGBf );
 
-    color_format = rgbe;
+    color_format = radcolor_rgbe;
 
     DEVA_write_radiance_header ( radiance_fp, n_rows, n_cols, color_format,
 	    view, exposure_set, exposure, description );
@@ -602,7 +602,7 @@ DEVA_XYZ_from_radfile ( FILE *radiance_fp )
 		"DEVA_XYZ_from_radfile: error reading Radiance file!" );
 	    exit ( EXIT_FAILURE );
 	}
-	if ( color_format == rgbe ) {
+	if ( color_format == radcolor_rgbe ) {
 	    for ( col = 0; col < n_cols; col++ ) {
 		colortrans ( XYZ_rad_pixel, rgb2xyzmat,
 			radiance_scanline[col] );
@@ -613,7 +613,7 @@ DEVA_XYZ_from_radfile ( FILE *radiance_fp )
 		DEVA_image_data ( XYZ, row, col ) . Z =
 		    colval ( XYZ_rad_pixel, CIEZ ) * DEVA_WHTEFFICACY;
 	    }
-	} else if ( color_format == xyze ) {
+	} else if ( color_format == radcolor_xyze ) {
 	    for ( col = 0; col < n_cols; col++ ) {
 		DEVA_image_data ( XYZ, row, col ) . X =
 		    colval ( radiance_scanline[col], CIEX );
@@ -680,7 +680,7 @@ DEVA_XYZ_to_radfile ( FILE *radiance_fp, DEVA_XYZ_image *XYZ )
 
     description = DEVA_image_description ( XYZ );
 
-    color_format = rgbe;
+    color_format = radcolor_rgbe;
 
     DEVA_write_radiance_header ( radiance_fp, n_rows, n_cols, color_format,
 	    view, exposure_set, exposure, description );
@@ -779,7 +779,7 @@ DEVA_xyY_from_radfile ( FILE *radiance_fp )
 		"DEVA_xyY_from_radfile: error reading Radiance file!" );
 	    exit ( EXIT_FAILURE );
 	}
-	if ( color_format == rgbe ) {
+	if ( color_format == radcolor_rgbe ) {
 	    for ( col = 0; col < n_cols; col++ ) {
 		colortrans ( XYZ_rad_pixel, rgb2xyzmat,
 			radiance_scanline[col] );
@@ -794,7 +794,7 @@ DEVA_xyY_from_radfile ( FILE *radiance_fp )
 		DEVA_image_data ( xyY, row, col ) =
 		    DEVA_XYZ2xyY ( XYZ_DEVA_pixel );
 	    }
-	} else if ( color_format == xyze ) {
+	} else if ( color_format == radcolor_xyze ) {
 	    for ( col = 0; col < n_cols; col++ ) {
 		XYZ_DEVA_pixel.X =
 		    colval ( radiance_scanline[col], CIEX );
@@ -865,7 +865,7 @@ DEVA_xyY_to_radfile ( FILE *radiance_fp, DEVA_xyY_image *xyY )
 
     description = DEVA_image_description ( xyY );
 
-    color_format = rgbe;
+    color_format = radcolor_rgbe;
 
     DEVA_write_radiance_header ( radiance_fp, n_rows, n_cols, color_format,
 	    view, exposure_set, exposure, description );

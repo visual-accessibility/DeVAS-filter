@@ -1,3 +1,7 @@
+version 2.7.01
+
+Remove name clash in RadianceColorFormat.
+
 version 2.7.00
 
 Add Radiance-style exposure value to in-memory DEVA_image objects. This

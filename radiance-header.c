@@ -125,7 +125,7 @@ initialize_headline ( void )
  */
 {
     header_line_number = 0;
-    color_format = unknown;
+    color_format = radcolor_unknown;
     view = DEVA_null_view;
     if ( header_text != NULL ) {
 	free ( header_text );
@@ -162,14 +162,14 @@ headline ( char *s, void *p )
     }
 
     if ( formatval ( fmt, s) ) {
-	if ( color_format != unknown ) {
+	if ( color_format != radcolor_unknown ) {
 	    fprintf ( stderr,
 		    "TT_*_image_from_radfile: multiple format records!\n" );
 	    exit ( EXIT_FAILURE );
 	} else if ( strcmp ( fmt, COLRFMT) == 0 ) {
-	    color_format = rgbe;
+	    color_format = radcolor_rgbe;
 	} else if ( strcmp( fmt, CIEFMT ) == 0 ) {
-	    color_format = xyze;
+	    color_format = radcolor_xyze;
 	} else {
 	    fprintf ( stderr,
 		    "TT_*_image_from_radfile: unrecognized format!\n" );
@@ -258,11 +258,11 @@ DEVA_write_radiance_header ( FILE *radiance_fp, int n_rows, int n_cols,
     }
 
     switch ( color_format ) {
-	case rgbe:
+	case radcolor_rgbe:
 	    fputformat ( COLRFMT, radiance_fp );
 	    break;
 
-	case xyze:
+	case radcolor_xyze:
 	    fputformat ( CIEFMT, radiance_fp );
 	    break;
 

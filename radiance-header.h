@@ -20,7 +20,12 @@
 #define	FALSE		0
 #endif	/* FALSE */
 
-typedef enum { unknown, rgbe, xyze } RadianceColorFormat;
+typedef enum {
+    radcolor_unknown,
+    radcolor_missing,
+    radcolor_rgbe,
+    radcolor_xyze
+} RadianceColorFormat;
 
 #ifdef __cplusplus
 extern "C" {
