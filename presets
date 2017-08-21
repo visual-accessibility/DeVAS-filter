@@ -1,3 +1,27 @@
+mild:	     Snellen 20/45 (logMAR 0.35)
+	     Pelli-Robson score 1.6
+	     color saturation 75%
+
+moderate:    Snellen 20/115 (logMAR 0.75)
+             Pelli-Robson score 1.0
+	     color saturation 40%
+
+severe:	     Snellen 20/285 (logMAR 1.15)
+             Pelli-Robson score 0.75
+	     color saturation 25%
+
+profound:    Snellen 20/710 (logMAR 1.55)
+             Pelli-Robson score 0.5
+	     color saturation 0%
+
+Acuity adapted from Colenbrander, A. (2003); Aspects of vision
+loss-visual functions and functional vision; Visual Impairment Research,
+5(3), 115-136.
+
+===========================================
+
+OLD:
+
 mild:	     Snellen 20/80 (logMAR 0.6)
              Pelli-Robson score 1.5
 	     color saturation 75%

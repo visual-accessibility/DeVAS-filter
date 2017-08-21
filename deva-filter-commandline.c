@@ -12,6 +12,7 @@
 #include "deva-filter.h"
 #include "KLT-filter.h"
 #include "deva-utils.h"
+#include "deva-margin.h"
 #include "radianceIO.h"
 #include "acuity-conversion.h"
 #include "ChungLeggeCSF.h"
@@ -19,14 +20,16 @@
 
 char	*progname;	/* one radiance routine requires this as a global */
 char	*Usage =
-	    "--mild|--moderate|--significant|--severe input.hdr output.hdr";
+	    "--mild|--moderate|--severe|--profound [--margin=<value>]"
+	    "\n\tinput.hdr output.hdr";
 char	*Usage2 = "[--snellen|--logMAR] [--sensitivity-ratio|--pelli-robson]"
-	    "\n\t[--autoclip|--clip=<level>] [--color|--grayscale] [--verbose]"
+    "\n\t[--autoclip|--clip=<level>] [--color|--grayscale] [--margin=<value>]"
+	    "\n\t[--verbose] [--version] [--presets]"
 	    "\n\t\tacuity contrast input.hdr output.hdr";
 int	args_needed = 4;
 
 /* option flags */
-typedef enum { no_preset, mild, moderate, significant, severe } PresetType;
+typedef enum { no_preset, mild, moderate, severe, profound } PresetType;
 typedef	enum { undefined_acuity_format, Snellen, logMAR } AcuityFormat;
 typedef enum { undefined_sensitivity, sensitivity_ratio, pelli_robson }
 							SensitivityType;
@@ -54,7 +57,35 @@ typedef enum { undefined_filter, use_DEVA_filter, use_KLT_filter } FilterType;
 #define	DEFAULT_FILTER_TYPE		use_DEVA_filter
 #define	DEFAULT_FILTER_TYPE_STRING	"use_DEVA_filter"
 
-/* pre-set values */
+/* preset values */
+
+#ifndef DEVE_USE_OLD_PRESETS
+
+#define	PRESET_MILD			"mild"
+#define	MILD_SNELLEN			(20.0/45.0)
+#define	MILD_LOGMAR			0.35
+#define	MILD_PELLI_ROBSON		1.6
+#define	MILD_SATURATION			.75
+
+#define	PRESET_MODERATE			"moderate"
+#define	MODERATE_SNELLEN		(20.0/115.0)
+#define	MODERATE_LOGMAR			0.75
+#define	MODERATE_PELLI_ROBSON		1.0
+#define	MODERATE_SATURATION		.4
+
+#define	PRESET_SEVERE			"severe"
+#define	SEVERE_SNELLEN			(20.0/285.0)
+#define	SEVERE_LOGMAR			1.15
+#define	SEVERE_PELLI_ROBSON		0.75
+#define	SEVERE_SATURATION		.25
+
+#define	PRESET_PROFOUND			"profound"
+#define	PROFOUND_SNELLEN		(20.0/710.0)
+#define	PROFOUND_LOGMAR			1.55
+#define	PROFOUND_PELLI_ROBSON		0.5
+#define	PROFOUND_SATURATION		0.0
+
+#else	/* DEVE_USE_OLD_PRESETS */
 
 #define	MILD_SNELLEN			(20.0/80.0)	/* logMAR 0.6 */
 #define	MILD_PELLI_ROBSON		1.5
@@ -71,6 +102,8 @@ typedef enum { undefined_filter, use_DEVA_filter, use_KLT_filter } FilterType;
 #define	SEVERE_SNELLEN			(20.0/800.0)	/* logMAR 1.6 */
 #define	SEVERE_PELLI_ROBSON		0.5
 #define	SEVERE_SATURATION		0.0
+
+#endif	/* DEVE_USE_OLD_PRESETS */
 
 #define	LOGMAR_MAX		2.3
 #define	LOGMAR_MIN		(-0.65)
@@ -101,6 +134,7 @@ static double	contrastratio2PelliRobson ( double contrast_ratio );
 static double	auto_clip_level ( DEVA_xyY_image *image );
 static void	clip_max_value ( DEVA_xyY_image *image, double clip_value );
 static void	deva_filter_print_defaults ( void );
+static void	deva_filter_print_presets ( void );
 
 int
 main ( int argc, char *argv[] )
@@ -128,9 +162,15 @@ main ( int argc, char *argv[] )
     double		acuity_adjustment;	/* CSF peak adjustment */
     double		logMAR_arg;		/* used for sanity check */
     double		pelli_robson_score;	/* log contrast */
+    double		margin = -1.0;		/* width of margin to add */
+    /* to mitigate FFT */
+    /* wraparound artificats */
+    int			v_margin, h_margin;	/* in pixels */
     char		*input_file_name;
-    char		*output_file_name;
     DEVA_xyY_image	*input_image;		/* Y values in cd/m^2 */
+    DEVA_xyY_image	*margin_image;		/* to deal with wrap-around */
+    DEVA_xyY_image	*margin_filtered_image;	/* artifacts */
+    char		*output_file_name;
     DEVA_xyY_image	*filtered_image;	/* Y values in cd/m^2 */
 
     int			argpt = 1;
@@ -142,49 +182,49 @@ main ( int argc, char *argv[] )
 	if ( strcmp ( argv[argpt], "-" ) == 0 ) {
 	    break;	/* read/write from/to stdin/stdout? */
 	}
-	
+
 	if ( ( strcasecmp ( argv[argpt], "--mild" ) == 0 ) ||
 		( strcasecmp ( argv[argpt], "-mild" ) == 0 ) ) {
 	    /* preset for mild loss of acuity and contrast */
 	    if ( ! ( ( preset_type == no_preset ) ||
-				( preset_type == mild ) ) ) {
+			( preset_type == mild ) ) ) {
 		fprintf ( stderr, "conflicting preset values!\n" );
 		exit ( EXIT_FAILURE );
 	    }
 	    preset_type = mild;
 	    argpt++;
-	
+
 	} else if ( ( strcasecmp ( argv[argpt], "--moderate" ) == 0 ) ||
 		( strcasecmp ( argv[argpt], "-moderate" ) == 0 ) ) {
 	    /* preset for moderate loss of acuity and contrast */
 	    if ( ! ( ( preset_type == no_preset ) ||
-				( preset_type == moderate ) ) ) {
+			( preset_type == moderate ) ) ) {
 		fprintf ( stderr, "conflicting preset values!\n" );
 		exit ( EXIT_FAILURE );
 	    }
 	    preset_type = moderate;
-	    argpt++;
-	
-	} else if ( ( strcasecmp ( argv[argpt], "--significant" ) == 0 ) ||
-		( strcasecmp ( argv[argpt], "-significant" ) == 0 ) ) {
-	    /* preset for significant loss of acuity and contrast */
-	    if ( ! ( ( preset_type == no_preset ) ||
-				( preset_type == significant ) ) ) {
-		fprintf ( stderr, "conflicting preset values!\n" );
-		exit ( EXIT_FAILURE );
-	    }
-	    preset_type = significant;
 	    argpt++;
 
 	} else if ( ( strcasecmp ( argv[argpt], "--severe" ) == 0 ) ||
 		( strcasecmp ( argv[argpt], "-severe" ) == 0 ) ) {
 	    /* preset for severe loss of acuity and contrast */
 	    if ( ! ( ( preset_type == no_preset ) ||
-				( preset_type == severe ) ) ) {
+			( preset_type == severe ) ) ) {
 		fprintf ( stderr, "conflicting preset values!\n" );
 		exit ( EXIT_FAILURE );
 	    }
 	    preset_type = severe;
+	    argpt++;
+
+	} else if ( ( strcasecmp ( argv[argpt], "--profound" ) == 0 ) ||
+		( strcasecmp ( argv[argpt], "-profound" ) == 0 ) ) {
+	    /* preset for profound loss of acuity and contrast */
+	    if ( ! ( ( preset_type == no_preset ) ||
+			( preset_type == profound ) ) ) {
+		fprintf ( stderr, "conflicting preset values!\n" );
+		exit ( EXIT_FAILURE );
+	    }
+	    preset_type = profound;
 	    argpt++;
 
 	} else if ( ( strcasecmp ( argv[argpt], "--Snellen" ) == 0 ) ||
@@ -208,7 +248,7 @@ main ( int argc, char *argv[] )
 	    argpt++;
 
 	} else if ( ( strcasecmp ( argv[argpt], "--sensitivity-ratio" ) == 0 )
-			||
+		||
 		( strcasecmp ( argv[argpt], "-sensitivity-ratio" ) == 0 ) ) {
 	    /* contrast sensitivity specifed as ratio to normal */
 	    if ( sensitivity_type == pelli_robson ) {
@@ -236,7 +276,7 @@ main ( int argc, char *argv[] )
 	    if ( ! ( ( color_type == undefined_color ) ||
 			( color_type == color ) ) ) {
 		fprintf ( stderr,
-		    "can't mix --color, --grayscale, and --saturation!\n" );
+			"can't mix --color, --grayscale, and --saturation!\n" );
 		exit ( EXIT_FAILURE );
 	    }
 	    color_type = color;
@@ -248,19 +288,19 @@ main ( int argc, char *argv[] )
 	    if ( ! ( ( color_type == undefined_color ) ||
 			( color_type == grayscale ) ) ) {
 		fprintf ( stderr,
-		    "can't mix --color, --grayscale, and --saturation!\n" );
+			"can't mix --color, --grayscale, and --saturation!\n" );
 		exit ( EXIT_FAILURE );
 	    }
 	    color_type = grayscale;
 	    argpt++;
 
 	} else if ( strncasecmp ( argv[argpt], "--saturation=",
-		       strlen ( "--saturation=" ) ) == 0 ) {
+		    strlen ( "--saturation=" ) ) == 0 ) {
 	    /* scale output saturation by specified value */
 	    if ( ! ( ( color_type == undefined_color ) ||
 			( color_type == saturation_value ) ) ) {
 		fprintf ( stderr,
-		    "can't mix --color, --grayscale, and --saturation!\n" );
+			"can't mix --color, --grayscale, and --saturation!\n" );
 		exit ( EXIT_FAILURE );
 	    }
 	    if ( color_type == saturation_value ) {
@@ -272,12 +312,12 @@ main ( int argc, char *argv[] )
 	    argpt++;
 
 	} else if ( strncasecmp ( argv[argpt], "-saturation=",
-		       strlen ( "-saturation=" ) ) == 0 ) {
+		    strlen ( "-saturation=" ) ) == 0 ) {
 	    /* scale output saturation by specified value */
 	    if ( ! ( ( color_type == undefined_color ) ||
 			( color_type == saturation_value ) ) ) {
 		fprintf ( stderr,
-		    "can't mix --color, --grayscale, and --saturation!\n" );
+			"can't mix --color, --grayscale, and --saturation!\n" );
 		exit ( EXIT_FAILURE );
 	    }
 	    if ( color_type == saturation_value ) {
@@ -293,14 +333,14 @@ main ( int argc, char *argv[] )
 	    /* pick a clip value automatically */
 	    if ( clip_type == value_clip ) {
 		fprintf ( stderr,
-		    "can't mix --clip=<value> and --autoclip!\n" );
+			"can't mix --clip=<value> and --autoclip!\n" );
 		exit ( EXIT_FAILURE );
 	    }
 	    clip_type = auto_clip;
 	    argpt++;
 
 	} else if ( strncasecmp ( argv[argpt], "--clip=",
-		       strlen ( "--clip=" ) ) == 0 ) {
+		    strlen ( "--clip=" ) ) == 0 ) {
 	    /* clip input to specified value (cd/m^2) */
 	    if ( clip_type == auto_clip ) {
 		fprintf ( stderr,
@@ -316,26 +356,52 @@ main ( int argc, char *argv[] )
 	    argpt++;
 
 	} else if ( strncasecmp ( argv[argpt], "-clip=",
-		       strlen ( "-clip=" ) ) == 0 ) {
+		    strlen ( "-clip=" ) ) == 0 ) {
 	    /* clip input to specified value (cd/m^2) */
 	    if ( clip_type == auto_clip ) {
 		fprintf ( stderr,
-		    "can't mix -clip=<value> and -autoclip!\n" );
+			"can't mix -clip=<value> and -autoclip!\n" );
 		exit ( EXIT_FAILURE );
 	    }
 	    if ( clip_type == value_clip ) {
 		fprintf ( stderr, "multiple --clip=<value> flags!\n" );
 		exit ( EXIT_FAILURE );
 	    }
-
 	    clip_type = value_clip;
 	    clip_value = atof ( argv[argpt] + strlen ( "-clip=" ) );
+	    argpt++;
+
+	} else if ( strncasecmp ( argv[argpt], "--margin=",
+		    strlen ( "--margin=" ) ) == 0 ) {
+	    margin = atof ( argv[argpt] + strlen ( "--margin=" ) );
+	    if ( ( margin < 0.0 ) || ( margin > 1.0 ) ) {
+		printf ( "margin (%f) must be in range [0.0 -- 1.0]!\n",
+			margin );
+		exit ( EXIT_FAILURE );
+	    }
+	    argpt++;
+
+	} else if ( strncasecmp ( argv[argpt], "-margin=",
+		    strlen ( "-margin=" ) ) == 0 ) {
+	    margin = atof ( argv[argpt] + strlen ( "-margin=" ) );
+	    if ( ( margin < 0.0 ) || ( margin > 1.0 ) ) {
+		printf ( "margin (%f) must be in range [0.0 -- 1.0]!\n",
+			margin );
+		exit ( EXIT_FAILURE );
+	    }
 	    argpt++;
 
 	} else if ( ( strcasecmp ( argv[argpt], "--version" ) == 0 ) ||
 		( strcasecmp ( argv[argpt], "-version" ) == 0 ) ) {
 	    /* print version number then exit */
 	    deva_filter_print_version ( );
+	    /* argpt++; */
+	    exit ( EXIT_FAILURE );
+
+	} else if ( ( strcasecmp ( argv[argpt], "--presets" ) == 0 ) ||
+		( strcasecmp ( argv[argpt], "-presets" ) == 0 ) ) {
+	    /* print presets number then exit */
+	    deva_filter_print_presets ( );
 	    /* argpt++; */
 	    exit ( EXIT_FAILURE );
 
@@ -352,7 +418,7 @@ main ( int argc, char *argv[] )
 	    DEVA_verbose = TRUE;
 	    argpt++;
 
-	/* "hidden" options: */
+	    /* "hidden" options: */
 	} else if ( ( strcasecmp ( argv[argpt], "--veryverbose" ) == 0 ) ||
 		( strcasecmp ( argv[argpt], "-veryverbose" ) == 0 ) ) {
 	    /* print out debugging information */
@@ -484,32 +550,6 @@ main ( int argc, char *argv[] )
 
 		break;
 
-	    case significant:
-
-		acuity_format = Snellen;
-		acuity = SIGNIFICANT_SNELLEN;
-
-		sensitivity_type = pelli_robson;
-		contrast_ratio =
-		    PelliRobson2contrastratio ( SIGNIFICANT_PELLI_ROBSON );
-
-		if ( SIGNIFICANT_SATURATION == 1.0 ) {
-		    color_type = color;
-		} else if ( SIGNIFICANT_SATURATION == 0.0 ) {
-		    color_type = grayscale;
-		} else {
-		    color_type = saturation_value;
-		}
-		saturation = SIGNIFICANT_SATURATION;
-
-		clip_type = auto_clip;
-		acuity_type = cutoff;
-		smoothing_type = smoothing;
-		/* use default unless --KLTfilter flag is given */
-		/* filter_type = use_DEVA_filter; */
-
-		break;
-
 	    case severe:
 
 		acuity_format = Snellen;
@@ -527,6 +567,32 @@ main ( int argc, char *argv[] )
 		    color_type = saturation_value;
 		}
 		saturation = SEVERE_SATURATION;
+
+		clip_type = auto_clip;
+		acuity_type = cutoff;
+		smoothing_type = smoothing;
+		/* use default unless --KLTfilter flag is given */
+		/* filter_type = use_DEVA_filter; */
+
+		break;
+
+	    case profound:
+
+		acuity_format = Snellen;
+		acuity = PROFOUND_SNELLEN;
+
+		sensitivity_type = pelli_robson;
+		contrast_ratio =
+		    PelliRobson2contrastratio ( PROFOUND_PELLI_ROBSON );
+
+		if ( PROFOUND_SATURATION == 1.0 ) {
+		    color_type = color;
+		} else if ( PROFOUND_SATURATION == 0.0 ) {
+		    color_type = grayscale;
+		} else {
+		    color_type = saturation_value;
+		}
+		saturation = PROFOUND_SATURATION;
 
 		clip_type = auto_clip;
 		acuity_type = cutoff;
@@ -747,7 +813,7 @@ main ( int argc, char *argv[] )
     if ( DEVA_verbose ) {
 	/* needs to go to stderr in case output is sent to stdout */
 	fprintf ( stderr, "acuity = 20/%d (logMar %.2f)",
-	    (int) round ( Snellen_decimal_to_Snellen_denominator ( acuity ) ),
+		(int) round ( Snellen_decimal_to_Snellen_denominator ( acuity ) ),
 		Snellen_decimal_to_logMAR ( acuity ) );
 	if ( acuity_type == peak_sensitivity ) {
 	    fprintf ( stderr, " wrt peak" );
@@ -755,7 +821,7 @@ main ( int argc, char *argv[] )
 	printf ( "\n" );
 
 	fprintf ( stderr,
-	    "contrast sensitivity ratio = %.2f (Pelli-Robson score %.2f)\n",
+		"contrast sensitivity ratio = %.2f (Pelli-Robson score %.2f)\n",
 		contrast_ratio, contrastratio2PelliRobson ( contrast_ratio ) );
     }
 
@@ -806,44 +872,110 @@ main ( int argc, char *argv[] )
 	    break;
     }
 
-    switch ( filter_type ) {
+    if ( margin > 0.0 ) {
+	/*
+	 * Add margin around input image to reduce problems with top-bottom
+	 * and left-right wraparound artifacts.
+	 */
 
-	case use_DEVA_filter:
+	/* margin sizes in pixels */
+	v_margin = (int) round ( 0.5 * margin *
+		DEVA_image_n_rows ( input_image ) );
+	h_margin = (int) round ( 0.5 * margin *
+		DEVA_image_n_cols ( input_image ) );
 
-	    filtered_image = deva_filter ( input_image, acuity_adjustment,
-		    contrast_ratio, smoothing_flag, saturation );
+	margin_image =  DEVA_xyY_add_margin ( v_margin, h_margin, input_image );
 
-	    if ( DEVA_veryverbose ) {
-		fprintf ( stderr, "deva_filter ( %s, %.4f, %.4f, %d, %.2f )\n",
-			input_file_name, acuity_adjustment, contrast_ratio,
-			smoothing_flag, saturation );
-	    }
+	switch ( filter_type ) {	/* remove this if/when KLT option */
+	    /* is removed */
+	    case use_DEVA_filter:
 
-	    break;
-
-	case use_KLT_filter:
-
-	    /* Used to compare deva-filter to CSF as MTF filter */
-	    /* Should not be used for production work! */
-
-	    filtered_image = KLT_filter ( input_image, acuity_adjustment,
-		    contrast_ratio, saturation );
-
-	    if ( DEVA_veryverbose ) {
-		fprintf ( stderr, "KLT_filter ( %s, %.4f, %.4f, %.2f )\n",
-			input_file_name, acuity_adjustment, contrast_ratio,
+		margin_filtered_image = deva_filter ( margin_image,
+			acuity_adjustment, contrast_ratio, smoothing_flag,
 			saturation );
-	    }
 
-	    break;
+		if ( DEVA_veryverbose ) {
+		    fprintf ( stderr,
+			    "deva_filter ( %s, %.4f, %.4f, %d, %.2f )\n",
+			    input_file_name, acuity_adjustment, contrast_ratio,
+			    smoothing_flag, saturation );
+		}
 
-	case undefined_filter:
-	default:
+		filtered_image = DEVA_xyY_strip_margin ( v_margin, h_margin,
+			margin_filtered_image );
 
-	    filtered_image = NULL;	/* quiet Mac OS warning */
-	    internal_error ( );
+		DEVA_xyY_image_delete ( margin_image );
+		DEVA_xyY_image_delete ( margin_filtered_image );
 
-	    break;
+		break;
+
+	    case use_KLT_filter:
+
+		/* Used to compare deva-filter to CSF as MTF filter */
+		/* Should not be used for production work! */
+
+		filtered_image = KLT_filter ( input_image, acuity_adjustment,
+			contrast_ratio, saturation );
+
+		if ( DEVA_veryverbose ) {
+		    fprintf ( stderr, "KLT_filter ( %s, %.4f, %.4f, %.2f )\n",
+			    input_file_name, acuity_adjustment, contrast_ratio,
+			    saturation );
+		}
+
+		break;
+
+	    case undefined_filter:
+	    default:
+
+		filtered_image = NULL;	/* quiet Mac OS warning */
+		internal_error ( );
+
+		break;
+	}
+
+    } else {
+
+	switch ( filter_type ) {	/* remove this if/when KLT option */
+	    /* is removed */
+	    case use_DEVA_filter:
+
+		filtered_image = deva_filter ( input_image, acuity_adjustment,
+			contrast_ratio, smoothing_flag, saturation );
+
+		if ( DEVA_veryverbose ) {
+		    fprintf ( stderr,
+			    "deva_filter ( %s, %.4f, %.4f, %d, %.2f )\n",
+			    input_file_name, acuity_adjustment, contrast_ratio,
+			    smoothing_flag, saturation );
+		}
+
+		break;
+
+	    case use_KLT_filter:
+
+		/* Used to compare deva-filter to CSF as MTF filter */
+		/* Should not be used for production work! */
+
+		filtered_image = KLT_filter ( input_image, acuity_adjustment,
+			contrast_ratio, saturation );
+
+		if ( DEVA_veryverbose ) {
+		    fprintf ( stderr, "KLT_filter ( %s, %.4f, %.4f, %.2f )\n",
+			    input_file_name, acuity_adjustment, contrast_ratio,
+			    saturation );
+		}
+
+		break;
+
+	    case undefined_filter:
+	    default:
+
+		filtered_image = NULL;	/* quiet Mac OS warning */
+		internal_error ( );
+
+		break;
+	}
     }
 
     add_description_arguments ( filtered_image, argc, argv );
@@ -1037,6 +1169,86 @@ clip_max_value ( DEVA_xyY_image *image, double clip_value )
 	    }
 	}
     }
+}
+
+#define	TYPE_FIELD_LENGTH	14
+
+static void
+deva_filter_print_presets ( void )
+{
+    int	    i;
+
+    printf ( "%s:", PRESET_MILD );
+    for ( i = 0; i < TYPE_FIELD_LENGTH - strlen ( PRESET_MILD ) - 1; i++ ) {
+	printf ( " " );
+    }
+    printf ( "Snellen 20/%d",
+	    (int) Snellen_decimal_to_Snellen_denominator ( MILD_SNELLEN ) );
+    printf ( " (logMAR %g)\n", MILD_LOGMAR );
+
+    for ( i = 0; i < TYPE_FIELD_LENGTH; i++ ) {
+	printf ( " " );
+    }
+    printf ( "Pelli-Robson score %g\n", MILD_PELLI_ROBSON );
+
+    for ( i = 0; i < TYPE_FIELD_LENGTH; i++ ) {
+	printf ( " " );
+    }
+    printf ( "color saturation %.0f%%\n", 100.0 * MILD_SATURATION );
+
+    printf ( "%s:", PRESET_MODERATE );
+    for ( i = 0; i < TYPE_FIELD_LENGTH - strlen ( PRESET_MODERATE ) - 1; i++ ) {
+	printf ( " " );
+    }
+    printf ( "Snellen 20/%d",
+	    (int) Snellen_decimal_to_Snellen_denominator ( MODERATE_SNELLEN ) );
+    printf ( " (logMAR %g)\n", MODERATE_LOGMAR );
+
+    for ( i = 0; i < TYPE_FIELD_LENGTH; i++ ) {
+	printf ( " " );
+    }
+    printf ( "Pelli-Robson score %g\n", MODERATE_PELLI_ROBSON );
+
+    for ( i = 0; i < TYPE_FIELD_LENGTH; i++ ) {
+	printf ( " " );
+    }
+    printf ( "color saturation %.0f%%\n", 100.0 * MODERATE_SATURATION );
+
+    printf ( "%s:", PRESET_SEVERE );
+    for ( i = 0; i < TYPE_FIELD_LENGTH - strlen ( PRESET_SEVERE ) - 1; i++ ) {
+	printf ( " " );
+    }
+    printf ( "Snellen 20/%d",
+	    (int) Snellen_decimal_to_Snellen_denominator ( SEVERE_SNELLEN ) );
+    printf ( " (logMAR %g)\n", SEVERE_LOGMAR );
+
+    for ( i = 0; i < TYPE_FIELD_LENGTH; i++ ) {
+	printf ( " " );
+    }
+    printf ( "Pelli-Robson score %g\n", SEVERE_PELLI_ROBSON );
+
+    for ( i = 0; i < TYPE_FIELD_LENGTH; i++ ) {
+	printf ( " " );
+    }
+    printf ( "color saturation %.0f%%\n", 100.0 * SEVERE_SATURATION );
+
+    printf ( "%s:", PRESET_PROFOUND );
+    for ( i = 0; i < TYPE_FIELD_LENGTH - strlen ( PRESET_PROFOUND ) - 1; i++ ) {
+	printf ( " " );
+    }
+    printf ( "Snellen 20/%d",
+	    (int) Snellen_decimal_to_Snellen_denominator ( PROFOUND_SNELLEN ) );
+    printf ( " (logMAR %g)\n", PROFOUND_LOGMAR );
+
+    for ( i = 0; i < TYPE_FIELD_LENGTH; i++ ) {
+	printf ( " " );
+    }
+    printf ( "Pelli-Robson score %g\n", PROFOUND_PELLI_ROBSON );
+
+    for ( i = 0; i < TYPE_FIELD_LENGTH; i++ ) {
+	printf ( " " );
+    }
+    printf ( "color saturation %.0f%%\n", 100.0 * PROFOUND_SATURATION );
 }
 
 static void

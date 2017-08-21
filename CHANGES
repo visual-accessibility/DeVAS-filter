@@ -1,3 +1,23 @@
+version 2.8.00
+
+Redefined presets such that acuity values corresponded more closely to
+Colenbrander, A. (2003); Aspects of vision loss-visual functions and
+functional vision; Visual Impairment Research, 5(3), 115-136.  Added
+--presets flag to print acutal values used in the filtering.
+
+Misc. stylistic cleanup that should not change functionality.
+
+Slightly more agressive smoothing (larger maximum distance).
+
+Added option to add margin around outside of input image to reduce FFT
+wraparound artifacts.
+
+Removed a redundant function prototype in deva-utils.h
+
+version 2.7.02
+
+Fix .gitignore in build directory
+
 version 2.7.01
 
 Remove name clash in RadianceColorFormat.

@@ -24,8 +24,6 @@ void		    DEVA_float_image_addto ( DEVA_float_image *i1,
 			DEVA_float_image *i2 );
 void		    DEVA_float_image_scalarmult ( DEVA_float_image *i,
 			float m );
-void		    DEVA_float_image_scalarmult ( DEVA_float_image *i,
-			float m );
 double		    degree2radian ( double degrees );
 double		    radian2degree ( double radians );
 int		    imax ( int x, int y );

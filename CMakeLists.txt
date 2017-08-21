@@ -20,6 +20,7 @@ ADD_EXECUTABLE ( deva-filter deva-filter-commandline.c
 	dilate.c
 	deva-image.c
 	deva-utils.c
+	deva-margin.c
 	radianceIO.c
 	radiance-header.c
 	acuity-conversion.c

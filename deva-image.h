@@ -128,6 +128,11 @@ DEVA_DEFINE_IMAGE_TYPE ( DEVA_complexf ) /* make sure to link against fftw3f! */
  * methods on DEVA_image objects:
  */
 
+/*
+ * For bounds checking, define DEVA_CHECK_BOUNDS before including this file
+ * or any other file including this file.  Safest is to do the define before
+ * including *any* include files.
+ */
 #ifdef	DEVA_CHECK_BOUNDS
 #define DEVA_image_data(deva_image,row,col)				\
 	    (deva_image)->data[DEVA_image_check_bounds (		\

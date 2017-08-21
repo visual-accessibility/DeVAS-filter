@@ -34,7 +34,8 @@ Specifies use of one of four predefined levels of acuity and contrast
 deficits, along with a corresponding loss in color sensitivity.  When
 used, the \fIacuity\fR and \fIcontrast\fR arguments are left off the
 command line.  Only one of these flags can be specified.  When used, no
-additional flags other than \fI\-\-verbose\fR are allowed.
+additional flags other than \fB\-\-margin=\fIvalue\fR or
+\fB\-\-verbose\fR are allowed.
 .TP
 \fB\-\-Snellen | \-\-logMAR\fR
 Specifies the format of the \fIacuity\fR argument.  \fB\-\-Snellen\fR is
@@ -64,6 +65,13 @@ cd/m^2.  Default is no clipping.
 \fB\-\-color | \-\-grayscale\fR
 Indicates that output image is either in color or grayscale.
 \fB\-\-color\fR is the default.
+.TP
+\fB\-\-margin=\fIvalue\fR
+Add a margin around the input file to reduce FFT artifacts due to
+top-bottom and left-right wraparound. \fIvalue\fR is a number in the
+range (0.0 -- 1.0].  It specifies the size of the horizontal and
+vertical padding as a fraction of the original horizontal and vertical
+size.
 .TP
 \fB--version\fR
 Print version number and then exit.

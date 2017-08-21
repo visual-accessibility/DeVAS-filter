@@ -59,10 +59,10 @@
 
 #define	MIN_AVERAGE_LUMINANCE	0.01	/* avoid divide by 0 in normalization */
 
-#define	SMOOTH_INTERVAL_RATIO	0.25	/* ratio of peak band wavelength */
+#define	SMOOTH_INTERVAL_RATIO	0.35	/* ratio of peak band wavelength */
 					/* to thresholded contrast smothing */
 					/* radius */
-#define	SMOOTH_MAXIMUM_RADIUS	512.0	/* with Felzenszwalb and Huttenlocher */
+#define	SMOOTH_MAXIMUM_RADIUS	2048.0	/* with Felzenszwalb and Huttenlocher */
 					/* (2012) distance transform, there */
 					/* is no extra cost to large */
 					/* smoothing radii */
@@ -71,6 +71,7 @@
 				/* Can't happen in practice, since r is pixel */
 				/* distance and so never less than 1.0 except */
 				/* at DC.  Needs to be < 1.0 for log2r_min to */
+				/* work. */
 
 /*
  * Used in clip_to_xyY_gamut ( ):
@@ -351,7 +352,7 @@ deva_filter ( DEVA_xyY_image *input_image, double acuity,
 	    n_lf_skipped++;
 	    continue;
 	} else {
-	    /* computer the bandpass band */
+	    /* compute the bandpass band */
 	    bandpass_filter ( band,  frequency_space, weighted_frequency_space,
 		    log2r, contrast_band, fft_inverse_plan );
 
@@ -503,7 +504,7 @@ log2r_prep ( DEVA_complexf_image *transformed_image )
     				/* set this value to be < -1.0 to make range */
 				/* of band 0 work in bandpass_filter */
     for ( col = 1; col < n_cols; col++ ) {
-	DEVA_image_data ( log2r, 0, col ) = log2 ( col );
+	DEVA_image_data ( log2r, 0, col ) = log2 ( (double) col );
     }
 
     for ( row = 1; row < ( n_rows + 1 ) / 2; row++ ) {
@@ -543,21 +544,21 @@ bandpass_filter ( int band,  DEVA_complexf_image *frequency_space,
  */
 {
     int     row, col;
-    float   log2r_min, log2r_max;
-    float   log2r_value;
-    float   filter_weight;
-    float   norm;
+    double  log2r_min, log2r_max;
+    double  log2r_value;
+    double  filter_weight;
+    double  norm;
 
-    log2r_min = (float) ( band - 1 );
-    log2r_max = (float) ( band + 1 );
+    log2r_min = (double) ( band - 1 );
+    log2r_max = (double) ( band + 1 );
 
     for ( row = 0; row < DEVA_image_n_rows ( frequency_space ); row++ ) {
 	for ( col = 0; col < DEVA_image_n_cols ( frequency_space ); col++ ) {
 	    log2r_value = DEVA_image_data ( log2r, row, col );
 	    if ( ( log2r_value > log2r_min ) &&
 		    ( log2r_value < log2r_max ) ) {
-		filter_weight = 0.5 * ( 1.0 + cos ( M_PI * log2r_value -
-				( band * M_PI ) ) );
+		filter_weight = 0.5 * ( 1.0 +
+			cos ( ( log2r_value - (double) band ) * M_PI ) );
 	    } else {
 		filter_weight = 0.0;
 	    }
