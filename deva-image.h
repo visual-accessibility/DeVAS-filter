@@ -7,8 +7,8 @@
  * deva-filter.
  */
 
-#ifndef __DEVAIMAGE_H
-#define __DEVAIMAGE_H
+#ifndef __DEVA_IMAGE_H
+#define __DEVA_IMAGE_H
 
 #include <stdlib.h>
 #include <stdio.h>		/* needed indirectly for view.h */
@@ -250,4 +250,4 @@ DEVA_PROTOTYPE_IMAGE_SETVALUE ( DEVA_complexf )
 }
 #endif
 
-#endif	/* __DEVAIMAGE_H */
+#endif	/* __DEVA_IMAGE_H */

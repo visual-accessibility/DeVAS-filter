@@ -1,5 +1,5 @@
-#ifndef __DEVA_RADIANCEHEADER_H
-#define __DEVA_RADIANCEHEADER_H
+#ifndef __DEVA_RADIANCE_HEADER_H
+#define __DEVA_RADIANCE_HEADER_H
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -45,4 +45,4 @@ DEVA_write_radiance_header ( FILE *radiance_fp, int n_rows, int n_cols,
 }
 #endif
 
-#endif	/* __DEVA_RADIANCEHEADER_H */
+#endif	/* __DEVA_RADIANCE_HEADER_H */

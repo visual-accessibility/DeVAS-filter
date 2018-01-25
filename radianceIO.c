@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "deva-image.h"
-#include "deva-utils.h"
 #include "radianceIO.h"
 #include "radiance-header.h"
 #include "radiance/color.h"
@@ -13,7 +12,7 @@
 #include "deva-license.h"	/* DEVA open source license */
 
 DEVA_float_image *
-DEVA_brightness_from_radfilename ( char *filename  )
+DEVA_brightness_image_from_radfilename ( char *filename  )
 /*
  * Reads Radiance rgbe or xyze file specified by pathname and returns
  * an in-memory brightness image.  Units of returned image are as for
@@ -36,14 +35,14 @@ DEVA_brightness_from_radfilename ( char *filename  )
 	}
     }
 
-    brightness = DEVA_brightness_from_radfile ( radiance_fp );
+    brightness = DEVA_brightness_image_from_radfile ( radiance_fp );
     fclose ( radiance_fp );
 
     return ( brightness );
 }
 
 DEVA_float_image *
-DEVA_brightness_from_radfile ( FILE *radiance_fp )
+DEVA_brightness_image_from_radfile ( FILE *radiance_fp )
 /*
  * Reads Radiance rgbe or xyze file from an open file descriptor and returns
  * an in-memory brightness image.  Units of returned image are as for
@@ -66,7 +65,8 @@ DEVA_brightness_from_radfile ( FILE *radiance_fp )
 
     radiance_scanline = (COLOR *) malloc ( n_cols * sizeof ( COLOR ) );
     if ( radiance_scanline == NULL ) {
-	fprintf ( stderr, "DEVA_brightness_from_radfile: malloc failed!\n" );
+	fprintf ( stderr,
+		"DEVA_brightness_image_from_radfile: malloc failed!\n" );
 	exit ( EXIT_FAILURE );
     }
 
@@ -79,7 +79,7 @@ DEVA_brightness_from_radfile ( FILE *radiance_fp )
     for ( row = 0; row < n_rows; row++ ) {
 	if ( freadscan( radiance_scanline, n_cols, radiance_fp ) < 0 ) {
 	    fprintf ( stderr,
-		"DEVA_brightness_from_radfile: error reading Radiance file!" );
+		"DEVA_brightness_image_from_radfile: error reading Radiance file!" );
 	    exit ( EXIT_FAILURE );
 	}
 	if ( color_format == radcolor_rgbe ) {
@@ -94,7 +94,7 @@ DEVA_brightness_from_radfile ( FILE *radiance_fp )
 	    }
 	} else {
 	    fprintf ( stderr,
-		    "DEVA_brightness_from_radfile: internal error!\n" );
+		    "DEVA_brightness_image_from_radfile: internal error!\n" );
 	    exit ( EXIT_FAILURE );
 	}
     }
@@ -105,7 +105,7 @@ DEVA_brightness_from_radfile ( FILE *radiance_fp )
 }
 
 void
-DEVA_brightness_to_radfilename ( char *filename, DEVA_float_image *brightness )
+DEVA_brightness_image_to_radfilename ( char *filename, DEVA_float_image *brightness )
 /*
  * Writes an in-memory brightness image to a Radiance rgbe image file
  * specified by pathname.  Units of the in-memory brightness image are
@@ -127,13 +127,13 @@ DEVA_brightness_to_radfilename ( char *filename, DEVA_float_image *brightness )
 	}
     }
 
-    DEVA_brightness_to_radfile ( radiance_fp, brightness );
+    DEVA_brightness_image_to_radfile ( radiance_fp, brightness );
 
     fclose ( radiance_fp );
 }
 
 void
-DEVA_brightness_to_radfile ( FILE *radiance_fp, DEVA_float_image *brightness )
+DEVA_brightness_image_to_radfile ( FILE *radiance_fp, DEVA_float_image *brightness )
 /*
  * Writes an in-memory brightness image to a Radiance rgbe image file
  * specified by an open file descriptor.  Units of the in-memory brightness
@@ -167,7 +167,7 @@ DEVA_brightness_to_radfile ( FILE *radiance_fp, DEVA_float_image *brightness )
 
     radiance_scanline = (COLOR *) malloc ( n_cols * sizeof ( COLOR ) );
     if ( radiance_scanline == NULL ) {
-	fprintf ( stderr, "DEVA_brightness_to_radfile: malloc failed!\n" );
+	fprintf ( stderr, "DEVA_brightness_image_to_radfile: malloc failed!\n" );
 	exit ( EXIT_FAILURE );
     }
 
@@ -180,7 +180,7 @@ DEVA_brightness_to_radfile ( FILE *radiance_fp, DEVA_float_image *brightness )
 	}
 	if ( fwritescan ( radiance_scanline, n_cols, radiance_fp ) < 0 ) {
 	    fprintf ( stderr,
-		"DEVA_brightness_to_radfile: error writing radiance file!\n" );
+		"DEVA_brightness_image_to_radfile: error writing radiance file!\n" );
 	    exit ( EXIT_FAILURE );
 	}
     }
@@ -189,7 +189,7 @@ DEVA_brightness_to_radfile ( FILE *radiance_fp, DEVA_float_image *brightness )
 }
 
 DEVA_float_image *
-DEVA_luminance_from_radfilename ( char *filename  )
+DEVA_luminance_image_from_radfilename ( char *filename  )
 /*
  * Reads Radiance rgbe or xyze file specified by pathname and returns
  * an in-memory luminance image.  Units of returned image are
@@ -212,14 +212,14 @@ DEVA_luminance_from_radfilename ( char *filename  )
 	}
     }
 
-    luminance = DEVA_luminance_from_radfile ( radiance_fp );
+    luminance = DEVA_luminance_image_from_radfile ( radiance_fp );
     fclose ( radiance_fp );
 
     return ( luminance );
 }
 
 DEVA_float_image *
-DEVA_luminance_from_radfile ( FILE *radiance_fp )
+DEVA_luminance_image_from_radfile ( FILE *radiance_fp )
 /*
  * Reads Radiance rgbe or xyze file from an open file descriptor and returns
  * an in-memory luminance image.  Units of returned image are
@@ -243,7 +243,7 @@ DEVA_luminance_from_radfile ( FILE *radiance_fp )
 
     radiance_scanline = (COLOR *) malloc ( n_cols * sizeof ( COLOR ) );
     if ( radiance_scanline == NULL ) {
-	fprintf ( stderr, "DEVA_luminance_from_radfile: malloc failed!\n" );
+	fprintf ( stderr, "DEVA_luminance_image_from_radfile: malloc failed!\n" );
 	exit ( EXIT_FAILURE );
     }
 
@@ -254,7 +254,7 @@ DEVA_luminance_from_radfile ( FILE *radiance_fp )
     for ( row = 0; row < n_rows; row++ ) {
 	if ( freadscan ( radiance_scanline, n_cols, radiance_fp ) < 0 ) {
 	    fprintf ( stderr,
-		"DEVA_luminance_from_radfile: error reading Radiance file!" );
+		"DEVA_luminance_image_from_radfile: error reading Radiance file!" );
 	    exit ( EXIT_FAILURE );
 	}
 	if ( color_format == radcolor_rgbe ) {
@@ -269,7 +269,7 @@ DEVA_luminance_from_radfile ( FILE *radiance_fp )
 	    }
 	} else {
 	    fprintf ( stderr,
-		    "DEVA_luminance_from_radfile: internal error!\n" );
+		    "DEVA_luminance_image_from_radfile: internal error!\n" );
 	    exit ( EXIT_FAILURE );
 	}
     }
@@ -280,7 +280,7 @@ DEVA_luminance_from_radfile ( FILE *radiance_fp )
 }
 
 void
-DEVA_luminance_to_radfilename ( char *filename, DEVA_float_image *luminance )
+DEVA_luminance_image_to_radfilename ( char *filename, DEVA_float_image *luminance )
 /*
  * Writes an in-memory luminance image to a Radiance rgbe image file
  * specified by pathname.  Units of the in-memory luminance image are
@@ -303,13 +303,13 @@ DEVA_luminance_to_radfilename ( char *filename, DEVA_float_image *luminance )
 	}
     }
 
-    DEVA_luminance_to_radfile ( radiance_fp, luminance );
+    DEVA_luminance_image_to_radfile ( radiance_fp, luminance );
 
     fclose ( radiance_fp );
 }
 
 void
-DEVA_luminance_to_radfile ( FILE *radiance_fp, DEVA_float_image *luminance )
+DEVA_luminance_image_to_radfile ( FILE *radiance_fp, DEVA_float_image *luminance )
 /*
  * Writes an in-memory luminance image to a Radiance rgbe image file specified
  * by an open file descriptor.  Units of the in-memory luminance image are
@@ -344,7 +344,7 @@ DEVA_luminance_to_radfile ( FILE *radiance_fp, DEVA_float_image *luminance )
 
     radiance_scanline = (COLOR *) malloc ( n_cols * sizeof ( COLOR ) );
     if ( radiance_scanline == NULL ) {
-	fprintf ( stderr, "DEVA_luminance_to_radfile: malloc failed!\n" );
+	fprintf ( stderr, "DEVA_luminance_image_to_radfile: malloc failed!\n" );
 	exit ( EXIT_FAILURE );
     }
 
@@ -357,7 +357,7 @@ DEVA_luminance_to_radfile ( FILE *radiance_fp, DEVA_float_image *luminance )
 	}
 	if ( fwritescan ( radiance_scanline, n_cols, radiance_fp ) < 0 ) {
 	    fprintf ( stderr,
-		"DEVA_luminance_to_radfile: error writing radiance file!\n" );
+		"DEVA_luminance_image_to_radfile: error writing radiance file!\n" );
 	    exit ( EXIT_FAILURE );
 	}
     }
@@ -366,7 +366,7 @@ DEVA_luminance_to_radfile ( FILE *radiance_fp, DEVA_float_image *luminance )
 }
 
 DEVA_RGBf_image *
-DEVA_RGBf_from_radfilename ( char *filename  )
+DEVA_RGBf_image_from_radfilename ( char *filename  )
 /*
  * Reads Radiance rgbe or xyze file specified by pathname and returns
  * an in-memory RGBf image.  A pathname of "-" specifies standard input.
@@ -385,14 +385,14 @@ DEVA_RGBf_from_radfilename ( char *filename  )
 	}
     }
 
-    RGBf = DEVA_RGBf_from_radfile ( radiance_fp );
+    RGBf = DEVA_RGBf_image_from_radfile ( radiance_fp );
     fclose ( radiance_fp );
 
     return ( RGBf );
 }
 
 DEVA_RGBf_image *
-DEVA_RGBf_from_radfile ( FILE *radiance_fp )
+DEVA_RGBf_image_from_radfile ( FILE *radiance_fp )
 /*
  * Reads Radiance rgbe or xyze file from an open file descriptor and returns
  * an in-memory RGBf image.
@@ -414,7 +414,7 @@ DEVA_RGBf_from_radfile ( FILE *radiance_fp )
 
     radiance_scanline = (COLOR *) malloc ( n_cols * sizeof ( COLOR ) );
     if ( radiance_scanline == NULL ) {
-	fprintf ( stderr, "DEVA_RGBf_from_radfile: malloc failed!\n" );
+	fprintf ( stderr, "DEVA_RGBf_image_from_radfile: malloc failed!\n" );
 	exit ( EXIT_FAILURE );
     }
 
@@ -427,7 +427,7 @@ DEVA_RGBf_from_radfile ( FILE *radiance_fp )
     for ( row = 0; row < n_rows; row++ ) {
 	if ( freadscan( radiance_scanline, n_cols, radiance_fp ) < 0 ) {
 	    fprintf ( stderr,
-		"DEVA_RGBf_from_radfile: error reading Radiance file!" );
+		"DEVA_RGBf_image_from_radfile: error reading Radiance file!" );
 	    exit ( EXIT_FAILURE );
 	}
 	if ( color_format == radcolor_rgbe ) {
@@ -452,7 +452,7 @@ DEVA_RGBf_from_radfile ( FILE *radiance_fp )
 	    }
 	} else {
 	    fprintf ( stderr,
-		    "DEVA_RGBf_from_radfile: internal error!\n" );
+		    "DEVA_RGBf_image_from_radfile: internal error!\n" );
 	    exit ( EXIT_FAILURE );
 	}
     }
@@ -463,7 +463,7 @@ DEVA_RGBf_from_radfile ( FILE *radiance_fp )
 }
 
 void
-DEVA_RGBf_to_radfilename ( char *filename, DEVA_RGBf_image *RGBf )
+DEVA_RGBf_image_to_radfilename ( char *filename, DEVA_RGBf_image *RGBf )
 {
     FILE    *radiance_fp;
 
@@ -477,13 +477,13 @@ DEVA_RGBf_to_radfilename ( char *filename, DEVA_RGBf_image *RGBf )
 	}
     }
 
-    DEVA_RGBf_to_radfile ( radiance_fp, RGBf );
+    DEVA_RGBf_image_to_radfile ( radiance_fp, RGBf );
 
     fclose ( radiance_fp );
 }
 
 void
-DEVA_RGBf_to_radfile ( FILE *radiance_fp, DEVA_RGBf_image *RGBf )
+DEVA_RGBf_image_to_radfile ( FILE *radiance_fp, DEVA_RGBf_image *RGBf )
 /*
  * For now, only write rgbe format files.
  */
@@ -514,7 +514,7 @@ DEVA_RGBf_to_radfile ( FILE *radiance_fp, DEVA_RGBf_image *RGBf )
 
     radiance_scanline = (COLOR *) malloc ( n_cols * sizeof ( COLOR ) );
     if ( radiance_scanline == NULL ) {
-	fprintf ( stderr, "DEVA_RGBf_to_radfile: malloc failed!\n" );
+	fprintf ( stderr, "DEVA_RGBf_image_to_radfile: malloc failed!\n" );
 	exit ( EXIT_FAILURE );
     }
 
@@ -527,7 +527,7 @@ DEVA_RGBf_to_radfile ( FILE *radiance_fp, DEVA_RGBf_image *RGBf )
 	}
 	if ( fwritescan ( radiance_scanline, n_cols, radiance_fp ) < 0 ) {
 	    fprintf ( stderr,
-		"DEVA_RGBf_to_radfile: error writing radiance file!\n" );
+		"DEVA_RGBf_image_to_radfile: error writing radiance file!\n" );
 	    exit ( EXIT_FAILURE );
 	}
     }
@@ -536,7 +536,7 @@ DEVA_RGBf_to_radfile ( FILE *radiance_fp, DEVA_RGBf_image *RGBf )
 }
 
 DEVA_XYZ_image *
-DEVA_XYZ_from_radfilename ( char *filename  )
+DEVA_XYZ_image_from_radfilename ( char *filename  )
 /*
  * Reads Radiance rgbe or xyze file specified by pathname and returns
  * an in-memory XYZ image.  A pathname of "-" specifies standard input.
@@ -555,14 +555,14 @@ DEVA_XYZ_from_radfilename ( char *filename  )
 	}
     }
 
-    XYZ = DEVA_XYZ_from_radfile ( radiance_fp );
+    XYZ = DEVA_XYZ_image_from_radfile ( radiance_fp );
     fclose ( radiance_fp );
 
     return ( XYZ );
 }
 
 DEVA_XYZ_image *
-DEVA_XYZ_from_radfile ( FILE *radiance_fp )
+DEVA_XYZ_image_from_radfile ( FILE *radiance_fp )
 /*
  * Reads Radiance rgbe or xyze file from an open file descriptor and returns
  * an in-memory XYZ image.
@@ -586,7 +586,7 @@ DEVA_XYZ_from_radfile ( FILE *radiance_fp )
 
     radiance_scanline = (COLOR *) malloc ( n_cols * sizeof ( COLOR ) );
     if ( radiance_scanline == NULL ) {
-	fprintf ( stderr, "DEVA_XYZ_from_radfile: malloc failed!\n" );
+	fprintf ( stderr, "DEVA_XYZ_image_from_radfile: malloc failed!\n" );
 	exit ( EXIT_FAILURE );
     }
 
@@ -599,7 +599,7 @@ DEVA_XYZ_from_radfile ( FILE *radiance_fp )
     for ( row = 0; row < n_rows; row++ ) {
 	if ( freadscan( radiance_scanline, n_cols, radiance_fp ) < 0 ) {
 	    fprintf ( stderr,
-		"DEVA_XYZ_from_radfile: error reading Radiance file!" );
+		"DEVA_XYZ_image_from_radfile: error reading Radiance file!" );
 	    exit ( EXIT_FAILURE );
 	}
 	if ( color_format == radcolor_rgbe ) {
@@ -624,7 +624,7 @@ DEVA_XYZ_from_radfile ( FILE *radiance_fp )
 	    }
 	} else {
 	    fprintf ( stderr,
-		    "DEVA_XYZ_from_radfile: internal error!\n" );
+		    "DEVA_XYZ_image_from_radfile: internal error!\n" );
 	    exit ( EXIT_FAILURE );
 	}
     }
@@ -635,7 +635,7 @@ DEVA_XYZ_from_radfile ( FILE *radiance_fp )
 }
 
 void
-DEVA_XYZ_to_radfilename ( char *filename, DEVA_XYZ_image *XYZ )
+DEVA_XYZ_image_to_radfilename ( char *filename, DEVA_XYZ_image *XYZ )
 {
     FILE    *radiance_fp;
 
@@ -649,13 +649,13 @@ DEVA_XYZ_to_radfilename ( char *filename, DEVA_XYZ_image *XYZ )
 	}
     }
 
-    DEVA_XYZ_to_radfile ( radiance_fp, XYZ );
+    DEVA_XYZ_image_to_radfile ( radiance_fp, XYZ );
 
     fclose ( radiance_fp );
 }
 
 void
-DEVA_XYZ_to_radfile ( FILE *radiance_fp, DEVA_XYZ_image *XYZ )
+DEVA_XYZ_image_to_radfile ( FILE *radiance_fp, DEVA_XYZ_image *XYZ )
 /*
  * For now, only write rgbe format files.
  */
@@ -687,7 +687,7 @@ DEVA_XYZ_to_radfile ( FILE *radiance_fp, DEVA_XYZ_image *XYZ )
 
     radiance_scanline = (COLOR *) malloc ( n_cols * sizeof ( COLOR ) );
     if ( radiance_scanline == NULL ) {
-	fprintf ( stderr, "DEVA_XYZ_to_radfile: malloc failed!\n" );
+	fprintf ( stderr, "DEVA_XYZ_image_to_radfile: malloc failed!\n" );
 	exit ( EXIT_FAILURE );
     }
 
@@ -705,7 +705,7 @@ DEVA_XYZ_to_radfile ( FILE *radiance_fp, DEVA_XYZ_image *XYZ )
 
 	if ( fwritescan ( radiance_scanline, n_cols, radiance_fp ) < 0 ) {
 	    fprintf ( stderr,
-		"DEVA_XYZ_to_radfile: error writing radiance file!\n" );
+		"DEVA_XYZ_image_to_radfile: error writing radiance file!\n" );
 	    exit ( EXIT_FAILURE );
 	}
     }
@@ -714,7 +714,7 @@ DEVA_XYZ_to_radfile ( FILE *radiance_fp, DEVA_XYZ_image *XYZ )
 }
 
 DEVA_xyY_image *
-DEVA_xyY_from_radfilename ( char *filename  )
+DEVA_xyY_image_from_radfilename ( char *filename  )
 /*
  * Reads Radiance rgbe or xyze file specified by pathname and returns
  * an in-memory xyY image.  A pathname of "-" specifies standard input.
@@ -733,14 +733,14 @@ DEVA_xyY_from_radfilename ( char *filename  )
 	}
     }
 
-    xyY = DEVA_xyY_from_radfile ( radiance_fp );
+    xyY = DEVA_xyY_image_from_radfile ( radiance_fp );
     fclose ( radiance_fp );
 
     return ( xyY );
 }
 
 DEVA_xyY_image *
-DEVA_xyY_from_radfile ( FILE *radiance_fp )
+DEVA_xyY_image_from_radfile ( FILE *radiance_fp )
 /*
  * Reads Radiance rgbe or xyze file from an open file descriptor and returns
  * an in-memory xyY image.
@@ -763,7 +763,7 @@ DEVA_xyY_from_radfile ( FILE *radiance_fp )
 
     radiance_scanline = (COLOR *) malloc ( n_cols * sizeof ( COLOR ) );
     if ( radiance_scanline == NULL ) {
-	fprintf ( stderr, "DEVA_xyY_from_radfile: malloc failed!\n" );
+	fprintf ( stderr, "DEVA_xyY_image_from_radfile: malloc failed!\n" );
 	exit ( EXIT_FAILURE );
     }
 
@@ -776,7 +776,7 @@ DEVA_xyY_from_radfile ( FILE *radiance_fp )
     for ( row = 0; row < n_rows; row++ ) {
 	if ( freadscan( radiance_scanline, n_cols, radiance_fp ) < 0 ) {
 	    fprintf ( stderr,
-		"DEVA_xyY_from_radfile: error reading Radiance file!" );
+		"DEVA_xyY_image_from_radfile: error reading Radiance file!" );
 	    exit ( EXIT_FAILURE );
 	}
 	if ( color_format == radcolor_rgbe ) {
@@ -808,7 +808,7 @@ DEVA_xyY_from_radfile ( FILE *radiance_fp )
 	    }
 	} else {
 	    fprintf ( stderr,
-		    "DEVA_XYZ_from_radfile: internal error!\n" );
+		    "DEVA_XYZ_image_from_radfile: internal error!\n" );
 	    exit ( EXIT_FAILURE );
 	}
     }
@@ -819,7 +819,7 @@ DEVA_xyY_from_radfile ( FILE *radiance_fp )
 }
 
 void
-DEVA_xyY_to_radfilename ( char *filename, DEVA_xyY_image *xyY )
+DEVA_xyY_image_to_radfilename ( char *filename, DEVA_xyY_image *xyY )
 {
     FILE    *radiance_fp;
 
@@ -833,13 +833,13 @@ DEVA_xyY_to_radfilename ( char *filename, DEVA_xyY_image *xyY )
 	}
     }
 
-    DEVA_xyY_to_radfile ( radiance_fp, xyY );
+    DEVA_xyY_image_to_radfile ( radiance_fp, xyY );
 
     fclose ( radiance_fp );
 }
 
 void
-DEVA_xyY_to_radfile ( FILE *radiance_fp, DEVA_xyY_image *xyY )
+DEVA_xyY_image_to_radfile ( FILE *radiance_fp, DEVA_xyY_image *xyY )
 /*
  * For now, only write rgbe format files.
  */
@@ -872,7 +872,7 @@ DEVA_xyY_to_radfile ( FILE *radiance_fp, DEVA_xyY_image *xyY )
 
     radiance_scanline = (COLOR *) malloc ( n_cols * sizeof ( COLOR ) );
     if ( radiance_scanline == NULL ) {
-	fprintf ( stderr, "DEVA_xyY_from_radfile: malloc failed!\n" );
+	fprintf ( stderr, "DEVA_xyY_image_from_radfile: malloc failed!\n" );
 	exit ( EXIT_FAILURE );
     }
 
@@ -891,7 +891,7 @@ DEVA_xyY_to_radfile ( FILE *radiance_fp, DEVA_xyY_image *xyY )
 
 	if ( fwritescan ( radiance_scanline, n_cols, radiance_fp ) < 0 ) {
 	    fprintf ( stderr,
-		"DEVA_xyY_to_radfile: error writing radiance file!\n" );
+		"DEVA_xyY_image_to_radfile: error writing radiance file!\n" );
 	    exit ( EXIT_FAILURE );
 	}
     }

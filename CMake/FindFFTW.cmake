@@ -20,22 +20,26 @@
 # See the License for more information.
 #=============================================================================
 
-find_path(FFTW_INCLUDE_DIR fftw3.h)
+find_path ( FFTW_INCLUDE_DIR fftw3.h )
 
-set(FFTW_NAMES ${FFTW_NAMES} fftw3)
-find_library(FFTW_LIBRARY NAMES ${FFTW_NAMES} )
+set ( FFTW_NAMES ${FFTW_NAMES} fftw3 )
+find_library ( FFTW_LIBRARY NAMES ${FFTW_NAMES} )
 
-set(FFTWF_NAMES ${FFTWF_NAMES} fftw3f)
-find_library(FFTWF_LIBRARY NAMES ${FFTWF_NAMES} )
+set (FFTWF_NAMES ${FFTWF_NAMES} fftw3f )
+find_library ( FFTWF_LIBRARY NAMES ${FFTWF_NAMES} )
 
 # handle the QUIETLY and REQUIRED arguments and set FFTW_FOUND to TRUE if
 # all listed variables are TRUE
-include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(FFTW DEFAULT_MSG FFTW_LIBRARY FFTW_INCLUDE_DIR)
+include ( FindPackageHandleStandardArgs )
+FIND_PACKAGE_HANDLE_STANDARD_ARGS ( FFTW
+	DEFAULT_MSG
+	FFTWF_LIBRARY
+	FFTW_INCLUDE_DIR
+	)
 
-if(FFTW_FOUND)
-  set(FFTW_LIBRARIES ${FFTW_LIBRARY} ${FFTWF_LIBRARY})
-endif()
+if ( FFTW_FOUND )
+  set ( FFTW_LIBRARIES ${FFTW_LIBRARY} ${FFTWF_LIBRARY} )
+endif ( )
 
 # Deprecated declarations.
 set (NATIVE_FFTW_INCLUDE_PATH ${FFTW_INCLUDE_DIR} )

@@ -45,7 +45,7 @@ static gethfunc mycheck;
 
 void
 newheader(		/* identifying line of information header */
-	char  *s,
+	const char  *s,
 	FILE  *fp
 )
 {
@@ -58,7 +58,7 @@ newheader(		/* identifying line of information header */
 int
 headidval(			/* get header id (return true if is id) */
 	char  *r,
-	char	*s
+	const char	*s
 )
 {
 	const char  *cp = HDRSTR;
@@ -74,7 +74,7 @@ headidval(			/* get header id (return true if is id) */
 int
 dateval(		/* convert capture date line to UTC */
 	time_t	*tloc,
-	char	*s
+	const char	*s
 )
 {
 	struct tm	tms;
@@ -100,7 +100,7 @@ dateval(		/* convert capture date line to UTC */
 int
 gmtval(			/* convert GMT date line to UTC */
 	time_t	*tloc,
-	char	*s
+	const char	*s
 )
 {
 	struct tm	tms;
@@ -171,7 +171,7 @@ printargs(		/* print arguments to a file */
 int
 formatval(			/* get format value (return true if format) */
 	char  *r,
-	char  *s
+	const char  *s
 )
 {
 	const char  *cp = FMTSTR;
@@ -190,7 +190,7 @@ formatval(			/* get format value (return true if format) */
 
 void
 fputformat(		/* put out a format value */
-	char  *s,
+	const char  *s,
 	FILE  *fp
 )
 {
@@ -207,20 +207,23 @@ getheader(		/* get header from file */
 	void  *p
 )
 {
+	int   rtotal = 0;
 	char  buf[MAXLINE];
 
 	for ( ; ; ) {
+		int	rval = 0;
 		buf[MAXLINE-2] = '\n';
 		if (fgets(buf, MAXLINE, fp) == NULL)
 			return(-1);
 		if (buf[buf[0]=='\r'] == '\n')
-			return(0);
+			return(rtotal);
 		if (buf[MAXLINE-2] != '\n') {
 			ungetc(buf[MAXLINE-2], fp);	/* prevent false end */
 			buf[MAXLINE-2] = '\0';
 		}
-		if (f != NULL && (*f)(buf, p) < 0)
+		if (f != NULL && (rval = (*f)(buf, p)) < 0)
 			return(-1);
+		rtotal += rval;
 	}
 }
 
@@ -247,8 +250,8 @@ mycheck(			/* check a header line for format info. */
 
 int
 globmatch(			/* check for match of s against pattern p */
-	char	*p,
-	char	*s
+	const char	*p,
+	const char	*s
 )
 {
 	int	setmatch;

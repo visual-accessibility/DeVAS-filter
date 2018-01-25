@@ -1,30 +1,62 @@
-The deva-filter simulates visibility under reduced acuity and contrast
-sensitivity.  It is intended to assist architects and lighting designers
-identify mobility hazards and important navigational landmarks that may
-not be visible to those with low vision.
+This repository provides source code for three programs: deva-filter,
+deva-visibility, and make-coordinates-file.  deva-filter simulates
+visibility under reduced acuity and contrast sensitivity.  It is
+intended to assist architects and lighting designers identify mobility
+hazards and important navigational landmarks that may not be visible to
+those with low vision. deva-visibility provides the full functionality
+of deva-filter, plus also provides an analysis combining the output of
+deva-filter with information about scene geometry to automatically
+estimate likely visual hazards associated with mobility impediments
+invisible to those with a particular level of visual impairment.
+make-coordinates-file is a helper program used to create one of the
+input files needed by deva-visibility.
 
-The current version only accepts RADIANCE HDR files with correct VIEW
-records as input.  It only outputs RADIANCE HDR files.
+deva-filter only accepts Radiance HDR files with correct VIEW records as
+input.  It only outputs Radiance HDR files.  deva-visibility accepts as
+input Radiance HDR files, plus Radiance ASCII files providing
+information about scene geometry.  It outputs a Radiance HDR file, as
+with deva-filter, and a separate PNG file with a visualization of
+estimated visual hazards.
 
-The software can be built on either Linux or MacOS.  No Windows version
-currently exits.
+WARNING: deva-visibility is still under active development and is likely
+to change over time.
+
+The software can be built on either Linux or MacOS.  Windows binaries
+are also provided, cross complied on a Linux system using Mingw-w64.
 
 The deva-filter is described in W.B. Thompson, G.E. Legge, D.J. Kersten,
 R.A. Shakespeare, and Q. Lei, "Simulating Visibility Under Reduced
 Acuity and Contrast Sensitivity, Journal of the Optical Society of
-America A (in press).  It is based on the algorithm described in E.
-Peli, "Contrast in complex images," Journal of the Optical Society of
-America A, 7, 2032-2040 (1990), augmented with parameterization based on
-standard clinical measures of acuity and contrast sensitivity, a
-reduction in one type of artifact produced by that algorithm, limited
-support for color, and the use of HDR imagery.
+America A, 34(4), 2017.  This paper is available under an open access
+agreement:
+
+  https://www.osapublishing.org/josaa/abstract.cfm?uri=josaa-34-4-583
+
+The method is based in part on the algorithm described in E.  Peli,
+"Contrast in complex images," Journal of the Optical Society of America
+A, 7, 2032-2040, 1990, augmented with parameterization based on standard
+clinical measures of acuity and contrast sensitivity, a reduction in one
+type of artifact produced by that algorithm, limited support for color,
+and the use of HDR imagery.
 
 ---------------------------------------------------------------------
 
-Documentation is at "man/deva-filter.pdf".
+Documentation is in the "man" directory.
 
 Open source license is at "deva-license.h".
 
 This product includes Radiance software (http://radsite.lbl.gov/)
 developed by the Lawrence Berkeley National Laboratory
-(http://www.lbl.gov/).
+(http://www.lbl.gov/).  It also utilizes code for libfftw
+<http://www.fftw.org/>, libpng <http://www.libpng.org/pub/png/libpng.html>,
+and zlib <http://www.zlib.net/>.
+
+For other licenses, see:
+
+    deva-filter/external-libs/fftw-3.3.7/COPYRIGHT
+    deva-filter/external-libs/fftw-3.3.7/COPYING
+    deva-filter/radiance/copyright.h
+    deva-filter/external-libs/libpng-1.6.34/LICENSE
+    deva-filter/external-libs/zlib-1.2.11/README
+
+---------------------------------------------------------------------

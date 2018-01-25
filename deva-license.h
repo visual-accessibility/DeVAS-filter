@@ -1,7 +1,7 @@
 /****************************************************************************
  * MIT License
  *
- * Copyright (c) 2016 University of Utah
+ * Copyright (c) 2018 University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal

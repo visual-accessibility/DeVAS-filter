@@ -63,7 +63,7 @@ DEVA_read_radiance_header ( FILE *radiance_fp, int *n_rows_p, int *n_cols_p,
     initialize_headline ( );
     if ( getheader ( radiance_fp, headline, NULL ) < 0 ) {
 	fprintf ( stderr,
-		"TT_float_image_from_radfile: invalid file header!\n" );
+		"DEVA_read_radiance_header: invalid file header!\n" );
 	exit ( EXIT_FAILURE );
     }
 
@@ -164,7 +164,7 @@ headline ( char *s, void *p )
     if ( formatval ( fmt, s) ) {
 	if ( color_format != radcolor_unknown ) {
 	    fprintf ( stderr,
-		    "TT_*_image_from_radfile: multiple format records!\n" );
+		    "DEVA_read_radiance_header: multiple format records!\n" );
 	    exit ( EXIT_FAILURE );
 	} else if ( strcmp ( fmt, COLRFMT) == 0 ) {
 	    color_format = radcolor_rgbe;
@@ -172,7 +172,7 @@ headline ( char *s, void *p )
 	    color_format = radcolor_xyze;
 	} else {
 	    fprintf ( stderr,
-		    "TT_*_image_from_radfile: unrecognized format!\n" );
+		    "DEVA_read_radiance_header: unrecognized format!\n" );
 	    exit ( EXIT_FAILURE );
 	}
 

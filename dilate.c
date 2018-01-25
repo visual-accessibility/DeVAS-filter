@@ -12,7 +12,6 @@
 #include <stdio.h>
 #include <math.h>
 #include "dilate.h"
-#include "deva-utils.h"
 #include "deva-license.h"	/* DEVA open source license */
 
 #define	SQ(x)	((x)*(x))

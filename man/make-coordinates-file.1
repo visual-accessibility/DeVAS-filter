@@ -1,0 +1,16 @@
+.TH MAKE-COORDINATES-FILE 1 "15 January 2018" "DEVA Project"
+.SH NAME
+make-coordinates-file \- convert Radiance file to a JPEG file
+.SH SYNOPSIS
+\fBmake-coordinates-file\fR \fIunits\fR
+\fIradiance-file.hdr\fR \fIcoordinates-file\fR
+.SH DESCRIPTION
+Create a coordinates file for use by \fBdeva-visibility\fR. \fIunits\fR
+is one of "meters", "centimeters", "feet", or "inches".
+\fIradiance-file.hdr\fR is a Radiance image file with a VIEW record
+corresponing to the geometry files used by \fBdeva-visibility\fR.
+\fIcoordinates-file\fR is the coordinates file needed by
+\fBdeva-visibility\fR.
+.\" SH EXAMPLES
+.SH AUTHOR
+William B. Thompson

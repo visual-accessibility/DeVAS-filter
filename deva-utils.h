@@ -1,5 +1,5 @@
-#ifndef __DEVAUTILS_H
-#define __DEVAUTILS_H
+#ifndef __DEVA_UTILS_H
+#define __DEVA_UTILS_H
 
 #include <stdlib.h>
 #include <string.h>
@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-char *		    strcat_safe ( char *dest, char *src );
+char		    *strcat_safe ( char *dest, char *src );
 DEVA_float_image    *DEVA_float_image_dup ( DEVA_float_image *original_image );
 void		    DEVA_float_image_addto ( DEVA_float_image *i1,
 			DEVA_float_image *i2 );
@@ -33,4 +33,4 @@ int		    imin ( int x, int y );
 }
 #endif
 
-#endif	/* __DEVAUTILS_H */
+#endif	/* __DEVA_UTILS_H */

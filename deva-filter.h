@@ -1,5 +1,5 @@
-#ifndef __DEVAFILTER_H
-#define __DEVAFILTER_H
+#ifndef __DEVA_FILTER_H
+#define __DEVA_FILTER_H
 
 #include <stdlib.h>
 #include "deva-image.h"
@@ -24,4 +24,4 @@ void		deva_filter_print_version ( void );
 }
 #endif
 
-#endif  /* __DEVAFILTER_H */
+#endif  /* __DEVA_FILTER_H */

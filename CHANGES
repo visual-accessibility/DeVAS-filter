@@ -1,3 +1,32 @@
+version 3.0.00
+
+Added deva-visibility.  This extends the functionality of deva-filter to
+provide estimates of likely low-vision hazards, defined as geometric
+structures that may be a mobility hazard but are not co-located with
+detectable visual contrast.  deva-visibility shares much of the
+deva-filter code base.
+
+Added deva-visualize-geometry, a utility program to display geometry
+files used by deva-visibility.
+
+Added a build for Windows (see INSTALLATION file).  This requires a
+local build of the fftw3f, libpng, and zlib libraries.  Static linking
+is used, so no installer or other support libraries are required.
+
+Cleaned up function names for _to_radfile and _from_radfile routines.
+
+Cleaned up define names.
+
+Removed one extraneous include from dilate.h.
+
+Tidy up deva-margin.h, deva-utils.h
+
+Updated Radiance file I/O routines to version 5.1.0.
+
+Updated JOSA A citation.
+
+Dropped KLT filter support.
+
 version 2.8.00
 
 Redefined presets such that acuity values corresponded more closely to

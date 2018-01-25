@@ -1,3 +1,0 @@
-#! /bin/sh
-
-man -t ./deva-filter.1 | ps2pdf - deva-filter.pdf

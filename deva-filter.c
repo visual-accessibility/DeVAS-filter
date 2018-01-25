@@ -437,7 +437,7 @@ deva_filter ( DEVA_xyY_image *input_image, double acuity,
 void
 deva_filter_print_version ( void )
 {
-    fprintf ( stderr, "deva_filter version %s\n", DEVAFILTER_VERSION_STRING );
+    fprintf ( stderr, "deva_filter version %s\n", DEVA_FILTER_VERSION_STRING );
 }
 
 static DEVA_complexf_image *

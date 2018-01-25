@@ -35,7 +35,7 @@ strcat_safe ( char *dest, char *src )
 	if ( returned_string != NULL ) {
 	    strcat ( returned_string, src );
 	} else {
-	    fprintf ( stderr, "DEVA_luminance_from_radfile: malloc failed!\n" );
+	    fprintf ( stderr, "DEVA:strcat_safe: malloc failed!\n" );
 	    exit ( EXIT_FAILURE );
 	}
     }

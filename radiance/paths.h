@@ -26,13 +26,18 @@
   #if defined(_MSC_VER) && !defined(RT_WINPROC)
     #define popen(cmd,mode)	_popen(cmd,mode)
     #define pclose(p)		_pclose(p)
-  #else
+  /* #else */
+  #elif !defined(_mingw64_cross)
+    /* deal with mingw64 cross-compiling issues */
     #define popen(cmd,mode)	win_popen(cmd,mode)
     #define pclose(p)		win_pclose(p)
   #endif
   #define kill(pid,sig)		win_kill(pid,sig)
   #define nice(inc)		win_nice(inc)
-  #define PATH_MAX		_MAX_PATH
+  #if !defined(_mingw64_cross)
+    /* deal with mingw64 cross-compiling issues */
+    #define PATH_MAX		_MAX_PATH
+  #endif
   #define NULL_DEVICE		"NUL"
   #define DIRSEP		'/'
   #define ISDIRSEP(c)		(((c)=='/') | ((c)=='\\'))
@@ -106,7 +111,7 @@
 	#define CURDIR		'.'
     #define DEFAULT_TEMPDIRS	{"/var/tmp", "/usr/tmp", "/tmp", ".", NULL}
     #define TEMPLATE		"/tmp/rtXXXXXX"
-    #define TEMPLEN		17
+    #define TEMPLEN		13
     #define ULIBVAR		"RAYPATH"
     #ifndef DEFPATH
       #define DEFPATH		":/usr/local/lib/ray"
@@ -133,7 +138,7 @@ extern "C" {
 #if defined(_WIN32) || defined(_WIN64)
   extern FILE *win_popen(char *command, char *type);
   extern int win_pclose(FILE *p);
-  extern char  *fixargv0();
+  extern char  *fixargv0(char *arg0);
 #endif
 
 /* Check if any of the characters in str2 are found in str1 */

@@ -1,5 +1,5 @@
-#ifndef __DEVAMARGIN_H
-#define __DEVAMARGIN_H
+#ifndef __DEVA_MARGIN_H
+#define __DEVA_MARGIN_H
 
 #include <stdlib.h>
 #include "deva-image.h"
@@ -23,5 +23,5 @@ DEVA_gray_image	*DEVA_gray_strip_margin ( int v_margin, int h_margin,
 }
 #endif
 
-#endif  /* __DEVAMARGIN_H */
+#endif  /* __DEVA_MARGIN_H */
 

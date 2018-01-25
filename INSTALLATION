@@ -1,53 +1,154 @@
 ---------------------------------------------------------------------
 To build the software for Linux:
 
-1. Install the packages cmake, fftw3-devel, and libfftw-3-3 from the
-   appropriate repository.
+1.  Install the packages cmake, fftw3-devel, and libfftw-3-3 from the
+    appropriate repositories.
 
-2. Run the following commands from the top level of the deva-filter
-   directory tree:
+2.  Run the following commands from the top level of the deva-filter
+    directory tree:
 
-     cd build
-     cmake ..
-     make
-     cd ..
+      cd build
+      cmake ..
+      make
+      cd ..
 
-     Copy the executable file "build/deva-filter" to wherever you want it.
+      Copy the executable files deva-filter, deva-visibility,
+      make-coordinates-file, and deva-visualize-geometry from the build
+      directory to wherever you want them.
+
+3.  To remove everything generated in the build process, run the
+    following command from top level of deva-filter source directory:
+
+      distclean
 
 ---------------------------------------------------------------------
 To build the software for MacOS:
 
-1. Install the package CMake <http://www.cmake.org/>
+1.  Install the package CMake <http://www.cmake.org/>
 
-   Download and unpack Unix/Linux source from
-   <http://www.cmake.org/download/>.
+    Download and unpack Unix/Linux source from
+    <http://www.cmake.org/download/>.
 
-   In directory where source has been unpacked:
+    In directory where source has been unpacked:
 
-   ./bootstrap
-   make
-   sudo make install
+      ./bootstrap
+      make
+      sudo make install
 
-2. Install the package FFTW3 <http://www.fftw.org/>.
+2.  Install the package FFTW3 <http://www.fftw.org/>.
 
-   Download and unpack the latest stable release of FFTW from
-   <http://www.fftw.org/download.html>
+    Download and unpack the latest stable release of FFTW from
+    <http://www.fftw.org/download.html>
 
-   ./configure
-   make
-   sudo make install 
-   ./configure --enable-float
-   make
-   sudo make install 
+      ./configure
+      make
+      sudo make install 
+      ./configure --enable-float
+      make
+      sudo make install 
 
-3. Run the following commands from the top level of the deva-filter
-   directory tree:
+3.  Run the following commands from the top level of the deva-filter
+    directory tree:
 
-     cd build
-     cmake ..
-     make
-     cd ..
+      cd build
+      cmake ..
+      make
+      cd ..
 
-     Copy the executable file "build/deva-filter" to wherever you want it.
+      Copy the executable files deva-filter, deva-visibility,
+      make-coordinates-file, and deva-visualize-geometry from the build
+      directory to wherever you want them.
+
+4.  To remove everything generated in the build process, run the
+    following command from top level of deva-filter source directory:
+
+      distclean
 
 ---------------------------------------------------------------------
+To build the software for Windows:
+
+Currently, the only supported build for Windows targets involves cross
+compiling on a Linux systems using Mingw-w64.  This approach can
+probably be adapted to MacOS.  A native Windows build is also probably
+doable with some work if you have Cmake and Mingw-w64 running on
+Windows.
+
+As currently structured, the Windows build produces a directly
+executable versions of deva-filter and deva-visibility.  No installer or
+special permisions are required.  On the other hand, you'll need to put
+deva-filter.exe in whatever current directory you have for the command
+window or put the .exe file in some fixed place and list the folder in
+your PATH variable.
+
+To build the Windows software by cross compiling on Linux:
+
+1.  On the Linux system, install the packages cmake and
+    mingw64-cross-gcc.
+
+2.  Build libfftw3f.a:
+
+    From top level of deva-filter source directory:
+
+      cd external-libs/fftw-3.3.7
+
+      ./configure \
+         --host=x86_64-w64-mingw32 \
+         --build=x86_64-suse-linux-gnu \
+         --target=x86_64-w64-mingw32 \
+         --prefix=$PWD/.. \
+         --with-our-malloc16 --with-windows-f77-mangling \
+         --disable-shared --enable-static --enable-threads \
+         --with-combined-threads --enable-sse2 \
+         --with-incoming-stack-boundary=2 \
+         --enable-float
+
+      make
+      make install
+      cd ../..
+
+3.  Build libz.a
+
+    From top level of deva-filter source directory:
+
+      cd external-libs/zlib-1.2.11
+      make PREFIX=x86_64-w64-mingw32- -fwin32/Makefile.gcc
+      make BINARY_PATH=$PWD/../bin \
+          INCLUDE_PATH=$PWD/../include \
+          LIBRARY_PATH=$PWD/../lib64 -fwin32/Makefile.gcc install
+      cd ../..
+
+4.  Build libpng.a
+
+    From top level of deva-filter source directory:
+
+      cd external-libs/libpng-1.6.34
+      ./configure \
+          --host=x86_64-w64-mingw32 \
+          --build=x86_64-suse-linux-gnu \
+          --target=x86_64-w64-mingw32 \
+          --enable-static \
+          --disable-shared \
+          --prefix=$PWD/.. \
+          CPPFLAGS=-I$PWD/../include \
+          LDFLAGS=-L$PWD/../lib64
+      make
+      make install
+      cd ../..
+
+5.  Build deva-filter.exe and deva-visibility.exe
+
+    From top level of deva-filter source directory:
+
+      cd build-windows
+      cmake -DCMAKE_TOOLCHAIN_FILE=../Windows-toolchain.cmake ..
+      make
+      cd ..
+
+      Copy the executable files deva-filter.exe, deva-visibility.exe,
+      make-coordinates-file.exe, and deva-visualize-geometry.exe from
+      the build directory to wherever you want them.
+
+6.  To remove everything generated in the build process, run the
+    following command from top level of deva-filter source directory:
+
+      distclean
