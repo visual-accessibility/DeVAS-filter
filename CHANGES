@@ -9,6 +9,9 @@ deva-filter code base.
 Added deva-visualize-geometry, a utility program to display geometry
 files used by deva-visibility.
 
+Added make-coordinates-file, a support routine used to create one of the
+input files needed by deva-visibility.
+
 Added a build for Windows (see INSTALLATION file).  This requires a
 local build of the fftw3f, libpng, and zlib libraries.  Static linking
 is used, so no installer or other support libraries are required.
