@@ -1,3 +1,6 @@
+/*
+ * Read/write DEVA RGB/gray image object from/to PNG files.
+ */
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -8,6 +11,13 @@
 
 DEVA_RGB_image *
 DEVA_RGB_image_from_filename_png ( char *filename )
+/*
+ * Read a PNG file and return pixel values as a DEVA_RGB_image image object.
+ * Pixels in file can be either grayscale or color, but in both cases are
+ * returned as RGB color values.
+ *
+ * filename:	name of an existing PNG file.
+ */
 {
     FILE    *file;
 
@@ -22,6 +32,13 @@ DEVA_RGB_image_from_filename_png ( char *filename )
 
 DEVA_RGB_image *
 DEVA_RGB_image_from_file_png ( FILE *input )
+/*
+ * Read a PNG file and return pixel values as a DEVA_RGB_image image object.
+ * Pixels in file can be either grayscale or color, but in both cases are
+ * returned as RGB color values.
+ *
+ * input:	open file descriptor for an existing PNG file.
+ */
 {
     png_image	    png_output;
     DEVA_RGB_image  *image;
@@ -51,6 +68,13 @@ DEVA_RGB_image_from_file_png ( FILE *input )
 
 DEVA_gray_image *
 DEVA_gray_image_from_filename_png ( char *filename )
+/*
+ * Read a PNG file and return pixel values as a DEVA_gray_image image object.
+ * Pixels in file can be either grayscale or color, but in both cases are
+ * returned as grayscale values.
+ *
+ * filename:	name of an existing PNG file.
+ */
 {
     FILE    *file;
 
@@ -65,6 +89,13 @@ DEVA_gray_image_from_filename_png ( char *filename )
 
 DEVA_gray_image *
 DEVA_gray_image_from_file_png ( FILE *input )
+/*
+ * Read a PNG file and return pixel values as a DEVA_gray_image image object.
+ * Pixels in file can be either grayscale or color, but in both cases are
+ * returned as grayscale values.
+ *
+ * input:	open file descriptor for an existing PNG file.
+ */
 {
     png_image	    png_output;
     DEVA_gray_image  *image;
@@ -94,8 +125,21 @@ DEVA_gray_image_from_file_png ( FILE *input )
     return ( image );
 }
 
+/*
+ * Read a PNG file and return pixel values as a DEVA_gray_image image object.
+ * Pixels in file can be either grayscale or color, but in both cases are
+ * returned as grayscale values.
+ *
+ * input:	open file descriptor for an existing PNG file.
+ */
+
 void
 DEVA_RGB_image_to_filename_png ( char *filename, DEVA_RGB_image *image )
+/*
+ * Write the pixel values from a DEVA_RGB_image to a RGB color PNG file.
+ *
+ * filename:	name of new PNG file.
+ */
 {
     FILE    *file;
 
@@ -112,6 +156,11 @@ DEVA_RGB_image_to_filename_png ( char *filename, DEVA_RGB_image *image )
 
 void
 DEVA_RGB_image_to_file_png ( FILE *output, DEVA_RGB_image *image )
+/*
+ * Write the pixel values from a DEVA_RGB_image to a RGB color PNG file.
+ *
+ * output:	open file descriptor for new PNG file.
+ */
 {
     png_image	png_output;
 
@@ -139,6 +188,11 @@ DEVA_RGB_image_to_file_png ( FILE *output, DEVA_RGB_image *image )
 void
 DEVA_gray_image_to_filename_png ( char *filename, DEVA_gray_image *image )
 {
+/*
+ * Write the pixel values from a DEVA_gray_image to a grayscale PNG file.
+ *
+ * filename:	name of new PNG file.
+ */
     FILE    *file;
 
     file = fopen ( filename, "wb" );
@@ -154,6 +208,11 @@ DEVA_gray_image_to_filename_png ( char *filename, DEVA_gray_image *image )
 
 void
 DEVA_gray_image_to_file_png ( FILE *output, DEVA_gray_image *image )
+/*
+ * Write the pixel values from a DEVA_gray_image to a grayscale PNG file.
+ *
+ * output:	open file descriptor for new PNG file.
+ */
 {
     png_image	png_output;
 

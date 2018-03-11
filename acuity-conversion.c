@@ -21,7 +21,7 @@ double
 Snellen_decimal_to_logMAR ( double Snellen_decimal )
 /*
  * Convert Snellen fraction, expressed as a single decimal number (e.g.,
- * 20/100 is indicated as 0.2) to logMAR value.
+ * 20/100 is indicated as 0.2), to logMAR value.
  */
 {
     double  logMAR;
@@ -54,6 +54,11 @@ logMAR_to_Snellen_decimal ( double logMAR )
 
 double
 Snellen_decimal_to_Snellen_denominator ( double Snellen_decimal )
+/*
+ * Convert Snellen fraction, expressed as a single decimal number (e.g.,
+ * 20/100 is indicated as 0.2), to the denominator of a Snellen fraction
+ * for which SNELLEN_NUMERATOR in acuity-conversion.h is the numerator.
+ */
 {
     if ( Snellen_decimal <= 0.0 ) {
 	fprintf ( stderr,
@@ -68,7 +73,9 @@ Snellen_decimal_to_Snellen_denominator ( double Snellen_decimal )
 double
 Snellen_denominator_to_Snellen_decimal ( double Snellen_denominator )
 /*
- * Assume U.S. standard numerator.
+ * Convert a number indicating the denominator of a Snellen fraction
+ * for which SNELLEN_NUMERATOR in acuity-conversion.h is the numerator,
+ * to a Snellen fraction, expressed as a single decimal number.
  */
 {
     if ( Snellen_denominator <= 0.0 ) {
@@ -83,6 +90,11 @@ Snellen_denominator_to_Snellen_decimal ( double Snellen_denominator )
 
 double
 Snellen_denominator_to_logMAR ( double Snellen_denominator )
+/*
+ * Convert a number indicating the denominator of a Snellen fraction
+ * for which SNELLEN_NUMERATOR in acuity-conversion.h is the numerator,
+ * to a logMAR value.
+ */
 {
     return ( Snellen_decimal_to_logMAR (
 		Snellen_denominator_to_Snellen_decimal ( Snellen_denominator )
@@ -91,6 +103,9 @@ Snellen_denominator_to_logMAR ( double Snellen_denominator )
 
 double
 logMAR_to_Snellen_denominator ( double logMAR )
+/* Convert a logMAR value to the denominator of a Snellen fraction
+ * for which SNELLEN_NUMERATOR in acuity-conversion.h is the numerator.
+ */
 {
     return ( Snellen_decimal_to_Snellen_denominator (
 		logMAR_to_Snellen_decimal ( logMAR )
@@ -102,7 +117,7 @@ double
 parse_snellen ( char *snellen_string )
 /*
  * Return the numeric value of a string that is either a single positive
- * floating point number or of the form "n/m" where n and m are each
+ * floating point number or of the form "n/m", where n and m are each
  * positive floating point numbers.
  */
 {
@@ -119,6 +134,9 @@ parse_snellen ( char *snellen_string )
 
 static int
 count_character ( char *string, char c )
+/*
+ * Return the number of times a particular character occurs in a string.
+ */
 {
     char    *cpt;
     int	    count;
@@ -156,6 +174,10 @@ convert_single_value ( char *snellen_string, char *full_snellen_string )
 
 static double
 convert_double_value ( char *snellen_string )
+/*
+ * Convert a string consisting *only* of a Snellen fraction of the form "n/m",
+ * where n and m are each positive floating point numbers.
+ */
 {
     char    *tmp_string;
     char    *cpt;
@@ -186,7 +208,10 @@ convert_double_value ( char *snellen_string )
 
 static void
 not_snellen_string ( char *string )
+/*
+ * Error parsing Snellen number.
+ */
 {
-    fprintf ( stderr, "\"%s\" is not a valid snellen number!\n", string );
+    fprintf ( stderr, "\"%s\" is not a valid Snellen number!\n", string );
     exit ( EXIT_FAILURE );
 }

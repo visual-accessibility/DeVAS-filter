@@ -17,16 +17,15 @@
  * includes a chosen percentile of all of the gradient magnitude values,
  * whether or not they are local maxima.
  */
-/************************
- ************************/
 #define	PERCENTILE_ALL
 
 #define	PERCENTILE_EDGE_PIXELS	0.3	/* percentile of gradient magnitude */
 					/* values considered to be likely */
 					/* edges (see note about */
-					/* PERCENTILE_EDGE_PIXELS) */
+					/* PERCENTILE_ALL) */
 #define	LOW_THRESHOLD_MULTIPLE	0.4	/* ratio of low to high threshold */
-					/* (for hysteresis thresholding) */
+					/* (for auto-level hysteresis */
+					/* thresholding) */
 
 #define	MAGNITUDE_HIST_NBINS	1000	/* needs to be large enought to deal */
 					/* with gradient magnitude histograms */

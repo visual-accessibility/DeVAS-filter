@@ -1,0 +1,6 @@
+Current version of Windows binaries: 3.0.00.
+
+In general, the pre-built Windows binaries will only be updated when
+there are significant functional changes of bug fixes in the code.  A
+fully up to date version of the Windows binaries can always be created
+from the source code.

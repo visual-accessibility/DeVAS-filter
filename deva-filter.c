@@ -183,12 +183,13 @@ deva_filter ( DEVA_xyY_image *input_image, double acuity,
     DEVA_float_image	*x;		/* chromaticity channels of input */
     DEVA_float_image	*y;
     DEVA_complexf_image	*frequency_space;/* transformed image */
-    float		DC;		/* DC of transfored image */
-    DEVA_complexf_image	*weighted_frequency_space;  /* work area */
+    float		DC;		/* l_0 in Peli (1990) */
+					/* DC of transformed image */
+    DEVA_complexf_image	*weighted_frequency_space;  /* G_i in Peli (1990) */
     DEVA_float_image	*log2r;		/* (re)used to creat bandpass weights */
     DEVA_float_image	*CSF_weights;	/* (re)used for filtering color */
-    DEVA_float_image	*contrast_band;	/* result of bandpass filter */
-    DEVA_float_image	*local_luminance;/* used to normalize local contrast */
+    DEVA_float_image	*contrast_band;	/* a_i in Peli (1990) */
+    DEVA_float_image	*local_luminance; /* l_i in Peli (1990) */
     DEVA_float_image	*thresholded_contrast_band; /* result of thesholding */
     fftwf_plan		fft_inverse_plan;	/* to create bandpass images */
     DEVA_gray_image	*threshold_mask_initial_positive; /* threshold mask */
@@ -238,6 +239,17 @@ deva_filter ( DEVA_xyY_image *input_image, double acuity,
     	/* break input into separate luminance and chromaticity channels */
     	/* allocates luminance, x, and y images */
 
+    /*
+     * Field-of-view needed in order to compute degrees/pixel, which is
+     * necessary to accociate image with spatial frequencies.  FOV is (or
+     * at least should be) in VIEW record in Radiance input .hdr image.
+     * deva_commandline copies the VIEW record from the Radiance file to the
+     * xyY input_image object.  disassemble_input copies to VIEW record from
+     * the input_image object to the luminance, x, and y image objects.
+     *
+     * The fov used in the computation is the larger of the horizontal and
+     * vertical fields-of-view.
+     */
     fov = fmax ( DEVA_image_view ( luminance ) . vert,
 	    DEVA_image_view ( luminance ) . horiz );
     if ( fov <= 0.0 ) {
@@ -268,13 +280,19 @@ deva_filter ( DEVA_xyY_image *input_image, double acuity,
     DC = DEVA_image_data ( frequency_space, 0, 0 ) . real /
 	((double) ( DEVA_image_n_rows ( luminance ) *
 	    DEVA_image_n_cols ( luminance ) ) );
+    		/*
+		 * FFTW requires normalization by the product of the dimensions.
+		 */
 
     /*
      * Local_luminance and filtered_luminance are iteratively computed
      * across bands.  This sets the starting values.
      */
     DEVA_float_image_setvalue ( local_luminance, DC );
+    	/* l_i in Peli (1990) */
+
     DEVA_float_image_setvalue ( filtered_luminance, DC );
+    	/* a_i in Peli (1990) */
 
     /* get a bit of speed by reusing for every band */
     log2r = log2r_prep ( frequency_space );
@@ -306,11 +324,18 @@ deva_filter ( DEVA_xyY_image *input_image, double acuity,
     }
 
     for ( band = 0; band < n_bands_max; band++ ) {
+	/* Iterate through bands from low to high frequency */
 
-	/* peak of cosine band in image coordinates */
+	/*
+	 * Peak of cosine band in cycles/image.
+	 * Frequency is relative to the longer axis of the image.
+	 */
 	peak_frequency_image = pow ( 2.0, band );
 
-	/* peak of cosine band in spatial frequency units */
+	/*
+	 * Peak of cosine band in spatial frequency units, specified as
+	 * visual angle.
+	 */
 	peak_frequency_angle = peak_frequency_image / fov;
 
 	/* sensitivity at peak of cosine band */
@@ -388,13 +413,25 @@ deva_filter ( DEVA_xyY_image *input_image, double acuity,
     }
 
     if ( saturation > 0.0 ) {
+	/*
+	 * Some amount of chromaticity needs to be preserved.
+	 * The spatial distribution of chroma values (x and y) is filtered
+	 * using the lumiance CSF in order to avoid having sharp color
+	 * boundaries confound the appearance of blurred luminance boundaries.
+	 * This is a useful heuristic, but not based on any photometric
+	 * model of low vision color perception.
+	 */
 	CSF_weights = CSF_weight_prep ( frequency_space, fov, acuity,
 		contrast_sensitivity );
 
+	/* spatial processing of color channels */
 	filtered_x = filter_color ( x, CSF_weights );
 	filtered_y = filter_color ( y, CSF_weights );
+
+	/* partial desaturation of color channels */
 	desaturate ( saturation, filtered_x, filtered_y );
 
+	/* clean up */
 	DEVA_float_image_delete ( CSF_weights );
     }
 
@@ -507,6 +544,7 @@ log2r_prep ( DEVA_complexf_image *transformed_image )
 	DEVA_image_data ( log2r, 0, col ) = log2 ( (double) col );
     }
 
+    /* first half of transform */
     for ( row = 1; row < ( n_rows + 1 ) / 2; row++ ) {
 	for ( col = 0; col < n_cols; col++ ) {
 	    row_dist = (double) row;
@@ -518,6 +556,7 @@ log2r_prep ( DEVA_complexf_image *transformed_image )
 	}
     }
 
+    /* second half of transform */
     for ( row = ( n_rows + 1 ) / 2; row < n_rows; row++ ) {
 	for ( col = 0; col < n_cols; col++ ) {
 	    row_dist = (double) ( n_rows - row );
@@ -713,8 +752,8 @@ static DEVA_float_image *
 CSF_weight_prep ( DEVA_complexf_image *frequency_space, double fov,
 	double acuity, double contrast_sensitivity )
 /*
- * Precompute CSF-based filter weights.
- * Suppress low frequency rolloff in CSF.
+ * Precompute CSF-based filter weights for filtering color channels.
+ * Suppress low frequency rolloff in CSF to avoid visual artifacts.
  * Normalize CSF to have a peak value of 1.0.
  *
  * These values can be reused for each color, thus saving repetitions
@@ -757,6 +796,7 @@ CSF_weight_prep ( DEVA_complexf_image *frequency_space, double fov,
 	}
     }
 
+    /* first half of transform */
     for ( row = 1; row < ( n_rows + 1 ) / 2; row++ ) {
 	for ( col = 0; col < n_cols; col++ ) {
 	    row_dist = (double) row;
@@ -767,12 +807,14 @@ CSF_weight_prep ( DEVA_complexf_image *frequency_space, double fov,
 	    if ( frequency_angle <= CSF_peak_frequency ) {
 		DEVA_image_data ( CSF_weights, row, col ) = 1.0;
 	    } else {
-		DEVA_image_data ( CSF_weights, row, col ) = ChungLeggeCSF ( frequency_angle,
-			acuity, contrast_sensitivity ) /  CSF_peak_sensitivity;
+		DEVA_image_data ( CSF_weights, row, col ) =
+		    ChungLeggeCSF ( frequency_angle, acuity,
+			    contrast_sensitivity ) /  CSF_peak_sensitivity;
 	    }
 	}
     }
 
+    /* second half of transform */
     for ( row = ( n_rows + 1 ) / 2; row < n_rows; row++ ) {
 	for ( col = 0; col < n_cols; col++ ) {
 	    row_dist = (double) ( n_rows - row );
@@ -783,8 +825,9 @@ CSF_weight_prep ( DEVA_complexf_image *frequency_space, double fov,
 	    if ( frequency_angle <= CSF_peak_frequency ) {
 		DEVA_image_data ( CSF_weights, row, col ) = 1.0;
 	    } else {
-		DEVA_image_data ( CSF_weights, row, col ) = ChungLeggeCSF ( frequency_angle,
-			acuity, contrast_sensitivity ) /  CSF_peak_sensitivity;
+		DEVA_image_data ( CSF_weights, row, col ) =
+		    ChungLeggeCSF ( frequency_angle, acuity,
+			    contrast_sensitivity ) /  CSF_peak_sensitivity;
 	    }
 	}
     }
@@ -804,8 +847,10 @@ filter_color ( DEVA_float_image *chroma_channel, DEVA_float_image *CSF_weights )
     double		norm;
     int			row, col;
 
+    /* forward FFT */
     frequency_space = forward_transform ( chroma_channel );
 
+    /* multiply by frequency space CSF values */
     for ( row = 0; row < DEVA_image_n_rows ( CSF_weights ); row++ ) {
 	for ( col = 0; col < DEVA_image_n_cols ( CSF_weights ); col++ ) {
 	    DEVA_image_data ( frequency_space, row, col ) =
@@ -814,10 +859,10 @@ filter_color ( DEVA_float_image *chroma_channel, DEVA_float_image *CSF_weights )
 	}
     }
 
+    /* inverse FFT */
     filtered_chroma_channel =
 	DEVA_float_image_new ( DEVA_image_n_rows ( chroma_channel ),
 	    DEVA_image_n_cols ( chroma_channel ) );
-
     fft_inverse_plan =
 	fftwf_plan_dft_c2r_2d ( DEVA_image_n_rows ( chroma_channel ),
 		DEVA_image_n_cols ( chroma_channel ),
@@ -826,9 +871,9 @@ filter_color ( DEVA_float_image *chroma_channel, DEVA_float_image *CSF_weights )
 		FFTW_ESTIMATE);
     fftwf_execute ( fft_inverse_plan );
 
+    /* normalize */
     norm = 1.0 / (double) ( DEVA_image_n_rows ( filtered_chroma_channel ) *
 	    DEVA_image_n_cols ( filtered_chroma_channel ) );
-
     for ( row = 0; row < DEVA_image_n_rows ( filtered_chroma_channel );
 	    					row++ ) {
 	for ( col = 0; col < DEVA_image_n_cols ( filtered_chroma_channel );
@@ -837,6 +882,7 @@ filter_color ( DEVA_float_image *chroma_channel, DEVA_float_image *CSF_weights )
 	}
     }
 
+    /* clean up */
     fftwf_destroy_plan ( fft_inverse_plan );
     DEVA_complexf_image_delete ( frequency_space );
 
@@ -845,9 +891,9 @@ filter_color ( DEVA_float_image *chroma_channel, DEVA_float_image *CSF_weights )
 
 static DEVA_complexf
 rxc ( DEVA_float real_value, DEVA_complexf complex_value )
-    /*
-     * Multiply a complex number by a real value.
-     */
+/*
+ * Multiply a complex number by a real value.
+ */
 {
     DEVA_complexf value;
 
@@ -860,7 +906,9 @@ rxc ( DEVA_float real_value, DEVA_complexf complex_value )
 static void
 disassemble_input ( DEVA_xyY_image *input_image, DEVA_float_image **luminance,
 	DEVA_float_image **x, DEVA_float_image **y )
-/* break input into separate luminance and chromaticity channels */
+/*
+ * Break input into separate luminance and chromaticity channels
+ */
 {
     int	    row, col;
 
@@ -882,6 +930,7 @@ disassemble_input ( DEVA_xyY_image *input_image, DEVA_float_image **luminance,
 	}
     }
 
+    /* Copy over view record (for fov). */
     DEVA_image_view ( *x ) = DEVA_image_view ( input_image );
     DEVA_image_view ( *y ) = DEVA_image_view ( input_image );
     DEVA_image_view ( *luminance ) = DEVA_image_view ( input_image );
@@ -898,8 +947,10 @@ static DEVA_xyY_image *
 assemble_output ( DEVA_float_image *filtered_luminance,
 	DEVA_float_image *filtered_x, DEVA_float_image *filtered_y,
 	double saturation )
-/* reassemble separate luminance and chromaticity channels into single */
-/* output image */
+/*
+ * Reassemble separate luminance and chromaticity channels into single
+ * output image.
+ */
 {
     DEVA_xyY	    xyY;
     DEVA_xyY_image  *output_image;
@@ -910,6 +961,7 @@ assemble_output ( DEVA_float_image *filtered_luminance,
 		DEVA_image_n_cols ( filtered_luminance ) );
 
     if ( saturation > 0.0 )  {
+	/* partially desaturated output requested */
 	for ( row = 0; row < DEVA_image_n_rows ( output_image ); row++ ) {
 	    for ( col = 0; col < DEVA_image_n_cols ( output_image ); col++ ) {
 		xyY.x = DEVA_image_data ( filtered_x, row, col );
@@ -918,9 +970,11 @@ assemble_output ( DEVA_float_image *filtered_luminance,
 
 		DEVA_image_data ( output_image, row, col ) =
 		    clip_to_xyY_gamut ( xyY );
+			/* filtered (x,y) values may be out of gamut */
 	    }
 	} 
     } else {
+	/* totally desaturated output requested */
 	for ( row = 0; row < DEVA_image_n_rows ( output_image ); row++ ) {
 	    for ( col = 0; col < DEVA_image_n_cols ( output_image ); col++ ) {
 		xyY.x = DEVA_x_WHITEPOINT;
@@ -929,6 +983,7 @@ assemble_output ( DEVA_float_image *filtered_luminance,
 
 		DEVA_image_data ( output_image, row, col ) =
 		    clip_to_xyY_gamut ( xyY );
+			/* filtered (x,y) values may be out of gamut */
 	    }
 	}
     }
@@ -938,6 +993,9 @@ assemble_output ( DEVA_float_image *filtered_luminance,
 
 static void
 desaturate ( double saturation, DEVA_float_image *x, DEVA_float_image *y )
+/*
+ * In-place desaturation of (x,y) chromaticity channels.
+ */
 {
     int	    row, col;
 
@@ -1034,6 +1092,8 @@ line_intersection ( XY_point line_1_p1, XY_point line_1_p2, XY_point line_2_p1,
  * of two points on the line.  It is a fatal error for the two points
  * specifying a particular line to be coincident or for the two lines to
  * be parallel or coincident.
+ *
+ * Algorithm taken from <https://en.wikipedia.org/wiki/Line–line_intersection>.
  */
 {
     double	denominator;

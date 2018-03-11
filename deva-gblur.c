@@ -1,7 +1,7 @@
 /*
- * 2-D Gaussian blur of floating point values.
+ * Space-domain 2-D Gaussian blur of floating point values.
  * Convolution is done using separable kernels.
- * Portion of kernel outside edges are is ignored.
+ * Portion of kernel outside image edges are is ignored.
  */
 
 #include <stdlib.h>
@@ -23,59 +23,39 @@ static double   *save_normalize = NULL;	/* make this global so we can free */
 static void	gblur_float_convolve_1d ( DEVA_float *in, DEVA_float *out,
 		    int in_size, float *kernel, int kernel_size, int first );
 /***********************************************
- * In gblur.h, since some application routines may care
- * static int	DEVA_float_gblur_kernel_size ( float st_deviation );
+ * In gblur.h, since some application routines may care:
+ * int	DEVA_float_gblur_kernel_size ( float st_deviation );
 ***********************************************/
 static int	imax ( int x, int y );
 static int	imin ( int x, int y );
 static float	*DEVA_float_gblur_kernel ( float st_deviation,
 		    int kernel_size );
 
-DEVA_float_image  *deva_float_gblur ( DEVA_float_image *input, float st_dev )
-/*
- * Convolve input image with Gaussian of specified standard deviation,
- * returning result in a new output image.
- */
-{
-    DEVA_float_image  *output;
-
-    output = DEVA_float_image_new ( DEVA_image_n_rows ( input ),
-	    DEVA_image_n_cols ( input ) );
-
-    deva_float_gblur2 ( input, output, st_dev );
-
-    return ( output );
-}
-
-void
-deva_float_gblur2 ( DEVA_float_image *input, DEVA_float_image *output,
-	float st_dev )
+DEVA_float_image *
+deva_float_gblur ( DEVA_float_image *input, float st_dev )
 /*
  * Convolve input image with Gaussian of specified standard deviation,
  * returning result in a preallocated output image of the same size.
  */
 {
-    int		n_rows, n_cols;
-    float	*kernel;
-    int		kernel_size;
-    int		row, col;
-    int		first;		/* to help optimize gblur_float_convolve_1d */
-    DEVA_float	*tmp_1, *tmp_2;
+    DEVA_float_image	*output;
+    int			row, col;
+    int			n_rows, n_cols;
+    float		*kernel;	/* 1-D kernel */
+    int			kernel_size;
+    int			first;	/* to help optimize gblur_float_convolve_1d */
+    DEVA_float		*tmp_1, *tmp_2;
 
     if ( st_dev < GBLUR_STD_DEV_MIN ) {
-	fprintf ( stderr, "DEVA_float_gblur2: st_dev too small to use (%g)\n",
+	fprintf ( stderr, "DEVA_float_gblur: st_dev too small to use (%g)\n",
 		st_dev );
 	exit ( EXIT_FAILURE );	/* can't blur this little! */
     }
 
-    if ( !DEVA_float_image_samesize ( input, output ) ) {
-	fprintf ( stderr,
-	    "DEVA_float_gblur2: input and output image sizes don't match!\n" );
-	exit ( EXIT_FAILURE );
-    }
-
     n_rows = DEVA_image_n_rows ( input );
     n_cols = DEVA_image_n_cols ( input );
+
+    output = DEVA_float_image_new ( n_rows, n_cols );
 
     /* pre-compute kernel values */
 
@@ -87,12 +67,14 @@ deva_float_gblur2 ( DEVA_float_image *input, DEVA_float_image *output,
      * separable convolution code.  This adds very little time.
      */
 
-    tmp_1 = (DEVA_float *) malloc ( n_cols * sizeof ( DEVA_float ) );
+    tmp_1 = (DEVA_float *) malloc ( imax ( n_rows, n_cols ) *
+	    sizeof ( DEVA_float ) );
     if ( tmp_1 == NULL ) {
 	fprintf ( stderr, "malloc failed!\n" );
 	exit ( EXIT_FAILURE );
     }
-    tmp_2 = (DEVA_float *) malloc ( n_cols * sizeof ( DEVA_float ) );
+    tmp_2 = (DEVA_float *) malloc ( imax ( n_rows, n_cols ) *
+	    sizeof ( DEVA_float ) );
     if ( tmp_2 == NULL ) {
 	fprintf ( stderr, "malloc failed!\n" );
 	exit ( EXIT_FAILURE );
@@ -100,39 +82,27 @@ deva_float_gblur2 ( DEVA_float_image *input, DEVA_float_image *output,
 
     first = TRUE;
     /* blur rows */
+    /* first pass cannot be done in place!!! */
     for ( row = 0; row < n_rows; row++ ) {
+	/* copy from input to 1-D temporary */
 	for ( col = 0; col < n_cols; col++ ) {
 	    tmp_1[col] = DEVA_image_data ( input, row, col );
 	}
 
+	/* convolve */
 	gblur_float_convolve_1d ( tmp_1, tmp_2, n_cols, kernel, kernel_size,
 	       first );
 	first = FALSE;
 
+	/* copy to output */
 	for ( col = 0; col < n_cols; col++ ) {
 	    DEVA_image_data ( output, row, col ) = tmp_2[col];
 	}
     }
 
     /* blur columns */
-
+    /* can be done in place */
     first = TRUE;
-    if ( n_rows != n_cols ) {
-	free ( tmp_1 );
-	free ( tmp_2 );
-
-	tmp_1 = (DEVA_float *) malloc ( n_rows * sizeof ( DEVA_float ) );
-	if ( tmp_1 == NULL ) {
-	    fprintf ( stderr, "malloc failed!\n" );
-	    exit ( EXIT_FAILURE );
-	}
-	tmp_2 = (DEVA_float *) malloc ( n_rows * sizeof ( DEVA_float ) );
-	if ( tmp_2 == NULL ) {
-	    fprintf ( stderr, "malloc failed!\n" );
-	    exit ( EXIT_FAILURE );
-	}
-    }
-
     for ( col = 0; col < n_cols; col++ ) {
 	for ( row = 0; row < n_rows; row++ ) {
 	    tmp_1[row] = DEVA_image_data ( output, row, col );
@@ -150,6 +120,9 @@ deva_float_gblur2 ( DEVA_float_image *input, DEVA_float_image *output,
     free ( tmp_1 );
     free ( tmp_2 );
     free ( kernel );
+    free ( save_normalize );
+
+    return ( output );
 }
 
 static void
@@ -272,13 +245,13 @@ DEVA_float_gblur_kernel ( float st_deviation, int kernel_size )
 
     if ( kernel_size <= 0 ) {
 	fprintf ( stderr,
-		"fgaussian: invalid kernel_size (%i)\n", kernel_size );
+		"deva_float_gblur: invalid kernel_size (%i)\n", kernel_size );
 	exit ( EXIT_FAILURE );
     }
 
     if ( st_deviation <= 0.0 ) {
 	fprintf ( stderr,
-		"fgaussian: invalid st_deviation (%f)\n", st_deviation );
+		"deva_float_gblur: invalid st_deviation (%f)\n", st_deviation );
 	exit ( EXIT_FAILURE );
     }
 
@@ -330,17 +303,4 @@ DEVA_float_gblur_kernel ( float st_deviation, int kernel_size )
     }
 
     return ( kernel );
-}
-
-void
-deva_gblur_destroy ( void )
-/*
- * Free resources save across calls.
- */
-{
-    if ( save_normalize != NULL ) {
-	free ( save_normalize );
-    }
-
-    save_normalize = NULL;
 }

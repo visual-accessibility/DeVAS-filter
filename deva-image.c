@@ -2,9 +2,82 @@
  * Establishes data types for a variety of fixed point and floating point
  * image pixel types.
  *
- * Defines dynamically allocatable 2-D arrays for each of these types.
- * Arrays have additional properties associated with them of use in the
- * deva-filter.
+ * Defines dynamically allocatable 2-D image arrays for each of these types.
+ * Image arrays have additional properties associated with them of use in
+ * the deva-filter.
+ *
+ * Images are implemented as objects that can be created, destroyed, and
+ * operated on by a variety of methods.
+ *
+ * Pixel values are strongly typed. Elements of multi-dimensional pixels
+ * types are indexed by name, not by a  numeric array index.
+ *
+ * Supported pixel types:
+ *
+ *   DEVA_gray      8 bit unsigned grayscale
+ *   DEVA_float     32 bit float
+ *   DEVA_double    64 bit float
+ *   DEVA_RGB       3 x 8 bit RGB
+ *   DEVA_RGBf      3 x 32 bit float RGB
+ *   DEVA_XYZ       3 x 32 bit float CIE XYC
+ *   DEVA_xyY       3 x 32 bit float CIT xyY
+ *   DEVA_complexf  32 bit float complex
+ *   DEVA_complexd  64 bit double complex
+ *
+ * To create an image object:
+ *
+ *   <DEVA_type>_image_new ( <n_rows>, <n_cols> )
+ *
+ *   	Note that arguments are (n_rows, n_cols), not (width, height) or
+ *   	(x_dim, y_dim)!
+ *
+ * To destroy an image object:
+ *
+ *   <DEVA_type>_image_delete ( <image_object> )
+ *
+ * Methods on image objects:
+ *
+ *   DEVA_image_data ( <image_object>, <row>, <col> )
+ *
+ *   	This is a C l-value, meaning that it can be either assigned a value
+ *   	or used in an expression.
+ *
+ *   	If the C pre-processor variable DEVA_CHECK_BOUNDS is defined before
+ *   	any direct or indirect inclusion of deva-image.h, bounds checking is
+ *   	done for the row and column index values. (Safest is to do the define
+ *   	before including *any* include files.)
+ *
+ *   DEVA_image_n_rows ( <deva_image> )
+ *
+ *   DEVA_image_n_cols ( <deva_image> )
+ *
+ *   DEVA_image_samesize ( <deva_image_1>, <deva_image_2> )
+ *
+ *   					TRUE if images are the same dimensions.
+ *
+ *   DEVA_image_info ( <deva_image> )	The DEVA_Image_Info information
+ *   					associated with the image object.
+ *   					This includes a Radiance VIEW
+ *   					structure and a description sting.
+ *   					The DEVA_Image_Info information may
+ *   					be either set or used in an expression.
+ *
+ *   DEVA_image_view ( <deva_image> )	The Radiance VIEW structure.  May be
+ *   					either set or used in an expression.
+ *
+ *   DEVA_image_description ( <deva_image> )
+ *
+ *   					The description string. May be
+ *   					either set or used in an expression.
+ *
+ *   DEVA_image_exposure_set ( <deva_image> )
+ *
+ *					TRUE if an exposure value has been set.
+ *
+ *   DEVA_image_exposure ( <deva_image> )
+ *
+ * 					The exposure value (only valid if
+ *					DEVA_image_exposure_set is TRUE).
  */
 
 #include <stdlib.h>

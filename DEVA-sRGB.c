@@ -9,8 +9,11 @@
  *
  * RGBf and XYZ representations use the same scaling, which is different
  * than the convention used in RADIANCE image files.
- *
- * Uses tifftools data types.
+ ******************************************************************************
+ * This should probably be changed, but care would be needed to make sure all *
+ * instances were handled correctly.  Currently, WHTEFFICACY scaling is done  *
+ * when appropriate in radianceIO.c.					      *
+ ******************************************************************************
  *
  * Uses algorithmic definition of sRGB, not color management software, and
  * ignores blackpoint, whitepoint, and other subtleties of the sRGB profile.

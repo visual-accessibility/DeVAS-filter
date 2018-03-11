@@ -6,6 +6,21 @@
 DEVA_gray_image *
 find_directional_maxima ( int patch_size, double threshold,
 	DEVA_float_image *values )
+/*
+ * Find direction local maxima of an array of floating point values.
+ *
+ * patch_size:	Check if center pixel in a patch_size x patch_size region
+ * 		is a directional local maxima.  patch_size must be an
+ * 		odd integer >= 3.
+ *
+ * threshold:	Ignore directional local maxima if value is < threshold.
+ *
+ * values:	Values to evaluate.
+ *
+ * Returned value:
+ * 		Boolean values, TRUE if corresponding pixel in values is
+ * 		an above threshold directional local maxima.
+ */
 {
     DEVA_gray_image *directional_maxima;
     int		    n_rows, n_cols;
@@ -38,8 +53,21 @@ find_directional_maxima ( int patch_size, double threshold,
 	}
     }
 
-    pad_size = ( patch_size - 1 ) / 2;
+    pad_size = ( patch_size - 1 ) / 2;	/* can't get any closer than this to */
+    					/* edge of search patch */
 
+    /*
+     * Default is to look over 4-connected region (horizontal and vertical).
+     * If EIGHT_CONNECTED is defined, search is over horizontal, vertical,
+     * and two diagonal directions.
+     *
+     * Ties are broken by requiring center pixel value to be strictly larger
+     * than neighborhood values in one direction, while requring only that
+     * the value be greater of equal to neighborhood values in the other
+     * direction.
+     */
+
+    /* special case for 3x3 patch */
     if ( patch_size == 3 ) {
 	for ( row = pad_size; row < n_rows - pad_size; row++ ) {
 	    for ( col = pad_size; col < n_cols - pad_size; col++ ) {
@@ -71,7 +99,9 @@ find_directional_maxima ( int patch_size, double threshold,
 		}
 	    }
 	}
+
     } else {
+	/* search over arbitrarily sized patch */
 	for ( row = pad_size; row < n_rows - pad_size; row++ ) {
 	    for ( col = pad_size; col < n_cols - pad_size; col++ ) {
 		center_value = DEVA_image_data ( values, row, col );
@@ -169,7 +199,7 @@ find_directional_maxima ( int patch_size, double threshold,
 DEVA_float_image *
 gblur_3x3 ( DEVA_float_image *values )
 /*
- * 3x3 Gaussian blur with sigma=0.5.
+ * 3x3 Gaussian blur of float values, with sigma=0.5.
  * Kernel values from <http://dev.theomader.com/gaussian-kernel-calculator/>.
  */
 {
@@ -236,7 +266,7 @@ gblur_3x3 ( DEVA_float_image *values )
 DEVA_XYZ_image *
 gblur_3x3_3d ( DEVA_XYZ_image *values )
 /*
- * 3x3 Gaussian blur with sigma=0.5.
+ * 3x3 Gaussian blur of XYZ (3 x float) values, with sigma=0.5.
  * Kernel values from <http://dev.theomader.com/gaussian-kernel-calculator/>.
  */
 {

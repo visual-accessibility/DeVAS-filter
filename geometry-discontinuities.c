@@ -47,13 +47,54 @@ geometry_discontinuities ( DEVA_coordinates *coordinates, DEVA_XYZ_image *xyz,
 	DEVA_float_image *dist, DEVA_XYZ_image *nor,
 	int position_patch_size, int orientation_patch_size,
 	int position_threshold, int orientation_threshold )
+/*
+ * Find geometric boundaries using two tests, one which looks for
+ * discontinuities in position due to occlusion and the other which look
+ * for discontinuities in orientation due to surface creases.
+ *
+ * coordinates:		A file specifying units of distance, coordinate
+ * 			system orientationk and viewpoint for geometry
+ * 			files.  Created by the make-coordinates-file program.
+ * 			Note that currently all geometry files need to use
+ * 			the same units.
+ *
+ * xyz:			Position data for every visible surface point,
+ *			formatted as a Radiance ASCII file.
+ *
+ * dist:		Distance from viewpoint to every visible surface point,
+ *			formatted as a Radiance ASCII file.  Not used in the
+ *			current version, but included in the API for possible
+ *			future use.
+ *
+ * nor:			Unit normal vector for every visible surface point,
+ *			formatted as a Radiance ASCII file.
+ *
+ * position_path_size:	xyz discontinuities evaluated over a
+ *			position_path_size x position_path_size region
+ *			Units are pixels.
+ *
+ * position_path_size:	nor discontinuities evaluated over a
+ *			orientation_path_size x orientation_path_size region
+ *			Units are pixels.
+ *
+ * position_threshold:	Threshold for xyz discontinuities. Units are cm.
+ *
+ * orientation_threshold: Threshold for nor discontinuities. Units are degrees.
+ *
+ * Returned value:	Boolean image object, TRUE if pixel corresponds to
+ * 			a geometric boundary.
+ */
 {
     int			min_image_size;
-    DEVA_float_image	*position_deviations;
-    DEVA_gray_image	*position_discontinuities;
-    DEVA_float_image	*orientation_deviations;
-    DEVA_gray_image	*orientation_discontinuities;
-    DEVA_gray_image	*combined_discontinuities;
+    DEVA_float_image	*position_deviations;	    /* position difference */
+    DEVA_gray_image	*position_discontinuities;  /* directional local max */
+    						    /* of pos differences */
+    DEVA_float_image	*orientation_deviations;    /* orientation diffs */
+    DEVA_gray_image	*orientation_discontinuities;/* directional local max */
+    						     /* of pos differences */
+    DEVA_gray_image	*combined_discontinuities;  /* union of positional */
+    						    /* and orientational */
+    						    /* discontinuities */
 
     /* sanity check of arguments */
 
@@ -71,18 +112,18 @@ geometry_discontinuities ( DEVA_coordinates *coordinates, DEVA_XYZ_image *xyz,
     }
     if ( orientation_patch_size < 3 ) {
 	fprintf ( stderr,
-		"geometry_discontinuities: orientation_patch_size must >= 3!\n" );
+	    "geometry_discontinuities: orientation_patch_size must >= 3!\n" );
 	exit ( EXIT_FAILURE );
     }
 
     if ( ( position_patch_size % 2 ) != 1 ) {
 	fprintf ( stderr,
-		"geometry_discontinuities: position_patch_size must be odd!\n" );
+	    "geometry_discontinuities: position_patch_size must be odd!\n" );
 	exit ( EXIT_FAILURE );
     }
     if ( ( orientation_patch_size % 2 ) != 1 ) {
 	fprintf ( stderr,
-		"geometry_discontinuities: orientation_patch_size must be odd!\n" );
+	    "geometry_discontinuities: orientation_patch_size must be odd!\n" );
 	exit ( EXIT_FAILURE );
     }
 
@@ -94,47 +135,53 @@ geometry_discontinuities ( DEVA_coordinates *coordinates, DEVA_XYZ_image *xyz,
 
     if ( position_patch_size > min_image_size ) {
 	fprintf ( stderr,
-		"geometry_discontinuities: position_patch_size exceeds data size!\n" );
+      "geometry_discontinuities: position_patch_size exceeds data size!\n" );
 	exit ( EXIT_FAILURE );
     }
     if ( orientation_patch_size > min_image_size ) {
 	fprintf ( stderr,
-		"geometry_discontinuities: orientation_patch_size exceeds data size!\n" );
+      "geometry_discontinuities: orientation_patch_size exceeds data size!\n" );
 	exit ( EXIT_FAILURE );
     }
 
+    /* compute position deviations, directional local maxima of same */
     position_deviations = compute_position_deviation ( position_patch_size,
 	    xyz, nor );
     position_discontinuities = find_directional_maxima ( DMAX_PATCH_SIZE,
 	    position_threshold, position_deviations );
 
 #ifdef DEBUG_POSITION
+    /* output viewable indication of position discontinuities */
     make_visible ( position_discontinuities );
     DEVA_gray_image_to_filename_png ( DEBUG_POSITION,
 	    position_discontinuities );
 #endif	/* DEBUG_POSITION */
 
+    /* compute orientation deviations, directional local maxima of same */
     orientation_deviations =
 	compute_orientation_deviation ( orientation_patch_size, nor );
-
     orientation_discontinuities = find_directional_maxima ( DMAX_PATCH_SIZE,
 	    orientation_threshold, orientation_deviations );
 
 #ifdef DEBUG_ORIENTATION
+    /* output viewable indication of orientation discontinuities */
     make_visible ( orientation_discontinuities );
     DEVA_gray_image_to_filename_png ( DEBUG_ORIENTATION,
 	    orientation_discontinuities );
 #endif	/* DEBUG_ORIENTATION */
 
+    /* compute union of two types of discontinuities */
     combined_discontinuities = DEVA_gray_or ( position_discontinuities,
 	    orientation_discontinuities );
 
 #ifdef DEBUG_COMBINED
+    /* output viewable indication of combined discontinuities */
     make_visible ( combined_discontinuities );
     DEVA_gray_image_to_filename_png ( DEBUG_COMBINED,
 	    combined_discontinuities );
 #endif	/* DEBUG_COMBINED */
 
+    /* clean up */
     DEVA_float_image_delete ( position_deviations );
     DEVA_gray_image_delete ( position_discontinuities );
     DEVA_float_image_delete ( orientation_deviations );
@@ -190,6 +237,7 @@ compute_position_deviation ( int position_patch_size, DEVA_XYZ_image *position,
     position_deviation = DEVA_float_image_new ( n_rows, n_cols );
 
     DEVA_float_image_setvalue ( position_deviation, 0.0 );
+    					/* initialize to all 0.0 */
 
     half_patch_size = ( position_patch_size - 1 ) / 2;
 
@@ -203,10 +251,19 @@ compute_position_deviation ( int position_patch_size, DEVA_XYZ_image *position,
 
 	    for ( i = -half_patch_size; i <= half_patch_size; i++ ) {
 		for ( j = -half_patch_size; j <= half_patch_size; j++ ) {
+		    /*
+		     * Generate vector from patch point to center position.
+		     */
 		    deviation_vector =
 			v3d_subtract ( DEVA_image_data ( position, row + i,
 				    col + j ), center_position );
 
+		    /*
+		     * Project onto unit normal vector of patch center, which
+		     * yields minimum difference from patch point to plane
+		     * going through center position and oriented
+		     * perpendicularly to normal vector of patch center.
+		     */
 		    deviation = v3d_dotprod ( center_normal,
 			    deviation_vector );
 
@@ -223,9 +280,11 @@ compute_position_deviation ( int position_patch_size, DEVA_XYZ_image *position,
 	     */
 
 	    if ( total_deviation < 0.0 ) {
+		/* behind center point */
 		DEVA_image_data ( position_deviation, row, col ) =
 		    -total_deviation /
 		    	((double) ( half_patch_size * position_patch_size ) );
+			/* normalization assumes occluding surface is flat */
 	    } else {
 		DEVA_image_data ( position_deviation, row, col ) = 0.0;
 	    }
@@ -249,6 +308,7 @@ compute_orientation_deviation ( int orientation_patch_size,
     int			row, col;
     DEVA_float_image	*orientation_deviation;
 #ifdef SMOOTH_ORIENTATION
+    /* define this is smoothing of orientation vectors is requested */
     DEVA_float_image	*smoothed_orientation_deviation;
 #endif	/* SMOOTH_ORIENTATION */
     int			half_patch_size;	/* excluding center */
@@ -285,6 +345,10 @@ compute_orientation_deviation ( int orientation_patch_size,
 	    for ( i = -half_patch_size; i < 0; i++ ) {
 		for ( j = -half_patch_size; j <= half_patch_size; j++ ) {
 		    /*
+		     * Get average angular distance of pairs of point on
+		     * opposite sides of center by computing arccosine of
+		     * dot product of pairs of surface normals.
+		     *
 		     * Need fmin to avoid problems with acos due to precision 
 		     * limitations in dot produce. (May need to deal with
 		     * lower bound as well.)
@@ -335,6 +399,9 @@ compute_orientation_deviation ( int orientation_patch_size,
 }
 
 #ifdef DEVA_CONVEX
+/*
+ * Used to differentiate between convex and concave corners.
+ */
 static double
 DEVA_distance_point_plane ( DEVA_XYZ point, DEVA_XYZ surface_normal,
 	DEVA_XYZ point_on_plane )

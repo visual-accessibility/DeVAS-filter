@@ -1,3 +1,21 @@
+version 3.0.01
+
+Modified radiance-header.c to deal with indented VIEW records produced
+by pcomb.  (pcomb has been modified in development version of Radiance
+to ouput one non-indented VIEW record, alleviating the need for this
+change if a recent enough version of Radiance is used to generate the
+file.)
+
+Cleaned up deva-gblur.c.  There should be no change in functionality.
+
+Better error reporting in read-geometry routines.
+
+Removed one extraneous routine from deva-margin.c
+
+More extensive comments throughout.
+
+Minor updates to man pages.
+
 version 3.0.00
 
 Added deva-visibility.  This extends the functionality of deva-filter to

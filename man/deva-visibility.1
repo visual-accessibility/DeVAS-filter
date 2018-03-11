@@ -23,9 +23,17 @@ arguments.  The other is a color PNG image, with estimated visibility
 hazards shown in red and other geometric features estimated to be less
 of a potential visibility hazard shown in dark gray.
 .PP
-Preset options, \fIacuity\fR, and \fIcontrast\fR are as for
-\fBdeva-filter\fR.
-.SH OTHER ARGUMENTS
+.SH OPTIONS
+All of the \fBdeva-filter\fR options, plus:
+.TP
+\fB\-\-luminanceboundaries==\fI<filename>.png\fR
+Write a grayscale PNG image file indicating the location of detected
+luminance boundaries.
+.TP
+\fB\-\-luminanceboundaries==\fI<filename>.png\fR
+Write a grayscale PNG image file indicating the location of detected
+luminance boundaries.
+.SH ARGUMENTS
 .TP
 \fIinput.hdr\fR
 Original Radiance image of area in design model to be evaluated for
@@ -59,16 +67,6 @@ of visual acuity and contrast sensitivity.
 .TP
 \fIhazards.png\fR
 An output PNG image indicating likely potential visibility hazards.
-.SH OPTIONS
-All of the \fBdeva-filter\fR options, plus:
-.TP
-\fB\-\-luminanceboundaries==\fI<filename>.png\fR
-Write a grayscale PNG image file indicating the location of detected
-luminance boundaries.
-.TP
-\fB\-\-luminanceboundaries==\fI<filename>.png\fR
-Write a grayscale PNG image file indicating the location of detected
-luminance boundaries.
 .\" SH EXAMPLES
 \." SH LIMITATIONS
 \." PP

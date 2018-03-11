@@ -12,10 +12,7 @@
 extern "C" {
 #endif
 
-void		    deva_float_gblur2 ( DEVA_float_image *input,
-			DEVA_float_image *output, float st_dev );
 DEVA_float_image    *deva_float_gblur ( DEVA_float_image *input, float st_dev );
-void		    deva_gblur_destroy ( void );
 
 /* expose this, since some application routines may care */
 int		    DEVA_float_gblur_kernel_size ( float st_deviation );

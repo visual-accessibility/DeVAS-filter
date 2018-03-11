@@ -50,10 +50,89 @@ char	*Usage = /* deva-filter */
 	    "--mild|--moderate|--severe|--profound [--margin=<value>]"
 	    "\n\tinput.hdr output.hdr";
 char	*Usage2 = "[--snellen|--logMAR] [--sensitivity-ratio|--pelli-robson]"
-    "\n\t[--autoclip|--clip=<level>] [--color|--grayscale] [--margin=<value>]"
-	    "\n\t[--verbose] [--version] [--presets]"
+    "\n\t[--autoclip|--clip=<level>] [--color|--grayscale|saturation=<value>]"
+    "\n\t[--margin=<value>] [--verbose] [--version] [--presets]"
 	    "\n\t\tacuity contrast input.hdr output.hdr";
 int	args_needed = 4;
+
+/*
+ * Options:
+ *
+ *   --mild | --moderate | --significant | --severe
+ *
+ *   		Specifies use of one of four predefined levels of acuity and
+ *   		contrast deficits, along with a corresponding loss in color
+ *   		sensitivity.  When used, the *acuity* and *contrast*
+ *   		arguments are left off the command line.  Only one of these
+ *   		flags can be specified.  When used, no additional flags other
+ *   		than --margin=<value> or --verbose are allowed.
+ *
+ *   --Snellen | --logMAR
+ *
+ *   		Specifies the format of the *acuity* argument.  --Snellen is
+ *   		the default.  Snellen ratios can be given as a single decimal
+ *   		value or in the common "n/m" (in the U.S., usually "20/m")
+ *   		fractional form.  logMAR values are given in the conventional
+ *   		manner as a single number.
+ *
+ *   --cutoff | --peak
+ *
+ *   		Indicates that *acuity* is specified with respect to cutoff or
+ *   		peak contrast sensitivity.  --cutoff is the default, and
+ *   		corresponds to the values usually reported in clinical eye
+ *   		examinations.
+ *
+ *   --sensitivity-ratio | --pelli-robson
+ *
+ *   		Indicates that *contrast* is specified as a ratio of desired
+ *   		Michaelson contrast sensitivity to normal vision contrast
+ *   		sensitivity (--sensitivity-ratio) or as a Pelli-Robson Chart
+ *   		score (--pelli-robson).  --sensitivity-ratio is the default.
+
+ *   --autoclip | --clip=<level>
+ *
+ *   		Large magnitude input luminance values are reduced to a lower
+ *   		level.  This is most useful in reducing filtering artifacts due
+ *   		to small, bright light sources.  For --autoclip, the level at
+ *   		which values are clipped is chosen automatically.  For --clip,
+ *   		values larger than <level> are reduced to <level>, with <level>
+ *   		specified in cd/m^2.  Default is no clipping.
+ *
+ *   --color | --grayscale
+ *
+ *		Indicates that output image is either in color or grayscale.
+ *		--color is the default.
+ *
+ *   --margin=<value>
+ *
+ *		Add a margin around the input file to reduce FFT artifacts due
+ *		to top-bottom and left-right wraparound. <value> is a number
+ *		in the range (0.0 -- 1.0].  It specifies the size of the
+ *		horizontal and vertical padding as a fraction of the original
+ *		horizontal and vertical size.
+ *
+ *   --version	Print version number and then exit.  No other flages or
+ *		arguments are required.
+ *
+ *   --presets	Print out acuity, contrast sensitivity, and color saturation
+ *		parameters associated with the presets --mild, --moderate,
+ *		--severe, and --profound.  No other flags or arguments are
+ *		required.
+ *
+ *   --verbose
+ *		Print possibly informative information about a particular run.
+ *
+ * Arguments:
+ *
+ *   acuity	Acuity, in format as specified by --Snellen or --logMAR flags.
+ *
+ *   contrast	Contrast, in format as specified by --sensitivity-ratio or
+ *   		--pelli-robson.
+ *
+ *   input.hdr	Radiance visible image file.  Must contain a VIEW record.
+ *
+ *   output.hdr	Low vision simulation.
+ */
 
 #else	/* DEVA_VISIBILITY */
 
@@ -64,13 +143,65 @@ char	*Usage = /* deva-visibility */
 	    "\n\tinput.hdr coordinates xyz.txt dist.txt nor.txt"
 	    "\n\tsimulated-view.hdr hazards.png";
 char	*Usage2 = "[--snellen|--logMAR] [--sensitivity-ratio|--pelli-robson]"
-    "\n\t[--autoclip|--clip=<level>] [--color|--grayscale] [--margin=<value>]"
-	    "\n\t[--luminanceboundaries=<filename.png>]"
-	    "\n\t[--geometryboundaries=<filename.png>]"
-	    "\n\t[--verbose] [--version] [--presets]"
+    "\n\t[--autoclip|--clip=<level>] [--color|--grayscale|saturation=<value>]"
+    "\n\t[--margin=<value>] [--verbose] [--version] [--presets]"
+    "\n\t[--luminanceboundaries=<filename.png>]"
+    "\n\t[--geometryboundaries=<filename.png>]"
 	    "\n\t\tacuity contrast input.hdr coordinates xyz.txt dist.txt"
 	    "\n\t\tnor.txt simulated-view.hdr hazards.png";
 int	args_needed = 9;
+
+/*
+ * Options:
+ *
+ *   All of the deva-filter options, plus:
+ *
+ *   --luminanceboundaries==<filename>.png
+ *
+ *		Write a grayscale PNG image file indicating the location of
+ *		detected luminance boundaries.
+ *
+ *   --luminanceboundaries==<filename>.png
+ *
+ *		Write a grayscale PNG image file indicating the location of
+ *		detected luminance boundaries.
+ *
+ * Arguments:
+ *
+ *   input.hdr	Original Radiance image of area in design model to be evaluated
+ *		for low-vision visibility hazards, as for deva-filter.
+ *
+ *   coordinates
+ *
+ *		A two line text file.  The first line specifies the units for
+ *		the xyz.txt and dist.txt files. The second line is the same as
+ *		the VIEW record in input.hdr.  See make-coordinates-file for
+ *		information on how to create this file.
+ *
+ *   xyz.txt	A Radiance ASCII format file specifying the xyz model
+ *		coordinates for each surface point in the model corresponding
+ *		to the line of sight associated with each pixel in input.hdr.
+ *
+ *   dist.txt	A Radiance ASCII format file specifying the distance from the
+ *		viewpoint to each surface point in the model corresponding to
+ *		the line of sight associated with each pixel in input.hdr.
+ *
+ *   nor.txt	A Radiance ASCII format file specifying the surface normal in
+ *		model coordinates for each surface point in the model
+ *		corresponding to the line of sight associated with each pixel
+ *		in input.hdr.  Note that the numeric values are unitless since
+ *		they specify a unit normal.
+ *
+ *   simulated-view.hdr
+ *
+ *		A Radiance image simulating the reduced visibility associated
+ *		with loss of visual acuity and contrast sensitivity.
+ *
+ *   hazards.png
+ *
+ *		An output PNG image indicating likely potential visibility
+ *		hazards.
+ */
 
 #endif	/* DEVA_VISIBILITY */
 
@@ -196,19 +327,21 @@ main ( int argc, char *argv[] )
     SmoothingType	smoothing_type = undefined_smoothing;
 
     /* initialized next four variables to quiet uninitialized warning */
-    double		saturation = -1.0;
+    double		saturation = -1.0;	/* Saturation adjustment: */
+    						/* 0 => full desaturation */
+						/* (0-1) => partial desat */
+    						/* 1 => leave sat as is */
     double		clip_value = -1.0;
     double		acuity = -1.0;		/* ratio to normal */
     double		contrast_ratio = -1.0;	/* ratio to normal */
-
-    int			smoothing_flag;	/* argument to deva_filter ( ) */
-
+    int			smoothing_flag;		/* reduce banding artifacts */
+    						/* due to thresholding */
     double		acuity_adjustment;	/* CSF peak adjustment */
     double		logMAR_arg;		/* used for sanity check */
     double		pelli_robson_score;	/* log contrast */
     double		margin = -1.0;		/* width of margin to add */
-    /* to mitigate FFT */
-    /* wraparound artificats */
+						/* to mitigate FFT */
+						/* wraparound artificats */
     int			v_margin, h_margin;	/* in pixels */
     char		*input_file_name;
 
@@ -230,12 +363,22 @@ main ( int argc, char *argv[] )
     DEVA_XYZ_image	*xyz;
     DEVA_float_image	*dist;
     DEVA_XYZ_image	*nor;
+
+    /* Hardwired parameters for detection of geometry boundaries. */
     int			position_patch_size = POSITION_PATCH_SIZE;
     int			orientation_patch_size = ORIENTATION_PATCH_SIZE;
     int			position_threshold = POSITION_THRESHOLD;
     int			orientation_threshold = ORIENTATION_THRESHOLD;
-    DEVA_float_image	*hazards;
+
+    DEVA_float_image	*hazards;	/* Visual angle between geometry */
+    					/* boundaries and nearest low vision */
+    					/* luminance boundaries. */
     DEVA_RGB_image	*hazards_visualization;
+    					/* Displayable image indicating */
+    					/* potentially invisible geometry */
+    					/* boundaries in red.  Optionally, */
+    					/* geometry boundaries predicted to */
+    					/* be visible can be marked in green. */
 #endif	/* DEVA_VISIBILITY */
 
     int			argpt = 1;
@@ -751,7 +894,6 @@ main ( int argc, char *argv[] )
 
 	    saturation = 1.0;	/* full color */
 
-
 	    break;
 
 	case grayscale:
@@ -882,10 +1024,12 @@ main ( int argc, char *argv[] )
 	}
     }
 
+    /* fine name of original Radiance file */
     input_file_name = argv[argpt++];
 
 #ifdef DEVA_VISIBILITY
 
+    /* file names of geometry files */
     coordinates_file_name = argv[argpt++];
     xyz_file_name = argv[argpt++];
     dist_file_name = argv[argpt++];
@@ -893,10 +1037,12 @@ main ( int argc, char *argv[] )
 
 #endif	/* DEVA_VISIBILITY */
 
+    /* file name of output simulated low vision file */
     filtered_image_file_name = argv[argpt++];
 
 #ifdef DEVA_VISIBILITY
 
+    /* file name of output prediction of difficult-to-see geometry */
     hazards_file_name = argv[argpt++];
 
 #endif	/* DEVA_VISIBILITY */
@@ -931,6 +1077,10 @@ main ( int argc, char *argv[] )
     }
 
     input_image = DEVA_xyY_image_from_radfilename ( input_file_name );
+    	/*
+	 * DEVA_xyY_image_from_radfilename copies VIEW record from Radiance
+	 * .hdr file to input_image object.
+	 */
 
     switch ( clip_type ) {
 
@@ -975,8 +1125,10 @@ main ( int argc, char *argv[] )
 	h_margin = (int) round ( 0.5 * margin *
 		DEVA_image_n_cols ( input_image ) );
 
+	/* add the margin */
 	margin_image =  DEVA_xyY_add_margin ( v_margin, h_margin, input_image );
 
+	/* filter the padded image */
 	margin_filtered_image = deva_filter ( margin_image,
 		acuity_adjustment, contrast_ratio, smoothing_flag,
 		saturation );
@@ -988,14 +1140,17 @@ main ( int argc, char *argv[] )
 		    smoothing_flag, saturation );
 	}
 
+	/* strip the padding back off */
 	filtered_image = DEVA_xyY_strip_margin ( v_margin, h_margin,
 		margin_filtered_image );
 
+	/* clean up */
 	DEVA_xyY_image_delete ( margin_image );
 	DEVA_xyY_image_delete ( margin_filtered_image );
 
     } else {
 
+	/* filter the unpadded image */
 	filtered_image = deva_filter ( input_image, acuity_adjustment,
 		contrast_ratio, smoothing_flag, saturation );
 
@@ -1007,42 +1162,58 @@ main ( int argc, char *argv[] )
 	}
     }
 
+    /* add command line to description */
     add_description_arguments ( filtered_image, argc, argv );
 
+    /* output radiance file */
     DEVA_xyY_image_to_radfilename ( filtered_image_file_name, filtered_image );
 
+    /* clean up */
     DEVA_xyY_image_delete ( input_image );
 
 #ifdef DEVA_VISIBILITY
 
+    /* read in geometry files */
     coordinates = DEVA_coordinates_from_filename ( coordinates_file_name );
     xyz = DEVA_geom3d_from_radfilename ( xyz_file_name );
-    standard_units_3D ( xyz, coordinates );
     dist = DEVA_geom1d_from_radfilename ( dist_file_name );
-    standard_units_1D ( dist, coordinates );
     nor = DEVA_geom3d_from_radfilename ( nor_file_name );
 
+    /* standardize distances (to cm) */
+    standard_units_1D ( dist, coordinates );
+    standard_units_3D ( xyz, coordinates );
+
+    /*
+     * Compute visual angle from geometry boundaries to nearest luminance
+     * boundary.
+     */
     hazards = deva_visibility ( filtered_image, coordinates, xyz, dist, nor,
 	    position_patch_size, orientation_patch_size,
 	    position_threshold, orientation_threshold,
 	    luminance_boundaries_file_name, geometry_boundaries_file_name );
 
+    /* clean up */
     DEVA_coordinates_delete ( coordinates );
     DEVA_XYZ_image_delete ( xyz );
     DEVA_float_image_delete ( dist );
     DEVA_XYZ_image_delete ( nor );
 
+    /*
+     * Make displayable file showing predicted geometry discontinuities that
+     * are not visible at specified level of low vision.
+     */
     hazards_visualization = visualize_hazards ( MAX_HAZARD, hazards,
 	    DEVA_VIS_HAZ_RED_ONLY );
 
-    DEVA_float_image_delete ( hazards );
-
     DEVA_RGB_image_to_filename_png ( hazards_file_name, hazards_visualization );
 
+    /* clean up */
+    DEVA_float_image_delete ( hazards );
     DEVA_RGB_image_delete ( hazards_visualization );
 
 #endif	/* DEVA_VISIBILITY */
 
+    /* clean up */
     DEVA_xyY_image_delete ( filtered_image );
 
     return ( EXIT_SUCCESS );	/* normal exit */
@@ -1068,6 +1239,7 @@ add_description_arguments ( DEVA_xyY_image *image, int argc, char *argv[] )
 		strcat_safe ( DEVA_image_description ( image ), " " );
 	}
 	DEVA_image_description ( image ) =
+	    /* strcat_safe makes a copy that is guaranteed to be big enough */
 	    strcat_safe ( DEVA_image_description ( image ), argv[argpt] );
     }
 
@@ -1097,9 +1269,16 @@ PelliRobson2contrastratio ( double PelliRobson_score )
  * contrast sensitivity to nominal normal vision peak contrast sensitivity.
  */
 {
-    double  requested_weber, requested_michelson, requested_sensitivity;
-    double  normal_weber, normal_michelson, normal_sensitivity;
-    double  contrast_ratio;
+    double  requested_weber;	    /* low vision Weber contrast limit */
+    double  requested_michelson;    /* low vision Michelson contrast limit */
+    double  requested_sensitivity;  /* requested Michelson contrast, */
+				    /* converted to sensitivity */
+    double  normal_weber;	    /* normal vision Weber contrast limit */
+    double  normal_michelson;	    /* normal vision Michelson contrast limit */
+    double  normal_sensitivity;	    /* normal vision Michelson contrast */
+    				    /* sensitivity */
+    double  contrast_ratio;	    /* ratio or requested Michelson */
+    				    /* sensitivity to normal sensitivity */
 
     requested_weber = exp10 ( -PelliRobson_score );
     requested_michelson = -requested_weber / ( requested_weber - 2.0 );
@@ -1126,11 +1305,11 @@ contrastratio2PelliRobson ( double contrast_ratio )
  * Micheson sensitivity to equivalent Pelli-Robson Chart score.
  */
 {
-    double  normal_weber;
-    double  normal_michelson;
-    double  requested_michelson;
-    double  requested_weber;
-    double  PelliRobson_score;
+    double  normal_weber;	/* normal vision Weber contrast limit */
+    double  normal_michelson;	/* normal vision Michelson contrast limit */
+    double  requested_michelson;/* low vision Michelson contrast limit */
+    double  requested_weber;	/* low vision Michelson contrast limit */
+    double  PelliRobson_score;	/* low vision Pelli-Robson score */
 
     normal_weber = exp10 ( -PELLI_ROBSON_NORMAL );
     normal_michelson = -normal_weber / ( normal_weber - 2.0 );
@@ -1170,6 +1349,8 @@ auto_clip_level ( DEVA_xyY_image *image )
     double	    glare_cutoff_revised;
     unsigned int    glare_count;
 
+    /* first pass */
+
     max_luminance = average_luminance_initial = 0.0;
 
     for ( row = 0; row < DEVA_image_n_rows ( image ); row++ ) {
@@ -1191,6 +1372,8 @@ auto_clip_level ( DEVA_xyY_image *image )
 	/* no need for glare source clipping */
 	return ( NO_CLIP_LEVEL );
     }
+
+    /* second pass */
 
     average_luminance_revised = 0.0;
     glare_count = 0;
@@ -1218,6 +1401,9 @@ auto_clip_level ( DEVA_xyY_image *image )
 
 void
 clip_max_value ( DEVA_xyY_image *image, double clip_value )
+/*
+ * In-pace clipping of xyY image object luminance (Y) values.
+ */
 {
     int	    row, col;
 

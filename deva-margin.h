@@ -16,8 +16,6 @@ DEVA_xyY_image	*DEVA_xyY_add_margin ( int v_margin, int h_margin,
 
 DEVA_xyY_image	*DEVA_xyY_strip_margin ( int v_margin, int h_margin,
 		    DEVA_xyY_image *with_margin );
-DEVA_gray_image	*DEVA_gray_strip_margin ( int v_margin, int h_margin,
-		    DEVA_gray_image *with_margin );
 
 #ifdef __cplusplus
 }

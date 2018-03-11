@@ -31,13 +31,16 @@ VIEW		    deva_get_VIEW_from_filename ( char *filename, int *n_rows,
 			int *c_cols );
 void		    deva_print_VIEW ( VIEW view );
 int		    DEVA_geom_dim_from_radfilename ( char *filename );
-int		    DEVA_geom_dim_from_radfile ( FILE *radiance_fp );
+int		    DEVA_geom_dim_from_radfile ( FILE *radiance_fp,
+       			char *filename );
 DEVA_XYZ_image	    *DEVA_geom3d_from_radfilename ( char *filename );
-DEVA_XYZ_image	    *DEVA_geom3d_from_radfile ( FILE *radiance_fp );
+DEVA_XYZ_image	    *DEVA_geom3d_from_radfile ( FILE *radiance_fp,
+			char *filename );
 DEVA_float_image    *DEVA_geom1d_from_radfilename ( char *filename );
-DEVA_float_image    *DEVA_geom1d_from_radfile ( FILE *radiance_fp );
+DEVA_float_image    *DEVA_geom1d_from_radfile ( FILE *radiance_fp,
+       			char *filename );
 DEVA_coordinates    *DEVA_coordinates_from_filename ( char *filename );
-DEVA_coordinates    *DEVA_coordinates_from_file ( FILE *file );
+DEVA_coordinates    *DEVA_coordinates_from_file ( FILE *file, char *name );
 void		    DEVA_print_coordinates ( DEVA_coordinates *coordinates );
 DEVA_coordinates    *DEVA_coordinates_new ( void );
 void		    DEVA_coordinates_delete ( DEVA_coordinates *coordinates );

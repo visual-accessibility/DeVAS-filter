@@ -534,6 +534,10 @@ main ( int argc, char *argv[] )
 double
 rescale ( double old_value, double old_min, double old_max, double new_min,
 	        double new_max )
+/*
+ * Rescale old_value, asserted to be in range [old_min - old_max] to new
+ * range [new_min - new_max].
+ */
 {
     double new_value;
 

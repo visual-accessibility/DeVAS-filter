@@ -6,6 +6,9 @@
  * Functions," Theory of Computing, 8(1).  As a result, execution time is
  * independent of the radius, and in general is quite fast.  For *very*
  * small radii, a splatting method may be faster.
+ *
+ * The dt_euclid_sq is exposed so that it can be used as a general distance
+ * transform by routines that require such functionality.
  */
 
 #include <stdlib.h>
@@ -16,6 +19,10 @@
 
 #define	SQ(x)	((x)*(x))
 
+/*
+ * See Felzenszwalb and Huttenlocher (2012) for the definition of these
+ * variables.
+ */
 static int	*v;	/* temporary work space */
 static float	*z;	/* temporary work space */
 static float	*f;	/* temporary work space */
@@ -26,6 +33,9 @@ static void	dt_euclid_sq_1d ( int size, float *input, float *output );
 
 DEVA_gray_image *
 DEVA_gray_dilate ( DEVA_gray_image *input, double radius )
+/*
+ * Dilate a binary image by a fixed radius.
+ */
 {
     DEVA_gray_image  *output;
 
@@ -40,6 +50,10 @@ DEVA_gray_dilate ( DEVA_gray_image *input, double radius )
 void
 DEVA_gray_dilate2 ( DEVA_gray_image *input, DEVA_gray_image *output,
 	double radius )
+/*
+ * Dilate a binary image by a fixed radius, returning result in a previously
+ * allocated image object.
+ */
 {
     int			n_rows, n_cols;
     int			row, col;
@@ -90,6 +104,8 @@ dt_euclid_sq ( DEVA_gray_image *input )
  *
  * input:   TRUE if point from which distance should be evaluated,
  * 	    FALSE otherwise
+ *
+ * output:  Distance to nearest pixel in input, in inter-pixel units.
  */
 {
     DEVA_float_image	*dt;

@@ -2,10 +2,20 @@
  * Canny edge detector, with modifications as described in M. Fleck,
  * "Some defects in finite-difference edge finders," IEEE PAMI, 14(3),
  * March 1992.
+ *
+ * Supports auto-thresholding if requested.  (Note that auto-thresholding
+ * is not totally "auto", since it requires setting one threshold for the
+ * percentile of pixel values considered above threshold, and a second
+ * parameter indicating how generous to be in hysteresis thresholding.)
+ * Auto-thresholding is based on setting the high threshold at a value that
+ * includes a chosen percentile of the gradient magnitude values at local
+ * maxima.  Defining PERCENTILE_ALL sets the high threshold at a value that
+ * includes a chosen percentile of all of the gradient magnitude values,
+ * whether or not they are local maxima.
  */
 
-// #define	DEVA_CHECK_BOUNDS
-// #define	PRINT_THRESHOLD_COUNTS
+/* #define	DEVA_CHECK_BOUNDS */		/* debugging aid */
+/* #define	PRINT_THRESHOLD_COUNTS */	/* debugging aid */
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -31,7 +41,8 @@
 #define	T2		0.0
 #define	T3		0.0
 
-#define	EPSILON		0.0001
+#define	EPSILON		0.0001	/* Used to avoid a boundary condition in */
+				/* computing percentile bin numbers. */
 
 #define	SQR(x)	((x)*(x))
 
@@ -71,6 +82,9 @@ DEVA_gray_image *
 deva_canny ( DEVA_float_image *input, double st_dev, double high_threshold,
 	double low_threshold, DEVA_float_image **magnitude_p,
 	DEVA_float_image **orientation_p )
+/*
+ * Canny edge detection with explicitly specified threshold values.
+ */
 {
     return ( canny_base ( input, st_dev, high_threshold, low_threshold,
 		magnitude_p, orientation_p, FALSE ) );
@@ -79,6 +93,9 @@ deva_canny ( DEVA_float_image *input, double st_dev, double high_threshold,
 DEVA_gray_image *
 deva_canny_autothresh ( DEVA_float_image *input, double st_dev,
     DEVA_float_image **magnitude_p, DEVA_float_image **orientation_p )
+/*
+ * Canny edge detection with automatically determined threshold values.
+ */
 {
     return ( canny_base ( input, st_dev, 0.0, 0.0, magnitude_p, orientation_p,
 		TRUE ) );
@@ -103,21 +120,22 @@ canny_base ( DEVA_float_image *input, double st_dev, double high_threshold,
  * magnitude_p:     Pointer to image object where gradient magnitude will
  * 		    be returned.  Ignored if NULL.
  * orientation_p:   Pointer to image object where gradient orientation will
- * 		    be returned.  Ignored if NULL.  Orientation is specified in
- * 		    degrees, with 0.0 corresponding to "left" and values
+ * 		    be returned.  Ignored if NULL.  Orientation is specified
+ * 		    in degrees, with 0.0 corresponding to "left" and values
  * 		    increasing clockwise.  Orientation is set to
  * 		    CANNY_DIR_NO_EDGE if no edge corresponds to that pixel.
- * auto_thresh:	    Autothreshold if TRUE (used MATLAB percentile method).
+ * auto_thresh:	    Autothreshold if TRUE (uses a variant of the MATLAB
+ * 		    percentile method).
  *
- * returned value:  TRUE for detected edges, FALSE elsewhere.
+ * returned value:  8-bit uint image object, with pixel values equal to TRUE
+ *		    for detected edges, FALSE elsewhere.
  */
-
 {
     int		      n_rows, n_cols;
     DEVA_float_image  *blurred_input;	/* smoothed original */
     DEVA_float_image  *magnitude;	/* gradient magnitude (A in Fleck) */
     DEVA_float_image  *grad_Y, *grad_X;	/* X and Y in Fleck */
-    DEVA_gray_image   *edge_map;		/* detected edges */
+    DEVA_gray_image   *edge_map;	/* detected edges */
 
     n_rows = DEVA_image_n_rows ( input );
     n_cols = DEVA_image_n_cols ( input );
@@ -137,7 +155,6 @@ canny_base ( DEVA_float_image *input, double st_dev, double high_threshold,
 
     if ( st_dev >= GBLUR_STD_DEV_MIN ) {
 	blurred_input = deva_float_gblur ( input, st_dev );
-	deva_gblur_destroy ( );
     } else if ( st_dev <= 0 ) {
 	/* don't blur */
 	blurred_input = input;
@@ -149,6 +166,8 @@ canny_base ( DEVA_float_image *input, double st_dev, double high_threshold,
     }
 
     magnitude = gradient_magnitude ( blurred_input, &grad_Y, &grad_X );
+    	/* Compute gradient magnitude, along with separate Y and X components */
+    	/* of gradient as used in Fleck implementation of Canny algorithm */
 
 #ifdef PERCENTILE_ALL
     /*
@@ -162,35 +181,48 @@ canny_base ( DEVA_float_image *input, double st_dev, double high_threshold,
 	 * thresholds using MATLAB percentile method.
 	 */
 	auto_thresh_values ( magnitude, &high_threshold, &low_threshold );
+	    /* Determing threshold values *before* finding directional */
+	    /* local maxima of luminance gradient. */
     }
 
     edge_map = find_edges ( magnitude, grad_Y, grad_X, high_threshold,
 	    low_threshold );
+    		/* Find local maximuma and threshold in one step. */
 
 #else
     /*
-     * Consider gradient magnitude of *only* of local maxima when choosing
-     * auto threshold values.
+     * Consider gradient magnitude of *only* of directional local maxima
+     * when choosing auto threshold values.
      */
 
     if ( auto_thresh ) {
 	edge_map = find_edges ( magnitude, grad_Y, grad_X, 0.0, 0.0 );
+	    /* Find *all* directional local maxima (no thresholding). */
 
 	clean_up_magnitude ( edge_map, magnitude );	/* set magnitude of */
 							/* non-edges to 0.0 */
 	auto_thresh_values ( magnitude, &high_threshold, &low_threshold );
+	    /*
+	     * Compute thresholds values based only on directional local maxima.
+	     */
 
 	hysteresis_label ( edge_map, magnitude, high_threshold, low_threshold );
-	hysteresis ( edge_map );
+	    /* set up for hysteresis process */
+	hysteresis ( edge_map );	/* actual hysteresis thresholding */
     } else {
 	edge_map = find_edges ( magnitude, grad_Y, grad_X, high_threshold,
 		low_threshold );
+			/*
+			 * Canny edge detection with explicitly specified
+			 * threshold values.
+			 */
     }
 
 #endif	/* PERCENTILE_ALL */
 
     if ( orientation_p != NULL ) {
 	*orientation_p = find_orientation ( edge_map, grad_Y, grad_X );
+		/* only computer gradient orientation if value is requested */
     }
 
     if ( magnitude_p != NULL ) {
@@ -199,9 +231,10 @@ canny_base ( DEVA_float_image *input, double st_dev, double high_threshold,
 	DEVA_float_image_delete ( magnitude );
     }
 
+    /* clean up */
+
     DEVA_float_image_delete ( grad_Y );
     DEVA_float_image_delete ( grad_X );
-
     if ( st_dev >= GBLUR_STD_DEV_MIN ) {
 	DEVA_float_image_delete ( blurred_input );
     }
@@ -257,6 +290,8 @@ gradient_magnitude ( DEVA_float_image *image, DEVA_float_image **grad_Y_p,
 	DEVA_image_data ( grad_X, n_rows - 1, col ) = 0.0;
     }
 
+    /* Fleck-style gradient computation.  See paper for details. */
+
     for ( row = 1; row < n_rows - 1; row++ ) {
 	for ( col = 1; col < n_cols - 1; col++ ) {
 	    V = ( DEVA_image_data ( image, row + 1, col ) -
@@ -300,6 +335,17 @@ gradient_magnitude ( DEVA_float_image *image, DEVA_float_image **grad_Y_p,
 static void
 auto_thresh_values ( DEVA_float_image *magnitude, double *high_threshold,
 	double *low_threshold )
+/*    
+ * Auto-thresholding is based on setting the high threshold at a value that
+ * includes a chosen percentile of the gradient magnitude values at local
+ * maxima.  Defining PERCENTILE_ALL sets the high threshold at a value that
+ * includes a chosen percentile of all of the gradient magnitude values,
+ * whether or not they are local maxima.
+ *
+ * Percentile cutoffs are computed using a histogram method.  A large number
+ * of bins are used due to the high dynamic range invovled and the nature
+ * of the frequency distibution of gradient magnitudes.
+ */
 {
     int	    magnitude_hist[MAGNITUDE_HIST_NBINS];
     int	    row, col;
@@ -318,8 +364,7 @@ auto_thresh_values ( DEVA_float_image *magnitude, double *high_threshold,
 	magnitude_hist[bin] = 0;
     }
 
-    /* ignore pixels at edge of image */
-
+    /* Compute maximum value of gradient, ignoring pixels at edge of image. */
     magnitude_max = -1.0;
     for ( row = 1; row < n_rows - 1; row++ ) {
 	for ( col = 1; col < n_cols - 1; col++ ) {
@@ -340,6 +385,7 @@ auto_thresh_values ( DEVA_float_image *magnitude, double *high_threshold,
 	exit ( EXIT_FAILURE );
     }
 
+    /* Spread out gradient magnitude values amoung histogram bins. */
     norm = 1.0 / magnitude_max;
     for ( row = 1; row < n_rows - 1; row++ ) {
 	for ( col = 1; col < n_cols - 1; col++ ) {
@@ -358,9 +404,9 @@ auto_thresh_values ( DEVA_float_image *magnitude, double *high_threshold,
     				/* remove non-local-maxima from count */
 #endif	/* PERCENTILE_ALL */
 
+    /* Search for bin index corresponding to requested percentile. */
     for ( bin = MAGNITUDE_HIST_NBINS - 1; bin >= 0; bin-- ) {
 	percentile += ((double) magnitude_hist[bin] ) / ((double) total_count );
-
 
 	if ( percentile > PERCENTILE_EDGE_PIXELS ) {
 	    break;
@@ -376,6 +422,9 @@ static DEVA_gray_image *
 find_edges ( DEVA_float_image *magnitude, DEVA_float_image *grad_Y,
 	DEVA_float_image *grad_X, double high_threshold, double low_threshold )
 /*
+ * Find directional local maxima of gradient magnitude.  See Fleck paper
+ * for the details.
+ *
  * Does *not* compute values for the pixels at the image boundary or one in
  * from the image boundary!
  */
@@ -443,7 +492,8 @@ find_edges ( DEVA_float_image *magnitude, DEVA_float_image *grad_Y,
 			DEVA_image_data ( edge_map, row, col) = CANNY_NO_EDGE;
 			continue;
 		    } else {
-			DEVA_image_data ( edge_map, row, col) = CANNY_MARKED_EDGE;
+			DEVA_image_data ( edge_map, row, col) =
+			    CANNY_MARKED_EDGE;
 		    }
 		    break;
 
@@ -470,7 +520,8 @@ find_edges ( DEVA_float_image *magnitude, DEVA_float_image *grad_Y,
 			DEVA_image_data ( edge_map, row, col) = CANNY_NO_EDGE;
 			continue;
 		    } else {
-			DEVA_image_data ( edge_map, row, col) = CANNY_MARKED_EDGE;
+			DEVA_image_data ( edge_map, row, col) =
+			    CANNY_MARKED_EDGE;
 			/* assume it's good until proved */
 			/* otherwise */
 		    }
@@ -708,11 +759,13 @@ find_edges ( DEVA_float_image *magnitude, DEVA_float_image *grad_Y,
 		if ( ( grad_Y_v * grad_X_v ) >= 0.0 ) {
 		    /* down-and-right diagonal */
 		    A_2g_plus = DEVA_image_data ( magnitude, row + 2, col + 2 );
-		    A_2g_minus = DEVA_image_data ( magnitude, row - 2, col - 2 );
+		    A_2g_minus =
+			DEVA_image_data ( magnitude, row - 2, col - 2 );
 		} else {
 		    /* down-and-left diagonal */
 		    A_2g_plus = DEVA_image_data ( magnitude, row + 2, col - 2 );
-		    A_2g_minus = DEVA_image_data ( magnitude, row - 2, col + 2 );
+		    A_2g_minus =
+			DEVA_image_data ( magnitude, row - 2, col + 2 );
 		}
 	    }
 
@@ -751,6 +804,12 @@ find_edges ( DEVA_float_image *magnitude, DEVA_float_image *grad_Y,
 static DEVA_float_image *
 find_orientation ( DEVA_gray_image *edge_map, DEVA_float_image *grad_Y,
 	DEVA_float_image *grad_X )
+/*
+ * Compute gradient orientation at boundary elements based on gradient in Y
+ * and X directions.  Orientation is specified in degrees, with 0.0
+ * corresponding to "left" and values increasing clockwise.  Orientation is
+ * set to CANNY_DIR_NO_EDGE if no edge corresponds to that pixel.
+ */
 {
     int		    row, col;
     int		    n_rows, n_cols;
@@ -884,6 +943,10 @@ follow ( DEVA_gray_image *edges, int row, int col)
 static void
 hysteresis_label ( DEVA_gray_image *edge_map, DEVA_float_image *magnitude,
 	double high_threshold, double low_threshold )
+/*
+ * Used when setting potential edge codes is done in a separate step from
+ * thresholding.
+ */
 {
     int     row, col;
 
@@ -906,6 +969,9 @@ hysteresis_label ( DEVA_gray_image *edge_map, DEVA_float_image *magnitude,
 
 static double
 std_angle ( double degrees )
+/*
+ * Maps angle in degrees to the range [0.0 - 360.0).
+ */
 {
     degrees = fmod ( degrees, 360.0 );
 
@@ -920,6 +986,9 @@ std_angle ( double degrees )
 
 static double
 radian2degree ( double radians )
+/*
+ * Converts radian value to degrees.
+ */
 {
     return ( radians * ( 360.0 / ( 2.0 * M_PI ) ) );
 }

@@ -69,27 +69,28 @@ DEVA_xyY_add_margin ( int v_margin, int h_margin, DEVA_xyY_image *original )
 	exit ( EXIT_FAILURE );
     }
 
+    /* copy VIEW record and update horizontal and vertical FOVs */
     DEVA_image_view ( with_margin ) = DEVA_image_view ( original );
     DEVA_image_view ( with_margin ) . vert = ((double) new_n_rows ) *
 	( DEVA_image_view ( original ) . vert / ((double) n_rows ) );
     DEVA_image_view ( with_margin ) . horiz = ((double) new_n_cols ) *
 	( DEVA_image_view ( original ) . horiz / ((double) n_cols ) );
 
+    /* computer average luminance of all border pixels in original image */
     average_luminance_at_border = 0.0;
     for ( col = 0; col < n_cols; col++ ) {
 	average_luminance_at_border += DEVA_image_data ( original, 0, col ).Y;
 	average_luminance_at_border += DEVA_image_data ( original,
 							n_rows - 1 , col ).Y;
     }
-
     for ( row = 1; row < n_rows - 1; row++ ) {
 	average_luminance_at_border += DEVA_image_data ( original, row, 0 ).Y;
 	average_luminance_at_border += DEVA_image_data ( original,
 							row, n_cols - 1 ).Y;
     }
-
     average_luminance_at_border /= (double) ( ( 2 * ( n_rows + n_cols ) ) - 2 );
 
+    /* copy contents of original image to center of new image */
     for ( row = 0; row < n_rows; row++ ) {
 	for ( col = 0; col < n_cols; col++ ) {
 	    DEVA_image_data ( with_margin, row + v_margin, col + h_margin ) =
@@ -97,7 +98,7 @@ DEVA_xyY_add_margin ( int v_margin, int h_margin, DEVA_xyY_image *original )
 	}
     }
 
-    /* top, bottom */
+    /* top, bottom margins */
     for ( row = 0; row < v_margin; row++ ) {
 	for ( col = 0; col < n_cols; col++ ) {
 	    DEVA_image_data ( with_margin, row, col + h_margin ) =
@@ -112,7 +113,7 @@ DEVA_xyY_add_margin ( int v_margin, int h_margin, DEVA_xyY_image *original )
 	}
     }
 
-    /* left, right */
+    /* left, right margins */
     for ( row = 0; row < n_rows; row++ ) {
 	for ( col = 0; col < h_margin; col++ ) {
 	    DEVA_image_data ( with_margin, row + v_margin, col ) =
@@ -203,6 +204,7 @@ scale ( double distance, double background_value, DEVA_xyY value )
     new_value.x = value.x;
     new_value.y = value.y;
 
+    /* hardwired constant (6.0) in sigmoid to make results plausible */
     weight = 2.0 * ( sigmoid ( 6.0 * ( 1.0 - distance ) ) - 0.5 );
     new_value.Y = ( weight * value.Y ) +
 	( ( 1.0 - weight ) * background_value );
@@ -248,7 +250,7 @@ DEVA_xyY_strip_margin ( int v_margin, int h_margin,
 
     with_margin_stripped = DEVA_xyY_image_new ( new_n_rows, new_n_cols );
 
-    /* Reset FOV based on degrees/pixel, not on trignometry. */
+    /* Reset FOV based on degrees/pixel, not on trignometry! */
     if ( ( DEVA_image_view ( with_margin ) . vert <= 0.0 ) ||
 	    ( DEVA_image_view ( with_margin ) . horiz <= 0.0 ) ) {
 	fprintf ( stderr,
@@ -258,64 +260,7 @@ DEVA_xyY_strip_margin ( int v_margin, int h_margin,
 	exit ( EXIT_FAILURE );
     }
 
-    DEVA_image_view ( with_margin_stripped ) = DEVA_image_view ( with_margin );
-    DEVA_image_view ( with_margin_stripped ) . vert = ((double) new_n_rows ) *
-	( DEVA_image_view ( with_margin ) . vert / ((double) n_rows ) );
-    DEVA_image_view ( with_margin_stripped ) . horiz = ((double) new_n_cols ) *
-	( DEVA_image_view ( with_margin ) . horiz / ((double) n_cols ) );
-
-    for ( row = 0; row < new_n_rows; row++ ) {
-	for ( col = 0; col < new_n_cols; col++ ) {
-	    DEVA_image_data ( with_margin_stripped, row, col ) =
-		DEVA_image_data ( with_margin, row + v_margin, col + h_margin );
-	}
-    }
-
-    return ( with_margin_stripped );
-}
-
-DEVA_gray_image *
-DEVA_gray_strip_margin ( int v_margin, int h_margin,
-	DEVA_gray_image *with_margin )
-/*
- * Remove a margin around the input file.
- *
- * v_margin:	Vertical (row) margin to remove, in pixels.  Total vertical
- * 		dimension decreases by twice this value.
- * h_margin:	Horizontal (col) margin to remove, in pixels.  Total horizontal
- * 		dimension decreases by twice this value.
- */
-{
-    DEVA_gray_image  *with_margin_stripped;
-    int		    row, col;
-    int		    n_rows, n_cols;
-    int		    new_n_rows, new_n_cols;
-
-    n_rows = DEVA_image_n_rows ( with_margin );
-    n_cols = DEVA_image_n_cols ( with_margin );
-
-    new_n_rows = n_rows - ( 2 * v_margin );
-    new_n_cols = n_cols - ( 2 * h_margin );
-
-    if ( ( new_n_rows < 1 ) || ( new_n_cols < 1 ) ) {
-	fprintf ( stderr,
-  "DEVA_gray_strip_margin: margins too big for image (%d, %d), (%d, %d)!\n",
-	  	v_margin, h_margin, n_rows, n_cols );
-	exit ( EXIT_FAILURE );
-    }
-
-    with_margin_stripped = DEVA_gray_image_new ( new_n_rows, new_n_cols );
-
-    /* Reset FOV based on degrees/pixel, not on trignometry. */
-    if ( ( DEVA_image_view ( with_margin ) . vert <= 0.0 ) ||
-	    ( DEVA_image_view ( with_margin ) . horiz <= 0.0 ) ) {
-	fprintf ( stderr,
-		"DEVA_gray_strip_margin: invalid or missing fov (%f, %f)!\n",
-		    DEVA_image_view ( with_margin ) . vert,
-		    DEVA_image_view ( with_margin ) .  horiz );
-	exit ( EXIT_FAILURE );
-    }
-
+    /* copy center of image with margins to new image */
     DEVA_image_view ( with_margin_stripped ) = DEVA_image_view ( with_margin );
     DEVA_image_view ( with_margin_stripped ) . vert = ((double) new_n_rows ) *
 	( DEVA_image_view ( with_margin ) . vert / ((double) n_rows ) );

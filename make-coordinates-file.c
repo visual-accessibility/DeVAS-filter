@@ -20,7 +20,7 @@
 #include "deva-license.h"	/* DEVA open source license */
 
 char	*Usage =
-	    "make-coordinates-file unit radiance-file.hdr coordinates-file";
+	    "make-coordinates-file units radiance-file.hdr coordinates-file";
 int	args_needed = 3;
 
 int
@@ -65,6 +65,7 @@ main ( int argc, char *argv[] )
 	exit ( EXIT_FAILURE );
     }
 
+    /* get VIEW record from Radiance file header */
     DEVA_read_radiance_header ( radiance_fp, NULL, NULL, NULL, &view,
 	    NULL, NULL, NULL );
 
@@ -73,6 +74,7 @@ main ( int argc, char *argv[] )
 	exit ( EXIT_FAILURE );
     }
 
+    /* write two line coordinates file */
     fprintf ( coordinates_fp, "distance-units=%s\n", unit );
 
     fputs ( VIEWSTR, coordinates_fp );

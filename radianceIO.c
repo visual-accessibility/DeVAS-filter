@@ -79,7 +79,7 @@ DEVA_brightness_image_from_radfile ( FILE *radiance_fp )
     for ( row = 0; row < n_rows; row++ ) {
 	if ( freadscan( radiance_scanline, n_cols, radiance_fp ) < 0 ) {
 	    fprintf ( stderr,
-		"DEVA_brightness_image_from_radfile: error reading Radiance file!" );
+	  "DEVA_brightness_image_from_radfile: error reading Radiance file!" );
 	    exit ( EXIT_FAILURE );
 	}
 	if ( color_format == radcolor_rgbe ) {
@@ -105,7 +105,8 @@ DEVA_brightness_image_from_radfile ( FILE *radiance_fp )
 }
 
 void
-DEVA_brightness_image_to_radfilename ( char *filename, DEVA_float_image *brightness )
+DEVA_brightness_image_to_radfilename ( char *filename,
+	DEVA_float_image *brightness )
 /*
  * Writes an in-memory brightness image to a Radiance rgbe image file
  * specified by pathname.  Units of the in-memory brightness image are
@@ -167,7 +168,8 @@ DEVA_brightness_image_to_radfile ( FILE *radiance_fp, DEVA_float_image *brightne
 
     radiance_scanline = (COLOR *) malloc ( n_cols * sizeof ( COLOR ) );
     if ( radiance_scanline == NULL ) {
-	fprintf ( stderr, "DEVA_brightness_image_to_radfile: malloc failed!\n" );
+	fprintf ( stderr,
+		"DEVA_brightness_image_to_radfile: malloc failed!\n" );
 	exit ( EXIT_FAILURE );
     }
 
@@ -180,7 +182,7 @@ DEVA_brightness_image_to_radfile ( FILE *radiance_fp, DEVA_float_image *brightne
 	}
 	if ( fwritescan ( radiance_scanline, n_cols, radiance_fp ) < 0 ) {
 	    fprintf ( stderr,
-		"DEVA_brightness_image_to_radfile: error writing radiance file!\n" );
+	  "DEVA_brightness_image_to_radfile: error writing radiance file!\n" );
 	    exit ( EXIT_FAILURE );
 	}
     }
@@ -243,7 +245,8 @@ DEVA_luminance_image_from_radfile ( FILE *radiance_fp )
 
     radiance_scanline = (COLOR *) malloc ( n_cols * sizeof ( COLOR ) );
     if ( radiance_scanline == NULL ) {
-	fprintf ( stderr, "DEVA_luminance_image_from_radfile: malloc failed!\n" );
+	fprintf ( stderr,
+		"DEVA_luminance_image_from_radfile: malloc failed!\n" );
 	exit ( EXIT_FAILURE );
     }
 
@@ -254,7 +257,7 @@ DEVA_luminance_image_from_radfile ( FILE *radiance_fp )
     for ( row = 0; row < n_rows; row++ ) {
 	if ( freadscan ( radiance_scanline, n_cols, radiance_fp ) < 0 ) {
 	    fprintf ( stderr,
-		"DEVA_luminance_image_from_radfile: error reading Radiance file!" );
+	  "DEVA_luminance_image_from_radfile: error reading Radiance file!" );
 	    exit ( EXIT_FAILURE );
 	}
 	if ( color_format == radcolor_rgbe ) {
@@ -280,7 +283,8 @@ DEVA_luminance_image_from_radfile ( FILE *radiance_fp )
 }
 
 void
-DEVA_luminance_image_to_radfilename ( char *filename, DEVA_float_image *luminance )
+DEVA_luminance_image_to_radfilename ( char *filename,
+	DEVA_float_image *luminance )
 /*
  * Writes an in-memory luminance image to a Radiance rgbe image file
  * specified by pathname.  Units of the in-memory luminance image are
@@ -309,7 +313,8 @@ DEVA_luminance_image_to_radfilename ( char *filename, DEVA_float_image *luminanc
 }
 
 void
-DEVA_luminance_image_to_radfile ( FILE *radiance_fp, DEVA_float_image *luminance )
+DEVA_luminance_image_to_radfile ( FILE *radiance_fp,
+	DEVA_float_image *luminance )
 /*
  * Writes an in-memory luminance image to a Radiance rgbe image file specified
  * by an open file descriptor.  Units of the in-memory luminance image are
@@ -357,7 +362,7 @@ DEVA_luminance_image_to_radfile ( FILE *radiance_fp, DEVA_float_image *luminance
 	}
 	if ( fwritescan ( radiance_scanline, n_cols, radiance_fp ) < 0 ) {
 	    fprintf ( stderr,
-		"DEVA_luminance_image_to_radfile: error writing radiance file!\n" );
+	  "DEVA_luminance_image_to_radfile: error writing radiance file!\n" );
 	    exit ( EXIT_FAILURE );
 	}
     }
@@ -636,6 +641,9 @@ DEVA_XYZ_image_from_radfile ( FILE *radiance_fp )
 
 void
 DEVA_XYZ_image_to_radfilename ( char *filename, DEVA_XYZ_image *XYZ )
+/*
+ * For now, only write rgbe format files.
+ */
 {
     FILE    *radiance_fp;
 

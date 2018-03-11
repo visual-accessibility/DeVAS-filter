@@ -23,9 +23,8 @@ written to standard output.
 .PP
 \fIacuity\fR is specified in terms of a Snellen ratio or a logMAR value.
 \fIcontrast\fR is specified in terms of either the ratio of the desired
-contrast sensitivity to normal vision contrast sensitivity or a
-Pelli-Robson Chart score.
-See options below.
+Michaelson contrast sensitivity to normal vision contrast sensitivity or
+as a Pelli-Robson Chart score.
 .SH OPTIONS
 .TP
 \fIpreset-options:\fR \
@@ -48,7 +47,7 @@ Indicates that \fIacuity\fR is specified with respect to cutoff or peak
 contrast sensitivity.  \fB\-\-cutoff\fR is the default, and corresponds
 to the values usually reported in clinical eye examinations.
 .TP
-\fB\-\-sensitivity-ratio | \-\-pelli-robson
+\fB\-\-sensitivity-ratio | \-\-pelli-robson\fR
 Indicates that \fIcontrast\fR is specified as a ratio of desired
 contrast sensitivity to normal vision contrast sensitivity
 (\fB\-\-sensitivity-ratio\fR) or as a Pelli-Robson Chart score
@@ -62,9 +61,11 @@ clipped is chosen automatically.  For \fB\-\-clip\fR, values larger than
 \fIlevel\fR are reduced to \fIlevel\fR, with \fIlevel\fR specified in
 cd/m^2.  Default is no clipping.
 .TP
-\fB\-\-color | \-\-grayscale\fR
-Indicates that output image is either in color or grayscale.
-\fB\-\-color\fR is the default.
+\fB\-\-color | \-\-grayscale | \-\-saturation=\fIvalue\fR
+Indicates amount of desaturation.  \fB\-\-color\fR: no desaturation.
+\fB\-\-grayscale\fR: full desturation. \fB\-\-saturation=\fIvalue\fR:
+partial desaturation, scaled by value in range (0.0 - 1.0), with low
+values indicating more desaturation.  \fB\-\-color\fR is the default.
 .TP
 \fB\-\-margin=\fIvalue\fR
 Add a margin around the input file to reduce FFT artifacts due to
@@ -73,16 +74,23 @@ range (0.0 -- 1.0].  It specifies the size of the horizontal and
 vertical padding as a fraction of the original horizontal and vertical
 size.
 .TP
-\fB--version\fR
-Print version number and then exit.
+\fB\-\-version\fR
+Print version number and then exit. No other flags or arguments are
+required.
 .TP
-\fB--verbose\fB
+\fB\-\-presets\fR
+Print out acuity, contrast sensitivity, and color saturation parameters
+associated with the presets \fB\-\-mild\fR, \fB\-\-moderate\fR,
+\fB\-\-severe\fR, and \fB\-\-profound\fR. No other flags or arguments are
+required.
+.TP
+\fB\-\-verbose\fB
 Print possibly informative information about a particular run.
 .SH EXAMPLES
 To simulate moderate loss of acuity, contrast sensitivity, and color
 sensitivity:
 .IP "" .5i
-deva-filter --moderate in.hdr out.hdr
+deva-filter \-\-moderate in.hdr out.hdr
 .PP
 To simulate 20/200 acuity without loss of peak contrast sensitivity:
 .IP "" .5i
@@ -90,22 +98,22 @@ deva-filter 20/200 1 in.hdr out.hdr
 .PP
 Equivalently, using logMAR notation for acuity:
 .IP "" .5i
-deva-filter --logMAR 1.0 1 in.hdr out.hdr
+deva-filter \-\-logMAR 1.0 1 in.hdr out.hdr
 .PP
 To do the same filtering but output a grayscale image:
 .IP "" .5i
-deva-filter --grayscale --logMAR 1.0 1 in.hdr out.hdr
+deva-filter \-\-grayscale \-\-logMAR 1.0 1 in.hdr out.hdr
 .PP
 To simulate a peak frequency sensitivity of 10% of normal vision and a
 peak contrast sensitivity at that frequency corresponding to 20% of
 normal vision:
 .IP "" .5i
-deva-filter --Snellen --peak 0.1 0.2 in.hdr out.hdr
+deva-filter \-\-Snellen \-\-peak 0.1 0.2 in.hdr out.hdr
 .PP
 To simulate 20/400 acuity and a contrast sensitivity indicated by a
 Pelli-Robson Chart score of 1.0:
 .IP "" .5i
-deva-filter --pelli-robson 20/400 1.0 in.hdr out.hdr
+deva-filter \-\-pelli-robson 20/400 1.0 in.hdr out.hdr
 \." SH LIMITATIONS
 \." PP
 .SH AUTHOR

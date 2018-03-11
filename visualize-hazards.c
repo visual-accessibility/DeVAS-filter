@@ -13,6 +13,24 @@ static DEVA_float_image	*expand_3x ( DEVA_float_image *image );
 DEVA_RGB_image *
 visualize_hazards ( double max_hazard, DEVA_float_image *hazards,
        int visualization_type )
+/*
+ * Make displayable file showing predicted geometry discontinuities that are
+ * not visible at specified level of low vision. 
+ *
+ * max_hazard:		Visual angle corresponding to maximum displayable
+ *			hazard.  All hazard values at or above this level as
+ *			displayed with the same red shade.
+ *
+ * hazards:		Visual angle from geometry boundaries to nearest
+ *			luminance boundary.
+ *
+ * visualization_type:	DEVA_VIS_HAZ_RED_ONLY
+ * 				redish => visibility hazard
+ * 				grayish => probably OK
+ * 			DEVA_VIS_HAZ_RED_GREEN
+ * 				redish => visibility hazard
+ *				greenish => probably OK
+ */
 {
     int			row, col;
     double		hazard_level;
@@ -37,18 +55,24 @@ visualize_hazards ( double max_hazard, DEVA_float_image *hazards,
     for ( row = 0; row < DEVA_image_n_rows ( hazards ); row++ ) {
 	for ( col = 0; col < DEVA_image_n_cols ( hazards ); col++ ) {
 	    if ( DEVA_image_data ( hazards_thickened, row, col ) >= 0.0 ) {
-		/* normalize based on max_hazard */
+		/* geometry edge that should be color coded */
+
 		if ( DEVA_image_data ( hazards_thickened, row, col ) >=
 						max_hazard ) {
+		    /* normalize based on max_hazard */
 		    hazard_level = 1.0;
 		} else {
 		    hazard_level =
 			DEVA_image_data ( hazards_thickened, row, col ) /
 				max_hazard;
 		}
+
 		DEVA_image_data ( visualization, row, col ) =
 		    color_hazard_level ( hazard_level, visualization_type );
+
 	    } else {
+		/* not a  geometry edge */
+
 		DEVA_image_data ( visualization, row, col ) = black;
 	    }
 	}
@@ -61,6 +85,10 @@ visualize_hazards ( double max_hazard, DEVA_float_image *hazards,
 
 static DEVA_RGB
 color_hazard_level ( double hazard_level, int visualization_type )
+/*
+ * Blend colors as defined by visualization_type, based on value of
+ * hazard_level (in range [0.0 - 1.0]).
+ */
 {
     DEVA_RGBf	color_mixed;
     DEVA_RGB	vis_color;

@@ -47,6 +47,7 @@ DEVA_float_image *
 DEVA_float_image_dup ( DEVA_float_image *original_image )
 /*
  * Make a copy of a DEVA_float_image
+ * [Currently unused.]
  */
 {
     DEVA_float_image	*duplicate_image;
@@ -103,6 +104,7 @@ void
 DEVA_float_image_scalarmult ( DEVA_float_image *i, float m )
 /*
  * Multiply values of i by m;
+ * [Currently unused.]
  */
 {
     int     row, col;
@@ -116,6 +118,9 @@ DEVA_float_image_scalarmult ( DEVA_float_image *i, float m )
 
 double
 degree2radian ( double degrees )
+/*
+ * [Currently unused.]
+ */
 {
     return ( degrees * ( ( 2.0 * M_PI ) / 360.0 ) );
 }
