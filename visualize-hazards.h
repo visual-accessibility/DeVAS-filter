@@ -7,24 +7,37 @@
 #include "deva-visibility.h"
 #include "DEVA-sRGB.h"
 
-#define	MAX_HAZARD	2.0	/* Degrees.  This is rather arbitrary! */
+/*
+ * Measurement types:
+ */
+typedef	enum {
+    unknown_measure,
+    reciprocal_measure,	/* 1 - ( scale / ( visual_angle + scale ) ) */
+    linear_measure,	/* min(visual_angle,max_hazard ) / max_hazard */
+    Gaussian_measure	/* 1 - exp ( -0.5 * ( x / sigma_hazard ) ^ 2 ) */
+} Measurement_type;
 
 /*
  * Visualization types:
  */
-#define	DEVA_VIS_HAZ_RED_ONLY	1	/* red => visibility hazard */
-					/* gray => probably OK */
-#define	DEVA_VIS_HAZ_RED_GREEN	2	/* red => visibility hazard */
-					/* green => probably OK */
+typedef	enum {
+    unknown_vis_type,
+    red_gray_type,	/* redish => hazard, grayish => probably OK */
+    red_green_type	/* redish => hazard, greenish => probably OK */
+} Visualization_type;
 
+
+/* minimal hazard for red_green_type */
 #define COLOR_MIN_RED_RG	0.1
 #define COLOR_MIN_GREEN_RG	0.4
 #define COLOR_MIN_BLUE_RG	0.1
 
+/* minimal hazard for red_gray_type */
 #define COLOR_MIN_RED_RO	0.15
 #define COLOR_MIN_GREEN_RO	0.15
 #define COLOR_MIN_BLUE_RO	0.15
 
+/* maximum hazard for both types */
 #define COLOR_MAX_RED           1.0
 #define COLOR_MAX_GREEN         0.0
 #define COLOR_MAX_BLUE          0.0
@@ -35,8 +48,9 @@
 extern "C" {
 #endif
 
-DEVA_RGB_image	*visualize_hazards ( double max_hazard,
-		    DEVA_float_image *hazards, int visualization_type );
+DEVA_RGB_image	*visualize_hazards ( DEVA_float_image *hazards,
+       		    Measurement_type measurement_type, double scale_parameter,
+		    Visualization_type visualization_type );
 
 #ifdef __cplusplus
 }

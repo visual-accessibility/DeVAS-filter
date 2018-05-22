@@ -196,7 +196,7 @@ scale ( double distance, double background_value, DEVA_xyY value )
     double	weight;
 
     if ( ( distance < 0.0 ) || ( distance > 1.0 ) ) {
-	fprintf ( stderr, "deva-merge:scale: invalid distance (%f)\n",
+	fprintf ( stderr, "deva-margin:scale: invalid distance (%f)\n",
 		distance );
 	exit ( EXIT_FAILURE );
     }

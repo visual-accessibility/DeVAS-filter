@@ -2,6 +2,7 @@
 #define	__DEVA_VISABILITY_H
 
 #include <stdlib.h>
+#include <math.h>
 #include "deva-image.h"
 #include "deva-filter.h"
 #include "read-geometry.h"

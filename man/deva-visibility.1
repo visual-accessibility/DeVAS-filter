@@ -26,13 +26,42 @@ of a potential visibility hazard shown in dark gray.
 .SH OPTIONS
 All of the \fBdeva-filter\fR options, plus:
 .TP
-\fB\-\-luminanceboundaries==\fI<filename>.png\fR
+\fB\-\-luminanceboundaries=\fI<filename>.png\fR
 Write a grayscale PNG image file indicating the location of detected
 luminance boundaries.
 .TP
-\fB\-\-luminanceboundaries==\fI<filename>.png\fR
+\fB\-\-luminanceboundaries=\fI<filename>.png\fR
 Write a grayscale PNG image file indicating the location of detected
 luminance boundaries.
+.TP
+\fB\-\-red\-gray
+Larger distance (usually associated with estimated visibility hazards)
+shown in red and other geometric standard boundary elements that are
+closer (usually associated with elements estimated to be less of a
+potential visibility hazard) shown in dark gray. Default.
+.TP
+\fB\-\-red\-green
+Larger distance (usually associated with estimated visibility hazards)
+shown in red and other geometric standard boundary elements that are
+closer (usually associated with elements estimated to be less of a
+potential visibility hazard) shown in green.
+.TP
+\fB\-\-Gaussian=\fI<sigma>\fR
+Visualization based on distance weighted by an unnormalized Gaussian
+function with standard deviation \fI<sigma>\fR. Default visualization
+weighting is \fB\-\-Gaussian=0.75\fR.
+.TP
+\fB\-\-reciprocal=\fI<scale>\fR
+Visualization based on reciprocal of distance, with distance scaled by
+\fI<scale>\fR.
+.TP
+\fB\-\-linear=\fI<max>\fR
+Visualization linearly scaled to a maximum distance of \fI<max>\fR.
+.TP
+\fB\-\-quantscore
+Annotate the output image with the average hazard value over all of the
+boundary elements in the standard.  Only available if compiled with the
+Cairo library option.
 .SH ARGUMENTS
 .TP
 \fIinput.hdr\fR

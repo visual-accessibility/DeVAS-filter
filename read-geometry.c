@@ -28,6 +28,10 @@
 #define	INCHES_TO_CENTIMETERS		2.54
 #define	FEET_TO_CENTIMETERS		30.48
 
+#define NULLVIEW	{'\0',{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}, \
+				0.,0.,0.,0.,0.,0.,0., \
+				{0.,0.,0.},{0.,0.,0.},0.,0.}
+
 #ifndef TRUE
 #define TRUE            1
 #endif  /* TRUE */
@@ -38,13 +42,6 @@
 #define	HEADER_MAXLINE		2048	/* same as for getheader */
 
 char	*progname;			/* Radiance requires this be global */
-
-VIEW	DEVA_null_view;			/* from radiance-header.c */
-
-/*
- * properties extracted from header (need to be globals because of how
- * radiance decodes headers)
- */
 
 VIEW
 deva_get_VIEW_from_filename ( char *filename, int *n_rows_p, int *n_cols_p )
@@ -762,6 +759,9 @@ DEVA_coordinates_from_file ( FILE *file, char *filename )
     DEVA_coordinates	*coordinates;
     char		header_string[500];
     char		units_string[100];
+    VIEW		DEVA_null_view = NULLVIEW;
+    			    /* can't count on getting this from */
+			    /* radiance-header.c */
 
     fgets ( header_string, 500, file );
     if ( ( strlen ( header_string ) > 0 ) && ( header_string[strlen (

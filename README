@@ -1,27 +1,34 @@
-This repository provides source code for four programs: deva-filter,
-deva-visibility, make-coordinates-file, and deva-visualize-geometry.
-deva-filter simulates visibility under reduced acuity and contrast
-sensitivity.  It is intended to assist architects and lighting designers
-identify mobility hazards and important navigational landmarks that may
-not be visible to those with low vision. deva-visibility provides the
-full functionality of deva-filter, plus also provides an analysis
-combining the output of deva-filter with information about scene
-geometry to automatically estimate likely visual hazards associated with
-mobility impediments invisible to those with a particular level of
-visual impairment.  make-coordinates-file is a helper program used to
-create one of the input files needed by deva-visibility.
-deva-visualize-geometry is a utility program to display geometry
-files used by deva-visibility.
+This repository provides source code for five programs: deva-filter,
+deva-visibility, make-coordinates-file, deva-visualize-geometry, and
+deva-compare-boundaries.
 
-deva-filter only accepts Radiance HDR files with correct VIEW records as
-input.  It only outputs Radiance HDR files.  deva-visibility accepts as
-input Radiance HDR files, plus Radiance ASCII files providing
-information about scene geometry.  It outputs a Radiance HDR file, as
-with deva-filter, and a separate PNG file with a visualization of
-estimated visual hazards.
+- deva-filter simulates visibility under reduced acuity and contrast
+  sensitivity.  It is intended to assist architects and lighting
+  designers identify mobility hazards and important navigational
+  landmarks that may not be visible to those with low vision.
+  deva-filter only accepts Radiance HDR files with correct VIEW records
+  as input.  It only outputs Radiance HDR files.
 
-WARNING: deva-visibility is still under active development and is likely
-to change over time.
+- deva-visibility provides the full functionality of deva-filter, plus
+  also provides an analysis combining the output of deva-filter with
+  information about scene geometry to automatically estimate likely
+  visual hazards associated with mobility impediments invisible to those
+  with a particular level of visual impairment.  deva-visibility accepts
+  as input Radiance HDR files, plus Radiance ASCII files providing
+  information about scene geometry.  It outputs a Radiance HDR file, as
+  with deva-filter, and a separate PNG file with a visualization of
+  estimated visual hazards.
+
+- make-coordinates-file is a helper program used to create one of the
+  input files needed by deva-visibility.
+
+- deva-visualize-geometry is a utility program to display geometry files
+  used by deva-visibility.
+
+- deva-compare-boundaries creates a visualization of how well one set of
+  boundary elements is predicted by another set of boundary elements.
+  It inputs PNG files plus a coordinates file as produced by
+  make-coordinates-file and outputs a PNG file.
 
 The software can be built on either Linux or MacOS.  Windows binaries
 are also provided, cross complied on a Linux system using Mingw-w64.

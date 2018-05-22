@@ -31,6 +31,9 @@
 #endif	/* DEVA_VISIBILITY */
 #include "deva-license.h"	/* DEVA open source license */
 
+/* #define	UNIFORM_MARGINS */	/* make top/bottom and lef/right */
+					/* margins all the same size */
+
 #ifdef DEVA_VISIBILITY
 
 /* The following need tuning!!! */
@@ -233,9 +236,13 @@ typedef enum { undefined_smoothing, no_smoothing, smoothing } SmoothingType;
 #define	DEFAULT_FILTER_TYPE		use_DEVA_filter
 #define	DEFAULT_FILTER_TYPE_STRING	"use_DEVA_filter"
 
+#define	DEFAULT_MEASUREMENT_TYPE	Gaussian_measure
+#define	DEFAULT_SCALE_PARAMETER		0.5
+#define	DEFAULT_VISUALIZATION_TYPE	red_gray_type;
+
 /* preset values */
 
-#ifndef DEVE_USE_OLD_PRESETS
+#ifndef DEVA_USE_OLD_PRESETS
 
 #define	PRESET_MILD			"mild"
 #define	MILD_SNELLEN			(20.0/45.0)
@@ -261,7 +268,7 @@ typedef enum { undefined_smoothing, no_smoothing, smoothing } SmoothingType;
 #define	PROFOUND_PELLI_ROBSON		0.5
 #define	PROFOUND_SATURATION		0.0
 
-#else	/* DEVE_USE_OLD_PRESETS */
+#else	/* DEVA_USE_OLD_PRESETS */
 
 #define	MILD_SNELLEN			(20.0/80.0)	/* logMAR 0.6 */
 #define	MILD_PELLI_ROBSON		1.5
@@ -279,7 +286,7 @@ typedef enum { undefined_smoothing, no_smoothing, smoothing } SmoothingType;
 #define	SEVERE_PELLI_ROBSON		0.5
 #define	SEVERE_SATURATION		0.0
 
-#endif	/* DEVE_USE_OLD_PRESETS */
+#endif	/* DEVA_USE_OLD_PRESETS */
 
 #define	LOGMAR_MAX		2.3
 #define	LOGMAR_MIN		(-0.65)
@@ -293,9 +300,12 @@ typedef enum { undefined_smoothing, no_smoothing, smoothing } SmoothingType;
 #define	PELLI_ROBSON_MAX	2.4
 #define PELLI_ROBSON_NORMAL	2.0	/* normal vision score on chart */
 
-#define	GLARE_CUTOFF_RATIO	7.0	/* RADIANCE identifies glare sources */
+#define	AUTO_CLIP_MEDIAN		/* based auto_clip value on median, */
+					/* not average */
+#define	CUTOFF_RATIO_MEAN	7.0	/* RADIANCE identifies glare sources */
 					/* as being brighter than 7 times the */
 					/* average luminance level. */
+#define	CUTOFF_RATIO_MEDIAN	12.0	/* need higher value for median */
 #define	NO_CLIP_LEVEL		-1.0	/* don't clip values */
 
 #define	exp10(x)	pow ( 10.0, (x) ) /* can't count on availablility
@@ -307,7 +317,11 @@ static void	print_usage ( void );
 static void	internal_error ( void );
 static double	PelliRobson2contrastratio ( double PelliRobson_score );
 static double	contrastratio2PelliRobson ( double contrast_ratio );
+#ifndef	AUTO_CLIP_MEDIAN
 static double	auto_clip_level ( DEVA_xyY_image *image );
+#else
+static double	auto_clip_level_median ( DEVA_xyY_image *image );
+#endif	/* AUTO_CLIP_MEDIAN */
 static void	clip_max_value ( DEVA_xyY_image *image, double clip_value );
 static void	deva_filter_print_defaults ( void );
 static void	deva_filter_print_presets ( void );
@@ -363,6 +377,10 @@ main ( int argc, char *argv[] )
     DEVA_XYZ_image	*xyz;
     DEVA_float_image	*dist;
     DEVA_XYZ_image	*nor;
+    /* hidden options */
+    Measurement_type	measurement_type = DEFAULT_MEASUREMENT_TYPE;
+    double		scale_parameter = DEFAULT_SCALE_PARAMETER;
+    Visualization_type	visualization_type = DEFAULT_VISUALIZATION_TYPE;
 
     /* Hardwired parameters for detection of geometry boundaries. */
     int			position_patch_size = POSITION_PATCH_SIZE;
@@ -705,6 +723,47 @@ main ( int argc, char *argv[] )
 		    strlen ( "-geometryboundaries=" ) ) == 0 ) {
 	    geometry_boundaries_file_name = argv[argpt] +
 		strlen ( "-geometryboundaries=" );
+	    argpt++;
+
+	} else if ( strncasecmp ( argv[argpt], "--reciprocal=",
+		    strlen ( "--reciprocal=" ) ) == 0 ) {
+	    measurement_type = reciprocal_measure;
+	    scale_parameter = atof ( argv[argpt] +
+		    strlen ( "--reciprocal=" ) );
+	    argpt++;
+	} else if ( strncasecmp ( argv[argpt], "-reciprocal=",
+		    strlen ( "-reciprocal=" ) ) == 0 ) {
+	    measurement_type = reciprocal_measure;
+	    scale_parameter = atof ( argv[argpt] +
+		    strlen ( "-reciprocal=" ) );
+	    argpt++;
+	} else if ( strncasecmp ( argv[argpt], "--linear=",
+		    strlen ( "--linear=" ) ) == 0 ) {
+	    measurement_type = linear_measure;
+	    scale_parameter = atof ( argv[argpt] + strlen ( "--linear=" ) );
+	    argpt++;
+	} else if ( strncasecmp ( argv[argpt], "-linear=",
+		    strlen ( "-linear=" ) ) == 0 ) {
+	    measurement_type = linear_measure;
+	    scale_parameter = atof ( argv[argpt] + strlen ( "-linear=" ) );
+	    argpt++;
+	} else if ( strncasecmp ( argv[argpt], "--Gaussian=",
+		    strlen ( "--Gaussian=" ) ) == 0 ) {
+	    measurement_type = Gaussian_measure;
+	    scale_parameter = atof ( argv[argpt] + strlen ( "--Gaussian=" ) );
+	    argpt++;
+	} else if ( strncasecmp ( argv[argpt], "-Gaussian=",
+		    strlen ( "-Gaussian=" ) ) == 0 ) {
+	    measurement_type = Gaussian_measure;
+	    scale_parameter = atof ( argv[argpt] + strlen ( "-Gaussian=" ) );
+	    argpt++;
+	} else if ( ( strcasecmp ( argv[argpt], "--red-green" ) == 0 ) ||
+		( strcasecmp ( argv[argpt], "-red-green" ) == 0 ) ) {
+	    visualization_type = red_green_type;
+	    argpt++;
+	} else if ( ( strcasecmp ( argv[argpt], "--red-gray" ) == 0 ) ||
+		( strcasecmp ( argv[argpt], "-red-gray" ) == 0 ) ) {
+	    visualization_type = red_gray_type;
 	    argpt++;
 
 #endif	/* DEVA_VISIBILITY */
@@ -1086,7 +1145,11 @@ main ( int argc, char *argv[] )
 
 	case auto_clip:
 
+#ifndef	AUTO_CLIP_MEDIAN
 	    clip_value = auto_clip_level ( input_image );
+#else
+	    clip_value = auto_clip_level_median ( input_image );
+#endif	/* AUTO_CLIP_MEDIAN */
 	    if ( clip_value >= 0.0 ) {
 		clip_max_value ( input_image, clip_value );
 
@@ -1124,6 +1187,15 @@ main ( int argc, char *argv[] )
 		DEVA_image_n_rows ( input_image ) );
 	h_margin = (int) round ( 0.5 * margin *
 		DEVA_image_n_cols ( input_image ) );
+
+#ifdef UNIFORM_MARGINS
+	/* make the margin based only on the smaller dimension */
+	if ( v_margin > h_margin ) {
+	    v_margin = h_margin;
+	} else {
+	    h_margin = v_margin;
+	}
+#endif	/* UNIFORM_MARGINS */
 
 	/* add the margin */
 	margin_image =  DEVA_xyY_add_margin ( v_margin, h_margin, input_image );
@@ -1202,8 +1274,9 @@ main ( int argc, char *argv[] )
      * Make displayable file showing predicted geometry discontinuities that
      * are not visible at specified level of low vision.
      */
-    hazards_visualization = visualize_hazards ( MAX_HAZARD, hazards,
-	    DEVA_VIS_HAZ_RED_ONLY );
+    hazards_visualization =
+	visualize_hazards ( hazards, measurement_type, scale_parameter,
+		visualization_type );
 
     DEVA_RGB_image_to_filename_png ( hazards_file_name, hazards_visualization );
 
@@ -1322,6 +1395,7 @@ contrastratio2PelliRobson ( double contrast_ratio )
     return ( PelliRobson_score );
 }
 
+#ifndef AUTO_CLIP_MEDIAN
 static double
 auto_clip_level ( DEVA_xyY_image *image )
 /*
@@ -1345,8 +1419,8 @@ auto_clip_level ( DEVA_xyY_image *image )
     double	    max_luminance;
     double	    average_luminance_initial;
     double	    average_luminance_revised;
-    double	    glare_cutoff_initial;
-    double	    glare_cutoff_revised;
+    double	    cutoff_initial;
+    double	    cutoff_revised;
     unsigned int    glare_count;
 
     /* first pass */
@@ -1366,9 +1440,9 @@ auto_clip_level ( DEVA_xyY_image *image )
     average_luminance_initial /=
 	( ((double) DEVA_image_n_rows ( image ) ) *
 	    ((double) DEVA_image_n_cols ( image ) ) );
-    glare_cutoff_initial = GLARE_CUTOFF_RATIO * average_luminance_initial;
+    cutoff_initial = CUTOFF_RATIO_MEAN * average_luminance_initial;
 
-    if ( glare_cutoff_initial >= max_luminance ) {
+    if ( cutoff_initial >= max_luminance ) {
 	/* no need for glare source clipping */
 	return ( NO_CLIP_LEVEL );
     }
@@ -1381,7 +1455,7 @@ auto_clip_level ( DEVA_xyY_image *image )
     for ( row = 0; row < DEVA_image_n_rows ( image ); row++ ) {
 	for ( col = 0; col < DEVA_image_n_cols ( image ); col++ ) {
 	    if ( DEVA_image_data ( image, row, col ) . Y >
-		    glare_cutoff_initial ) {
+		    cutoff_initial ) {
 		glare_count++;
 	    } else {
 		average_luminance_revised +=
@@ -1394,10 +1468,108 @@ auto_clip_level ( DEVA_xyY_image *image )
 	( ( ((double) DEVA_image_n_rows ( image ) ) *
 	    ((double) DEVA_image_n_cols ( image ) ) ) -
 	  ( (double) glare_count ) );
-    glare_cutoff_revised = GLARE_CUTOFF_RATIO * average_luminance_revised;
+    cutoff_revised = CUTOFF_RATIO_MEAN * average_luminance_revised;
 
-    return ( glare_cutoff_revised );
+    /* printf ( "clip_level = %f\n", cutoff_revised ); */
+
+    return ( cutoff_revised );
 }
+
+#else
+
+#define	MAGNITUDE_HIST_NBINS	1000
+#define	MEDIAN_EPSILON		0.0001	/* Used to avoid a boundary condition */
+					/* computing percentile bin numbers. */
+
+static double
+auto_clip_level_median ( DEVA_xyY_image *image )
+/*
+ * Suggests a clip level to apply to extreamly bright pixels to reduce
+ * filter ringing.
+ *
+ * Uses a variant of the RADIANCE glare identification heuristic based on
+ * a multiple of the median luminance.
+ *
+ * NO_CLIP_LEVEL is returned if no clipping is needed.
+ */
+{
+    int		    row, col;
+    int		    n_rows, n_cols;
+    unsigned int    magnitude_hist[MAGNITUDE_HIST_NBINS];
+    int		    bin;
+    double	    max_luminance;
+    double	    norm;
+    unsigned int    total_count;
+    double	    percentile;
+    double	    previous_percentile;
+    double	    median;
+    double	    cutoff;
+
+    n_rows = DEVA_image_n_rows ( image );
+    n_cols = DEVA_image_n_cols ( image );
+
+    for ( bin = 0; bin < MAGNITUDE_HIST_NBINS; bin++ ) {
+	magnitude_hist[bin] = 0;
+    }
+
+    max_luminance = 0.0;
+
+    for ( row = 0; row < n_rows; row++ ) {
+	for ( col = 0; col < n_cols; col++ ) {
+	    max_luminance = fmax ( max_luminance,
+		    DEVA_image_data (image, row, col ) . Y );
+	}
+    }
+
+    if ( max_luminance <= 0.0 ) {
+	fprintf ( stderr, "auto_clip_median: no non-zero luminance!\n" );
+	exit ( EXIT_FAILURE );
+    }
+
+    /* Spread out luminance values amoung histogram bins. */
+    norm = 1.0 / max_luminance;
+    for ( row = 1; row < n_rows - 1; row++ ) {
+	for ( col = 1; col < n_cols - 1; col++ ) {
+	    bin = norm * DEVA_image_data ( image, row, col ) . Y *
+		( ( (double) MAGNITUDE_HIST_NBINS ) - MEDIAN_EPSILON );
+	    magnitude_hist[bin]++;
+	}
+    }
+
+    percentile = 0.0;
+    previous_percentile = -1.0;
+    total_count = n_rows * n_cols;
+
+    /* Search for bin index corresponding to median (percentile == 0.5. */
+    for ( bin = MAGNITUDE_HIST_NBINS - 1; bin >= 0; bin-- ) {
+	percentile += ((double) magnitude_hist[bin] ) / ((double) total_count );
+
+	if ( percentile > 0.5 ) {
+	    if ( ( 0.5 - previous_percentile ) < ( percentile - 0.5 ) ) {
+		bin--;
+	    }
+
+	    break;
+	}
+    }
+
+    median = ( ((double) bin ) + 0.5 ) /
+	( ((double) MAGNITUDE_HIST_NBINS ) - MEDIAN_EPSILON ) * max_luminance;
+
+    cutoff = CUTOFF_RATIO_MEDIAN * median;
+
+    /* printf ( "median = %f, maximum = %f", median, max_luminance ); */
+
+    if ( cutoff >= max_luminance ) {
+	/* printf ( ", no clipping\n" ); */
+	return ( NO_CLIP_LEVEL );
+    } else {
+	/* printf ( ", clip level = %f\n", cutoff ); */
+	return ( cutoff );
+    }
+}
+
+#endif
 
 void
 clip_max_value ( DEVA_xyY_image *image, double clip_value )

@@ -17,13 +17,32 @@
  * includes a chosen percentile of all of the gradient magnitude values,
  * whether or not they are local maxima.
  */
-#define	PERCENTILE_ALL
+/* #define	PERCENTILE_ALL */
 
-#define	PERCENTILE_EDGE_PIXELS	0.3	/* percentile of gradient magnitude */
+/*
+ * Gradient-based edge detectors, not so surprisingly, are based on the
+ * gradient of image intensity.  The gradient is a difference operator, and is
+ * usually inappropriate when applied to luminance images.  The reason for this
+ * is that the human visual system's sensitivity to luminance differences
+ * decreases as the average luminance increases.  As a result, most definitions
+ * of image contrast at a boundary use some for of intensity ratios rather than
+ * intensity differences.  A gradient-based edge detector can approximate this
+ * if it is applied to the logarithm of image intensity.  Definining
+ * CANNY_LOG_MAGNITUDE causes this formulation to be used.  Note that this is
+ * not an issue when gradient-based edge detectors are applied to images that
+ * are sRGB or gamma encoded, since the pixel values for these images are
+ * approximately linear in perceived brightness.
+ */
+#define	CANNY_LOG_MAGNITUDE
+
+/* old value was 0.3 */
+#define	PERCENTILE_EDGE_PIXELS	0.4	/* percentile of gradient magnitude */
 					/* values considered to be likely */
 					/* edges (see note about */
 					/* PERCENTILE_ALL) */
-#define	LOW_THRESHOLD_MULTIPLE	0.4	/* ratio of low to high threshold */
+
+/* old value was 0.4 */
+#define	LOW_THRESHOLD_MULTIPLE	0.6	/* ratio of low to high threshold */
 					/* (for auto-level hysteresis */
 					/* thresholding) */
 
@@ -35,10 +54,17 @@
  * The following values are specified as defines rather than as enums,
  * since they have to be assignable to gray_image pixels.
  */
-#define	CANNY_NO_EDGE		0
-#define CANNY_MARKED_EDGE	1
-#define CANNY_POSSIBLE_EDGE	2
-#define CANNY_CERTAIN_EDGE	3
+#define	CANNY_NO_EDGE		0	/* definitely not an edge */
+#define CANNY_MARKED_EDGE	1	/* above all relevant thresholds, */
+					/* but may violate local directional */
+					/* maxima constraint */
+#define CANNY_POSSIBLE_EDGE	2	/* above some relevant thresholds, */
+					/* but may violate local directional */
+					/* maxima constraint */
+#define CANNY_CERTAIN_EDGE	3	/* above all relevant thresholds, */
+					/* but may violate local directional */
+					/* maxima constraint (used for */
+					/* hysteresis thresholding). */
 
 #define	CANNY_MAG_NO_EDGE       0.0
 #define	CANNY_DIR_NO_EDGE       -1.0

@@ -12,6 +12,19 @@
  * maxima.  Defining PERCENTILE_ALL sets the high threshold at a value that
  * includes a chosen percentile of all of the gradient magnitude values,
  * whether or not they are local maxima.
+ *
+ * Gradient-based edge detectors, not so surprisingly, are based on the
+ * gradient of image intensity.  The gradient is a difference operator, and
+ * is usually inappropriate when applied to luminance images.  The reason
+ * for this is that the human visual system's sensitivity to luminance
+ * differences decreases as the average luminance increases.  As a result,
+ * most definitions of image contrast at a boundary use some for of intensity
+ * ratios rather than intensity differences.  A gradient-based edge detector
+ * can approximate this if it is applied to the logarithm of image intensity.
+ * Definining CANNY_LOG_MAGNITUDE in deva-canny.h causes this formulation to
+ * be used.  Note that this is not an issue when gradient-based edge detectors
+ * are applied to images that are sRGB or gamma encoded, since the pixel
+ * values for these images are approximately linear in perceived brightness.
  */
 
 /* #define	DEVA_CHECK_BOUNDS */		/* debugging aid */
@@ -20,7 +33,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <assert.h>
 #include "deva-canny.h"
 #include "deva-gblur.h"
 #include "deva-image.h"
@@ -45,6 +57,14 @@
 				/* computing percentile bin numbers. */
 
 #define	SQR(x)	((x)*(x))
+
+#ifdef CANNY_LOG_MAGNITUDE
+#define	CANNY_LOG_EPSILON	0.1	/* avoid log(0.0) */
+#endif
+
+#ifdef PRINT_THRESHOLD_COUNTS
+static int	promotion_count = 0;	/* needs to be global */
+#endif	/* PRINT_THRESHOLD_COUNTS */
 
 /*
  *	Static function prototypes
@@ -110,7 +130,7 @@ canny_base ( DEVA_float_image *input, double st_dev, double high_threshold,
  * input:	    Luminance magnitude
  * st_dev:	    Standard deviation of initial Gaussian blurring.  If
  * 		    negative, no initial smoothing is done.  If blurring is
- * 		    requested, value must be <= GBLUR_STD_DEV_MIN (0.5), since
+ * 		    requested, value must be >= GBLUR_STD_DEV_MIN (0.5), since
  * 		    gblur can't handle smaller values.
  * high_threshold:  Primary threshold, applied to gradient magnitude.  No
  * 		    thresholding if value is <= 0.0.
@@ -136,6 +156,9 @@ canny_base ( DEVA_float_image *input, double st_dev, double high_threshold,
     DEVA_float_image  *magnitude;	/* gradient magnitude (A in Fleck) */
     DEVA_float_image  *grad_Y, *grad_X;	/* X and Y in Fleck */
     DEVA_gray_image   *edge_map;	/* detected edges */
+#ifdef CANNY_LOG_MAGNITUDE
+    int		      row, col;
+#endif	/* CANNY_LOG_MAGNITUDE */
 
     n_rows = DEVA_image_n_rows ( input );
     n_cols = DEVA_image_n_cols ( input );
@@ -155,9 +178,29 @@ canny_base ( DEVA_float_image *input, double st_dev, double high_threshold,
 
     if ( st_dev >= GBLUR_STD_DEV_MIN ) {
 	blurred_input = deva_float_gblur ( input, st_dev );
+#ifdef CANNY_LOG_MAGNITUDE
+	for ( row = 0; row < n_rows; row++ ) {
+	    for ( col = 0; col < n_cols; col++ ) {
+		DEVA_image_data ( blurred_input, row, col ) =
+		    log ( DEVA_image_data ( blurred_input, row, col ) +
+			    CANNY_LOG_EPSILON );
+	    }
+	}
+#endif	/* CANNY_LOG_MAGNITUDE */
     } else if ( st_dev <= 0 ) {
 	/* don't blur */
+#ifdef CANNY_LOG_MAGNITUDE
+	blurred_input = DEVA_float_image_new ( n_rows, n_cols );
+	for ( row = 0; row < n_rows; row++ ) {
+	    for ( col = 0; col < n_cols; col++ ) {
+		DEVA_image_data ( blurred_input, row, col ) =
+		    log ( DEVA_image_data ( input, row, col ) +
+			    CANNY_LOG_EPSILON );
+	    }
+	}
+#else
 	blurred_input = input;
+#endif	/* CANNY_LOG_MAGNITUDE */
     } else {
 	fprintf ( stderr,
 		"canny: can't handle small standard devations (%f)!\n",
@@ -220,6 +263,12 @@ canny_base ( DEVA_float_image *input, double st_dev, double high_threshold,
 
 #endif	/* PERCENTILE_ALL */
 
+#ifdef PRINT_THRESHOLD_COUNTS
+    if ( ( high_threshold > 0.0) && (low_threshold > 0.0) ) {
+	printf ( "promotion count = %d\n", promotion_count );
+    }
+#endif	/* PRINT_THRESHOLD_COUNTS */
+
     if ( orientation_p != NULL ) {
 	*orientation_p = find_orientation ( edge_map, grad_Y, grad_X );
 		/* only computer gradient orientation if value is requested */
@@ -235,9 +284,15 @@ canny_base ( DEVA_float_image *input, double st_dev, double high_threshold,
 
     DEVA_float_image_delete ( grad_Y );
     DEVA_float_image_delete ( grad_X );
+#ifdef CANNY_LOG_MAGNITUDE
+    if ( ( st_dev >= GBLUR_STD_DEV_MIN ) || ( st_dev <= 0.0 ) ) {
+	DEVA_float_image_delete ( blurred_input );
+    }
+#else
     if ( st_dev >= GBLUR_STD_DEV_MIN ) {
 	DEVA_float_image_delete ( blurred_input );
     }
+#endif
 
     return ( edge_map );
 }
@@ -347,15 +402,15 @@ auto_thresh_values ( DEVA_float_image *magnitude, double *high_threshold,
  * of the frequency distibution of gradient magnitudes.
  */
 {
-    int	    magnitude_hist[MAGNITUDE_HIST_NBINS];
-    int	    row, col;
-    int	    n_rows, n_cols;
-    int	    bin;
-    int	    bin_index;
-    double  magnitude_max;
-    double  norm;
-    double  percentile;
-    int	    total_count;
+    unsigned int    magnitude_hist[MAGNITUDE_HIST_NBINS];
+    int	    	    row, col;
+    int	    	    n_rows, n_cols;
+    int	    	    bin;
+    int	    	    bin_index;
+    double  	    magnitude_max;
+    double  	    norm;
+    double  	    percentile;
+    unsigned int    total_count;
 
     n_rows = DEVA_image_n_rows ( magnitude );
     n_cols = DEVA_image_n_cols ( magnitude );
@@ -391,7 +446,6 @@ auto_thresh_values ( DEVA_float_image *magnitude, double *high_threshold,
 	for ( col = 1; col < n_cols - 1; col++ ) {
 	    bin_index = norm * DEVA_image_data ( magnitude, row, col ) *
 		( ( (double) MAGNITUDE_HIST_NBINS ) - EPSILON );
-
 	    magnitude_hist[bin_index]++;
 	}
     }
@@ -481,10 +535,14 @@ find_edges ( DEVA_float_image *magnitude, DEVA_float_image *grad_Y,
 
 	    center_magnitude = DEVA_image_data ( magnitude, row, col );
 
-	    /* Compare gradient magntitude with thresholds to */
-	    /* see if any more elaborate analysis is needed. */
-	    /* Need to figure out if we have no thresholding, */
-	    /* simple thresholding, or hysteresis thresholding */
+	    /*
+	     * Compare gradient magntitude with thresholds to
+	     * see if any more elaborate analysis is needed.
+	     * Need to figure out if we have no thresholding,
+	     * simple thresholding, or hysteresis thresholding.
+	     * This first check does not screen for directional
+	     * local maxima.
+	     */
 
 	    switch (threshold_type) {
 		case SIMPLE:
@@ -528,7 +586,11 @@ find_edges ( DEVA_float_image *magnitude, DEVA_float_image *grad_Y,
 		    break;
 	    }
 
-	    /* We get here only if the DEVA_image_data is above threshold. */
+	    /*
+	     * We get here only if the DEVA_image_data is above high_threshold
+	     * if simple thresholding, low_threshold if hysteresis thresholding,
+	     * or 0.0 if no thresholding.
+	     */
 
 #ifdef PRINT_THRESHOLD_COUNTS
 	    T1_passed_count++;
@@ -648,8 +710,10 @@ find_edges ( DEVA_float_image *magnitude, DEVA_float_image *grad_Y,
 	    }
 
 	    /*
-	     * We get here only if the DEVA_image_data is above threshold and
-	     * distance 1 pseudo-cell check is also passed.
+	     * We get here only if the DEVA_image_data is above high_threshold
+	     * if simple thresholding, low_threshold if hysteresis thresholding,
+	     * or 0.0 if no thresholding, and if distance 1 pseudo-cell check
+	     * is also passed.
 	     */
 
 #ifdef PRINT_THRESHOLD_COUNTS
@@ -776,9 +840,16 @@ find_edges ( DEVA_float_image *magnitude, DEVA_float_image *grad_Y,
 	    }
 
 	    /*
-	     * We get here only if the DEVA_image_data is above threshold,
+	     * We get here only if the DEVA_image_data is above low_threshold,
 	     * distance 1 pseudo-cell check is passed, and distance 2
 	     * pseudo-cell check is passed.
+	     */
+
+	    /*
+	     * We get here only if the DEVA_image_data is above high_threshold
+	     * if simple thresholding, low_threshold if hysteresis thresholding,
+	     * or 0.0 if no thresholding, if distance 1 pseudo-cell check
+	     * is passed, and if distance 2 pseudo-cell check is also passed.
 	     */
 
 #ifdef PRINT_THRESHOLD_COUNTS
@@ -923,15 +994,18 @@ follow ( DEVA_gray_image *edges, int row, int col)
      * image.  This should never happen because earlier code avoids pixels
      * two in from the edge.
      */
-    assert ( ( row > 0 ) && ( row < DEVA_image_n_rows ( edges ) ) &&
-		( col > 0 ) && ( col < DEVA_image_n_cols ( edges ) ) );
-
     for ( new_row = row - 1; new_row <= row + 1; new_row++ ) {
 	for ( new_samp = col - 1; new_samp <= col + 1; new_samp++ ) {
 	    if ( ( DEVA_image_data ( edges,new_row,new_samp) ==
 			CANNY_CERTAIN_EDGE) ||
 		    ( DEVA_image_data ( edges, new_row, new_samp) ==
 		      CANNY_POSSIBLE_EDGE ) ) {
+#ifdef PRINT_THRESHOLD_COUNTS
+		if ( DEVA_image_data ( edges, new_row, new_samp) ==
+			                      CANNY_POSSIBLE_EDGE ) {
+		    promotion_count++;
+		}
+#endif	/* PRINT_THRESHOLD_COUNTS */
 		DEVA_image_data ( edges, new_row, new_samp) = CANNY_MARKED_EDGE;
 		follow ( edges, new_row, new_samp );
 	    }

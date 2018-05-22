@@ -1,6 +1,14 @@
 cmake_minimum_required(VERSION 3.0)
 PROJECT ( DEVA_FILTER )
 
+if ( NOT CMAKE_SYSTEM_NAME STREQUAL "Windows" )
+  # Linux, MacOS
+  option (DEVA_FILTER_USE_CAIRO "Build using Cairo library" ON )
+else ( )
+  # Windows
+  option (DEVA_FILTER_USE_CAIRO "Build using Cairo library" OFF )
+endif ( )
+
 message ( STATUS "CMAKE_SYSTEM_NAME = " ${CMAKE_SYSTEM_NAME} )
 
 # SET ( CMAKE_VERBOSE_MAKEFILE ON )
@@ -18,13 +26,25 @@ if ( CMAKE_SYSTEM_NAME STREQUAL "Windows" )
   include ( ${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindFFTW_Windows.cmake )
 else ( )
   find_package ( PNG REQUIRED )
+  find_package ( TIFF REQUIRED )
+  if ( DEVA_FILTER_USE_CAIRO )
+    include ( ${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindCairo.cmake )
+  endif ( )
   include ( ${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindFFTW.cmake )
 endif ( )
 
-INCLUDE_DIRECTORIES (
+if ( DEVA_FILTER_USE_CAIRO )
+  INCLUDE_DIRECTORIES (
+	${FFTW_INCLUDE_DIR}
+	${PNG_INCLUDE_DIR}
+	${CAIRO_INCLUDE_DIR}
+	)
+else ( )
+  INCLUDE_DIRECTORIES (
 	${FFTW_INCLUDE_DIR}
 	${PNG_INCLUDE_DIR}
 	)
+endif ( )
 
 ADD_EXECUTABLE ( deva-filter deva-commandline.c
 	deva-filter.c
@@ -127,3 +147,62 @@ TARGET_LINK_LIBRARIES ( deva-visualize-geometry
 	${PNG_LIBRARIES}
 	-lm
 	)
+
+if ( DEVA_FILTER_USE_CAIRO )
+
+  ADD_EXECUTABLE ( deva-compare-boundaries deva-compare-boundaries.c
+	deva-image.c
+	read-geometry.c
+	dilate.c
+	visualize-hazards.c
+	deva-add-text.c
+	DEVA-sRGB.c
+	DEVA-png.c
+	radiance-header.c
+	radiance/badarg.c
+	radiance/color.c
+	radiance/fputword.c
+	radiance/fvect.c
+	radiance/header.c
+	radiance/image.c
+	radiance/resolu.c
+	radiance/spec_rgb.c
+	radiance/words.c
+	radiance/timegm.c
+	)
+  TARGET_COMPILE_DEFINITIONS ( deva-compare-boundaries PRIVATE DEVA_USE_CAIRO )
+  TARGET_LINK_LIBRARIES ( deva-compare-boundaries
+	${PNG_LIBRARIES}
+	${TIFF_LIBRARIES}
+	${CAIRO_LIBRARIES}
+	-lm
+	)
+
+else ( )
+
+  ADD_EXECUTABLE ( deva-compare-boundaries deva-compare-boundaries.c
+	deva-image.c
+	read-geometry.c
+	dilate.c
+	visualize-hazards.c
+	DEVA-sRGB.c
+	DEVA-png.c
+	radiance-header.c
+	radiance/badarg.c
+	radiance/color.c
+	radiance/fputword.c
+	radiance/fvect.c
+	radiance/header.c
+	radiance/image.c
+	radiance/resolu.c
+	radiance/spec_rgb.c
+	radiance/words.c
+	radiance/timegm.c
+	)
+  TARGET_LINK_LIBRARIES ( deva-compare-boundaries
+	${PNG_LIBRARIES}
+	${TIFF_LIBRARIES}
+	-lm
+	)
+
+endif ( )

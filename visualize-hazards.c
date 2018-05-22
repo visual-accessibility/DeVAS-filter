@@ -6,43 +6,76 @@
 #include "deva-image.h"
 #include "deva-license.h"
 
+#define	SQ(x)	((x) * (x))
+
 static DEVA_RGB		color_hazard_level ( double hazard_level,
-			    int visualization_type );
+			     Visualization_type visualization_type );
 static DEVA_float_image	*expand_3x ( DEVA_float_image *image );
 
 DEVA_RGB_image *
-visualize_hazards ( double max_hazard, DEVA_float_image *hazards,
-       int visualization_type )
+visualize_hazards ( DEVA_float_image *hazards,
+	Measurement_type measurement_type, double scale_parameter,
+	Visualization_type visualization_type )
 /*
  * Make displayable file showing predicted geometry discontinuities that are
  * not visible at specified level of low vision. 
  *
- * max_hazard:		Visual angle corresponding to maximum displayable
- *			hazard.  All hazard values at or above this level as
- *			displayed with the same red shade.
  *
  * hazards:		Visual angle from geometry boundaries to nearest
  *			luminance boundary.
+ * Measurement_type:	reciprocal_measure
+ * 			    scale / ( visual_angle + scale )
+ * 			linear_measure
+ * 			    1 - ( min(visual_angle,max_hazard ) / max_hazard )
  *
- * visualization_type:	DEVA_VIS_HAZ_RED_ONLY
- * 				redish => visibility hazard
- * 				grayish => probably OK
- * 			DEVA_VIS_HAZ_RED_GREEN
- * 				redish => visibility hazard
- *				greenish => probably OK
+ * scale_parameter:	reciprocal_scale, max_hazard, or Gaussian_sigma as
+ * 			appropriate for measurement type
+ *
+ * visualization_type:	red_gray_type
+ * 			    redish => visibility hazard
+ * 			    grayish => probably OK
+ * 			red_green_type
+ * 			    redish => visibility hazard
+ *			    greenish => probably OK
  */
 {
+    double		reciprocal_scale = -1.0;
+    			/* 1 - scale / ( visual_angle + scale ) */
+    double		max_hazard = -1.0;
+    			/* min(visual_angle,max_hazard ) / max_hazard */
+    double		Gaussian_sigma = -1.0;
+    			/* 1 - exp ( -0.5 * ( x / Gaussian_sigma ) ^ 2 ) */
     int			row, col;
     double		hazard_level;
     DEVA_float_image	*hazards_thickened;
     DEVA_RGB_image	*visualization;
     DEVA_RGB		black;
 
-    if ( ( visualization_type != DEVA_VIS_HAZ_RED_ONLY ) &&
-	    ( visualization_type != DEVA_VIS_HAZ_RED_GREEN ) ) {
+    if ( ( visualization_type != red_gray_type ) &&
+	    ( visualization_type != red_green_type ) ) {
 	fprintf ( stderr, "visualize_hazards: invalid visualization_type!\n" );
 	exit ( EXIT_FAILURE );
     }
+
+    switch ( measurement_type ) {
+	case reciprocal_measure:
+	    reciprocal_scale = scale_parameter;
+	    break;
+
+	case linear_measure:
+	    max_hazard = scale_parameter;
+	    break;
+
+	case Gaussian_measure:
+	    Gaussian_sigma = scale_parameter;
+	    break;
+
+	default:
+	    fprintf ( stderr,
+		    "visualize_hazards: invalid measurement_type!\n" );
+	    exit ( EXIT_FAILURE );
+    }
+
 
     /* make things easier to see */
     hazards_thickened = expand_3x ( hazards );
@@ -57,14 +90,32 @@ visualize_hazards ( double max_hazard, DEVA_float_image *hazards,
 	    if ( DEVA_image_data ( hazards_thickened, row, col ) >= 0.0 ) {
 		/* geometry edge that should be color coded */
 
-		if ( DEVA_image_data ( hazards_thickened, row, col ) >=
-						max_hazard ) {
-		    /* normalize based on max_hazard */
-		    hazard_level = 1.0;
-		} else {
-		    hazard_level =
-			DEVA_image_data ( hazards_thickened, row, col ) /
-				max_hazard;
+		switch ( measurement_type ) {
+
+		    case reciprocal_measure:
+			hazard_level = 1.0 - ( reciprocal_scale /
+			    ( DEVA_image_data ( hazards_thickened, row, col ) +
+				  reciprocal_scale ) );
+			break;
+
+		    case linear_measure:
+			hazard_level =
+			    fmin ( DEVA_image_data ( hazards_thickened, row,
+					col ), max_hazard ) / max_hazard;
+			break;
+
+		    case Gaussian_measure:
+			hazard_level = 1.0 -
+			    exp ( -0.5 *
+				    ( SQ ( DEVA_image_data ( hazards_thickened,
+					    row, col ) / Gaussian_sigma ) ) );
+			break;
+
+		    default:
+			fprintf ( stderr,
+				"visualize_hazards: internal error!\n" );
+			exit ( EXIT_FAILURE );
+
 		}
 
 		DEVA_image_data ( visualization, row, col ) =
@@ -84,10 +135,12 @@ visualize_hazards ( double max_hazard, DEVA_float_image *hazards,
 }
 
 static DEVA_RGB
-color_hazard_level ( double hazard_level, int visualization_type )
+color_hazard_level ( double hazard_level,
+	Visualization_type visualization_type )
 /*
  * Blend colors as defined by visualization_type, based on value of
- * hazard_level (in range [0.0 - 1.0]).
+ * hazard_level (in range [0.0 - 1.0]).  The larger the value, the
+ * greater the potential hazard.
  */
 {
     DEVA_RGBf	color_mixed;
@@ -95,7 +148,7 @@ color_hazard_level ( double hazard_level, int visualization_type )
 
     switch ( visualization_type ) {
 
-	case DEVA_VIS_HAZ_RED_ONLY:
+	case red_gray_type:
 	    color_mixed.red = ( hazard_level * COLOR_MAX_RED ) +
 		( ( 1.0 - hazard_level ) * COLOR_MIN_RED_RO );
 	    color_mixed.green = ( hazard_level * COLOR_MAX_GREEN ) +
@@ -106,7 +159,7 @@ color_hazard_level ( double hazard_level, int visualization_type )
 
 	    break;
 
-	case DEVA_VIS_HAZ_RED_GREEN:
+	case red_green_type:
 
 	    color_mixed.red = ( hazard_level * COLOR_MAX_RED ) +
 		( ( 1.0 - hazard_level ) * COLOR_MIN_RED_RG );
