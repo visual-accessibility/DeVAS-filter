@@ -1,3 +1,8 @@
+version 3.1.02
+
+In deva-commandline.c (deva-visibility): Added measurement type options
+to usage message.
+
 version 3.1.01
 
 deva-compare-boundaries.c: New program to create a visualization image

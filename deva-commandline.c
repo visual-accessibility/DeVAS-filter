@@ -141,6 +141,8 @@ int	args_needed = 4;
 
 char	*Usage = /* deva-visibility */
 	    "--mild|--moderate|--severe|--profound [--margin=<value>]"
+	    "\n\t[--red-gray|--red-green]"
+	    "\n\t[--Gaussian=<sigma>|--reciprocal=<scale>|--linear=<max>]"
 	    "\n\t[--luminanceboundaries=<filename.png>]"
 	    "\n\t[--geometryboundaries=<filename.png>]"
 	    "\n\tinput.hdr coordinates xyz.txt dist.txt nor.txt"
@@ -148,6 +150,8 @@ char	*Usage = /* deva-visibility */
 char	*Usage2 = "[--snellen|--logMAR] [--sensitivity-ratio|--pelli-robson]"
     "\n\t[--autoclip|--clip=<level>] [--color|--grayscale|saturation=<value>]"
     "\n\t[--margin=<value>] [--verbose] [--version] [--presets]"
+    "\n\t[--red-gray|--red-green]"
+    "\n\t[--Gaussian=<sigma>|--reciprocal=<scale>|--linear=<max>]"
     "\n\t[--luminanceboundaries=<filename.png>]"
     "\n\t[--geometryboundaries=<filename.png>]"
 	    "\n\t\tacuity contrast input.hdr coordinates xyz.txt dist.txt"
@@ -237,7 +241,7 @@ typedef enum { undefined_smoothing, no_smoothing, smoothing } SmoothingType;
 #define	DEFAULT_FILTER_TYPE_STRING	"use_DEVA_filter"
 
 #define	DEFAULT_MEASUREMENT_TYPE	Gaussian_measure
-#define	DEFAULT_SCALE_PARAMETER		0.5
+#define	DEFAULT_SCALE_PARAMETER		0.75
 #define	DEFAULT_VISUALIZATION_TYPE	red_gray_type;
 
 /* preset values */
