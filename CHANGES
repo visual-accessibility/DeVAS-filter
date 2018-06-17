@@ -1,4 +1,4 @@
-version 3.1.00
+version 3.1.01
 
 deva-compare-boundaries.c: New program to create a visualization image
 comparing a standard set of boundary elements (e.g., geometry) to a
