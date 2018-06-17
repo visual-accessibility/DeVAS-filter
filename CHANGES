@@ -9,13 +9,15 @@ compile-time switch.
 deva-add-text.c: New routine to add annotation text to an image.
 Requires a switch in CMakeLists.txt to link against Cairo library.
 
-In deva-commandline.c (deva-visibility): Switch to basing auto-clipping
-on multiple of median luminance, which is more robust than the previous
-multiple of average luminance.  Added interface for more measurement
-types.  Added an compile-time option for basing margin on only smaller
-dimension of input image.
+In deva-commandline.c (deva-filter, deva-visibility): Switch to basing
+auto-clipping on multiple of median luminance, which is more robust than
+the previous multiple of average luminance.  Added a compile-time option
+for basing margin on only smaller dimension of input image.
 
-In deva-canny.c:  Switch to basing luminance boundaries on gradient of
+In deva-commandline.c (deva-visibility): Added interface for more
+measurement types.
+
+In deva-canny.c:  Switch to basing luminance boundaries on log
 luminance, not luminance itself.  This better approximates human
 perception of contrast boundaries.  Switched to basing auto-thresholding
 on local maxima of directional gradient, not all directional gradients.
