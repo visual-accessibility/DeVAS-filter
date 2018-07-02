@@ -2,11 +2,11 @@ cmake_minimum_required(VERSION 3.0)
 PROJECT ( DEVA_FILTER )
 
 if ( NOT CMAKE_SYSTEM_NAME STREQUAL "Windows" )
-  # Linux, MacOS
-  option (DEVA_FILTER_USE_CAIRO "Build using Cairo library" ON )
+# Linux, MacOS
+option (DEVA_FILTER_USE_CAIRO "Build using Cairo library" ON )
 else ( )
-  # Windows
-  option (DEVA_FILTER_USE_CAIRO "Build using Cairo library" OFF )
+# Windows
+option (DEVA_FILTER_USE_CAIRO "Build using Cairo library" OFF )
 endif ( )
 
 message ( STATUS "CMAKE_SYSTEM_NAME = " ${CMAKE_SYSTEM_NAME} )
@@ -14,36 +14,35 @@ message ( STATUS "CMAKE_SYSTEM_NAME = " ${CMAKE_SYSTEM_NAME} )
 # SET ( CMAKE_VERBOSE_MAKEFILE ON )
 
 if ( CMAKE_SYSTEM_NAME STREQUAL "Windows" )
-  # Radiance tries to redefine things it shouldn't with mignw64
-  # cross-compiling
-  set ( CMAKE_C_FLAGS "-Wall -g -O3 -D_mingw64_cross" )
+# Radiance tries to redefine things it shouldn't with mignw64
+# cross-compiling
+set ( CMAKE_C_FLAGS "-Wall -g -O3 -D_mingw64_cross" )
 else ( )
-  set ( CMAKE_C_FLAGS "-Wall -g -O3" )
+set ( CMAKE_C_FLAGS "-Wall -g -O3" )
 endif ( )
 
 if ( CMAKE_SYSTEM_NAME STREQUAL "Windows" )
-  include ( ${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindPNG_Windows.cmake )
-  include ( ${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindFFTW_Windows.cmake )
+include ( ${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindPNG_Windows.cmake )
+include ( ${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindFFTW_Windows.cmake )
 else ( )
-  find_package ( PNG REQUIRED )
-  find_package ( TIFF REQUIRED )
-  if ( DEVA_FILTER_USE_CAIRO )
-    include ( ${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindCairo.cmake )
-  endif ( )
-  include ( ${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindFFTW.cmake )
+find_package ( PNG REQUIRED )
+if ( DEVA_FILTER_USE_CAIRO )
+include ( ${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindCairo.cmake )
+endif ( )
+include ( ${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindFFTW.cmake )
 endif ( )
 
 if ( DEVA_FILTER_USE_CAIRO )
-  INCLUDE_DIRECTORIES (
-	${FFTW_INCLUDE_DIR}
-	${PNG_INCLUDE_DIR}
-	${CAIRO_INCLUDE_DIR}
-	)
+INCLUDE_DIRECTORIES (
+${FFTW_INCLUDE_DIR}
+${PNG_INCLUDE_DIR}
+${CAIRO_INCLUDE_DIR}
+)
 else ( )
-  INCLUDE_DIRECTORIES (
-	${FFTW_INCLUDE_DIR}
-	${PNG_INCLUDE_DIR}
-	)
+INCLUDE_DIRECTORIES (
+${FFTW_INCLUDE_DIR}
+${PNG_INCLUDE_DIR}
+)
 endif ( )
 
 ADD_EXECUTABLE ( deva-filter deva-commandline.c
@@ -123,7 +122,7 @@ ADD_EXECUTABLE ( make-coordinates-file make-coordinates-file.c
 	radiance/timegm.c
 	)
 TARGET_LINK_LIBRARIES ( make-coordinates-file
-	-lm
+-lm
 	)
 
 ADD_EXECUTABLE ( deva-visualize-geometry deva-visualize-geometry.c
@@ -150,7 +149,7 @@ TARGET_LINK_LIBRARIES ( deva-visualize-geometry
 
 if ( DEVA_FILTER_USE_CAIRO )
 
-  ADD_EXECUTABLE ( deva-compare-boundaries deva-compare-boundaries.c
+ADD_EXECUTABLE ( deva-compare-boundaries deva-compare-boundaries.c
 	deva-image.c
 	read-geometry.c
 	dilate.c
@@ -170,17 +169,16 @@ if ( DEVA_FILTER_USE_CAIRO )
 	radiance/words.c
 	radiance/timegm.c
 	)
-  TARGET_COMPILE_DEFINITIONS ( deva-compare-boundaries PRIVATE DEVA_USE_CAIRO )
-  TARGET_LINK_LIBRARIES ( deva-compare-boundaries
+TARGET_COMPILE_DEFINITIONS ( deva-compare-boundaries PRIVATE DEVA_USE_CAIRO )
+TARGET_LINK_LIBRARIES ( deva-compare-boundaries
 	${PNG_LIBRARIES}
-	${TIFF_LIBRARIES}
 	${CAIRO_LIBRARIES}
 	-lm
 	)
 
 else ( )
 
-  ADD_EXECUTABLE ( deva-compare-boundaries deva-compare-boundaries.c
+ADD_EXECUTABLE ( deva-compare-boundaries deva-compare-boundaries.c
 	deva-image.c
 	read-geometry.c
 	dilate.c
@@ -199,10 +197,58 @@ else ( )
 	radiance/words.c
 	radiance/timegm.c
 	)
-  TARGET_LINK_LIBRARIES ( deva-compare-boundaries
+TARGET_LINK_LIBRARIES ( deva-compare-boundaries
 	${PNG_LIBRARIES}
-	${TIFF_LIBRARIES}
 	-lm
 	)
 
 endif ( )
+
+ADD_EXECUTABLE ( geometry-boundaries geometry-boundaries.c
+	deva-image.c
+	read-geometry.c
+	geometry-discontinuities.c
+	directional-maxima.c
+	deva-utils.c
+	DEVA-png.c
+	radiance-header.c
+	radiance/badarg.c
+	radiance/color.c
+	radiance/fputword.c
+	radiance/fvect.c
+	radiance/header.c
+	radiance/image.c
+	radiance/resolu.c
+	radiance/spec_rgb.c
+	radiance/words.c
+	radiance/timegm.c
+	)
+TARGET_LINK_LIBRARIES ( geometry-boundaries
+	${PNG_LIBRARIES}
+	-lm
+	)
+
+ADD_EXECUTABLE ( luminance-boundaries luminance-boundaries.c
+	deva-image.c
+	deva-canny.c
+	deva-gblur.c
+	radianceIO.c
+	radiance-header.c
+	acuity-conversion.c
+	radiance/badarg.c
+	radiance/color.c
+	radiance/fputword.c
+	radiance/fvect.c
+	radiance/header.c
+	radiance/image.c
+	radiance/resolu.c
+	radiance/spec_rgb.c
+	radiance/words.c
+	radiance/timegm.c
+	DEVA-sRGB.c
+	DEVA-png.c
+	)
+TARGET_LINK_LIBRARIES ( luminance-boundaries
+	${PNG_LIBRARIES}
+	-lm
+	)

@@ -536,7 +536,7 @@ find_edges ( DEVA_float_image *magnitude, DEVA_float_image *grad_Y,
 	    center_magnitude = DEVA_image_data ( magnitude, row, col );
 
 	    /*
-	     * Compare gradient magntitude with thresholds to
+	     * Compare gradient magnitude with thresholds to
 	     * see if any more elaborate analysis is needed.
 	     * Need to figure out if we have no thresholding,
 	     * simple thresholding, or hysteresis thresholding.

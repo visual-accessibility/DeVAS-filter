@@ -16,7 +16,7 @@
  * in those data files hole result in zero values.
  */
 
-// #define	DEVA_CHECK_BOUNDS
+/* #define	DEVA_CHECK_BOUNDS */
 
 #define	MAX_DST		(1e+8)	/* any distance larger than this is infinite */
 				/* and thus a hole */

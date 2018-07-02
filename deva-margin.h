@@ -5,6 +5,16 @@
 #include "deva-image.h"
 #include "deva-license.h"	/* DEVA open source license */
 
+#define DEVA_MARGIN_REFLECT
+			/* If defined, reflect portion of image */
+			/* inside the boundary to the margin, */
+			/* rather than copying nearest edge pixel. */
+
+/* #define DEVA_MARGIN_AVERAGE_ALL */
+			/* If defined, blend outer part of margin */
+			/* to average of all pixels (DC value), */
+			/* rather that average of border elements. */
+
 /* function prototypes */
 
 #ifdef __cplusplus

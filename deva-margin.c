@@ -4,6 +4,8 @@
 #include "deva-image.h"
 #include "deva-license.h"       /* DEVA open source license */
 
+#include "radianceIO.h"
+
 static		DEVA_xyY scale ( double distance, double background_value,
 		    DEVA_xyY value );
 static double	sigmoid ( double x );
@@ -31,7 +33,7 @@ DEVA_xyY_add_margin ( int v_margin, int h_margin, DEVA_xyY_image *original )
     int		    row, col;
     int		    n_rows, n_cols;
     int		    new_n_rows, new_n_cols;
-    double	    average_luminance_at_border;
+    double	    average_luminance;
     double	    distance, row_diff, col_diff;
 
     n_rows = DEVA_image_n_rows ( original );
@@ -52,6 +54,16 @@ DEVA_xyY_add_margin ( int v_margin, int h_margin, DEVA_xyY_image *original )
 	fprintf ( stderr,
 		"DEVA_xyY_add_margin: n_cols too small (%d)!\n", n_cols );
 	exit ( EXIT_FAILURE );
+    }
+
+    if ( v_margin > ( n_rows / 2 ) ) { 
+	fprintf ( stderr,
+		"DEVA_xyY_add_margin: v_margin too large (%d)!\n", v_margin );
+    }
+
+    if ( h_margin > ( n_cols / 2 ) ) { 
+	fprintf ( stderr,
+		"DEVA_xyY_add_margin: h_margin too large (%d)!\n", h_margin );
     }
 
     new_n_rows = n_rows + ( 2 * v_margin );
@@ -76,19 +88,34 @@ DEVA_xyY_add_margin ( int v_margin, int h_margin, DEVA_xyY_image *original )
     DEVA_image_view ( with_margin ) . horiz = ((double) new_n_cols ) *
 	( DEVA_image_view ( original ) . horiz / ((double) n_cols ) );
 
+#ifdef DEVA_MARGIN_AVERAGE_ALL
+
+    /* computer average luminance of all pixels in original image */
+    average_luminance = 0.0;
+
+    for ( row = 0; row < n_rows; row++ ) {
+	for ( col = 0; col < n_cols; col++ ) {
+	    average_luminance += DEVA_image_data ( original, row, col ).Y;
+	}
+    }
+
+    average_luminance /= (double) ( n_rows * n_cols );
+
+#else
+
     /* computer average luminance of all border pixels in original image */
-    average_luminance_at_border = 0.0;
+    average_luminance = 0.0;
     for ( col = 0; col < n_cols; col++ ) {
-	average_luminance_at_border += DEVA_image_data ( original, 0, col ).Y;
-	average_luminance_at_border += DEVA_image_data ( original,
-							n_rows - 1 , col ).Y;
+	average_luminance += DEVA_image_data ( original, 0, col ).Y;
+	average_luminance += DEVA_image_data ( original, n_rows - 1 , col ).Y;
     }
     for ( row = 1; row < n_rows - 1; row++ ) {
-	average_luminance_at_border += DEVA_image_data ( original, row, 0 ).Y;
-	average_luminance_at_border += DEVA_image_data ( original,
-							row, n_cols - 1 ).Y;
+	average_luminance += DEVA_image_data ( original, row, 0 ).Y;
+	average_luminance += DEVA_image_data ( original, row, n_cols - 1 ).Y;
     }
-    average_luminance_at_border /= (double) ( ( 2 * ( n_rows + n_cols ) ) - 2 );
+    average_luminance /= (double) ( ( 2 * ( n_rows + n_cols ) ) - 2 );
+
+#endif	/* DEVA_MARGIN_AVERAGE_ALL */
 
     /* copy contents of original image to center of new image */
     for ( row = 0; row < n_rows; row++ ) {
@@ -98,17 +125,125 @@ DEVA_xyY_add_margin ( int v_margin, int h_margin, DEVA_xyY_image *original )
 	}
     }
 
+#ifdef DEVA_MARGIN_REFLECT
+
+    /*
+     * Reflect portion of image inside the boundary to the margin,
+     * rather than copying nearest edge pixel.
+     */
+
     /* top, bottom margins */
     for ( row = 0; row < v_margin; row++ ) {
 	for ( col = 0; col < n_cols; col++ ) {
 	    DEVA_image_data ( with_margin, row, col + h_margin ) =
 		scale ( 1.0 - ( ((double) row ) / ((double) v_margin ) ),
-			average_luminance_at_border,
+			average_luminance,
+			DEVA_image_data ( original, v_margin - 1 - row, col ) );
+	    DEVA_image_data ( with_margin, row + v_margin + n_rows,
+		    col + h_margin ) =
+		scale ( ( ((double) row ) / ((double) v_margin ) ),
+			average_luminance,
+			DEVA_image_data ( original, n_rows - 1 - row, col ) );
+	}
+    }
+
+    /* left, right margins */
+    for ( row = 0; row < n_rows; row++ ) {
+	for ( col = 0; col < h_margin; col++ ) {
+	    DEVA_image_data ( with_margin, row + v_margin, col ) =
+		scale ( 1.0 - ( ((double) col ) / ((double) h_margin ) ),
+			average_luminance,
+			DEVA_image_data ( original, row, h_margin - 1 - col ) );
+	    DEVA_image_data ( with_margin, row + v_margin,
+		    col + h_margin + n_cols ) =
+		scale ( ( ((double) col ) / ((double) h_margin ) ),
+			average_luminance,
+			DEVA_image_data ( original, row, n_cols - 1 - col ) );
+	}
+    }
+
+    /* corners */
+    for ( row = 0; row < v_margin; row++ ) {
+	for ( col = 0; col < h_margin; col++ ) {
+
+	    /* upper left */
+	    row_diff = ((double) ( v_margin - 1 - row ) ) /
+		((double) ( v_margin - 1 ) );
+	    col_diff = ((double) ( h_margin - 1 - col ) ) /
+		((double) ( h_margin - 1 ) );
+	    distance =
+		sqrt ( ( row_diff * row_diff ) + ( col_diff * col_diff ) );
+	    if ( distance > 1.0 ) {
+		distance = 1.0;
+	    }
+	    DEVA_image_data ( with_margin, row, col ) =
+		scale ( distance, average_luminance,
+			DEVA_image_data ( original, v_margin - 1 - row,
+			    h_margin - 1 - col ) );
+
+	    /* upper right */
+	    col_diff = ((double) ( col ) ) /
+		((double) ( h_margin - 1 ) );
+	    distance =
+		sqrt ( ( row_diff * row_diff ) + ( col_diff * col_diff ) );
+	    if ( distance > 1.0 ) {
+		distance = 1.0;
+	    }
+	    DEVA_image_data ( with_margin, row, col + h_margin + n_cols ) =
+		scale ( distance, average_luminance,
+			DEVA_image_data ( original, v_margin - 1 - row,
+			    n_cols - 1 - col ) );
+
+	    /* lower left */
+	    row_diff = ((double) ( row ) ) /
+		((double) ( v_margin - 1 ) );
+	    col_diff = ((double) ( h_margin - 1 - col ) ) /
+		((double) ( h_margin - 1 ) );
+	    distance =
+		sqrt ( ( row_diff * row_diff ) + ( col_diff * col_diff ) );
+	    if ( distance > 1.0 ) {
+		distance = 1.0;
+	    }
+	    DEVA_image_data ( with_margin, row + v_margin + n_rows, col ) =
+		scale ( distance, average_luminance,
+			DEVA_image_data ( original, n_rows - 1 - row,
+			    h_margin - 1 - col ) );
+
+	    /* lower right */
+	    row_diff = ((double) ( row ) ) /
+		((double) ( v_margin - 1 ) );
+	    col_diff = ((double) ( col ) ) /
+		((double) ( h_margin - 1 ) );
+	    distance =
+		sqrt ( ( row_diff * row_diff ) + ( col_diff * col_diff ) );
+	    if ( distance > 1.0 ) {
+		distance = 1.0;
+	    }
+	    DEVA_image_data ( with_margin, row + v_margin + n_rows,
+		    col + h_margin + n_cols ) =
+		scale ( distance, average_luminance,
+			DEVA_image_data ( original, n_rows - 1 - row,
+			    n_cols - 1 - col ) );
+	}
+    }
+
+#else
+
+    /*
+     * Create margin by flooding from nearest edge pixels.
+     */
+
+    /* top, bottom margins */
+    for ( row = 0; row < v_margin; row++ ) {
+	for ( col = 0; col < n_cols; col++ ) {
+	    DEVA_image_data ( with_margin, row, col + h_margin ) =
+		scale ( 1.0 - ( ((double) row ) / ((double) v_margin ) ),
+			average_luminance,
 			DEVA_image_data ( original, 0, col ) );
 	    DEVA_image_data ( with_margin, row + v_margin + n_rows,
 		    col + h_margin ) =
 		scale ( ( ((double) row ) / ((double) v_margin ) ),
-			average_luminance_at_border,
+			average_luminance,
 			DEVA_image_data ( original, n_rows - 1, col ) );
 	}
     }
@@ -118,12 +253,12 @@ DEVA_xyY_add_margin ( int v_margin, int h_margin, DEVA_xyY_image *original )
 	for ( col = 0; col < h_margin; col++ ) {
 	    DEVA_image_data ( with_margin, row + v_margin, col ) =
 		scale ( 1.0 - ( ((double) col ) / ((double) h_margin ) ),
-			average_luminance_at_border,
+			average_luminance,
 			DEVA_image_data ( original, row, 0 ) );
 	    DEVA_image_data ( with_margin, row + v_margin,
 		    col + h_margin + n_cols ) =
 		scale ( ( ((double) col ) / ((double) h_margin ) ),
-			average_luminance_at_border,
+			average_luminance,
 			DEVA_image_data ( original, row, n_cols - 1 ) );
 	}
     }
@@ -142,7 +277,7 @@ DEVA_xyY_add_margin ( int v_margin, int h_margin, DEVA_xyY_image *original )
 		distance = 1.0;
 	    }
 	    DEVA_image_data ( with_margin, row, col ) =
-		scale ( distance, average_luminance_at_border,
+		scale ( distance, average_luminance,
 			DEVA_image_data ( original, 0, 0 ) );
 
 	    col_diff = ((double) ( col ) ) /
@@ -153,7 +288,7 @@ DEVA_xyY_add_margin ( int v_margin, int h_margin, DEVA_xyY_image *original )
 		distance = 1.0;
 	    }
 	    DEVA_image_data ( with_margin, row, col + h_margin + n_cols ) =
-		scale ( distance, average_luminance_at_border,
+		scale ( distance, average_luminance,
 			DEVA_image_data ( original, 0, n_cols - 1 ) );
 
 	    row_diff = ((double) ( row ) ) /
@@ -166,7 +301,7 @@ DEVA_xyY_add_margin ( int v_margin, int h_margin, DEVA_xyY_image *original )
 		distance = 1.0;
 	    }
 	    DEVA_image_data ( with_margin, row + v_margin + n_rows, col ) =
-		scale ( distance, average_luminance_at_border,
+		scale ( distance, average_luminance,
 			DEVA_image_data ( original, n_rows - 1, 0 ) );
 
 	    row_diff = ((double) ( row ) ) /
@@ -180,10 +315,14 @@ DEVA_xyY_add_margin ( int v_margin, int h_margin, DEVA_xyY_image *original )
 	    }
 	    DEVA_image_data ( with_margin, row + v_margin + n_rows,
 		    col + h_margin + n_cols ) =
-		scale ( distance, average_luminance_at_border,
+		scale ( distance, average_luminance,
 			DEVA_image_data ( original, n_rows - 1, n_cols - 1 ) );
 	}
     }
+
+#endif	/* DEVA_MARGIN_REFLECT */
+
+    DEVA_xyY_image_to_radfilename ( "margin-test.hdr", with_margin );
 
     return ( with_margin );
 }

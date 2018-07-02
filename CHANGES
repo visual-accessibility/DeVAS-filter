@@ -1,3 +1,28 @@
+version 3.2.00
+
+Added two new programs: luminance-boundaries, geometry-boundaries.
+
+In deva-filter.c (deva-filter, deva-visibility): Changed smoothing
+algorithm to better deal with artifacts at the boundaries of the
+smoothing windows.  Added optional debugging code to output individual
+contrast bands.
+
+In deva-margin.c:  Added compile-time option to base feathering on
+average luminance over full image rather than just over the boundary
+pixels.  Added compile-time option to base margin pixels on reflection
+of image around the boundary, not just a fill of boundary pixels.
+
+In dilate.c, added dt_euclid_sq_2 which used a pre-allocated output
+image.
+
+In deva-commandline.c (deva-filter, deva-visibility): Cleaned up command
+summaries.  Allowed specifing smoothing_type with presets.
+
+In ChungLeggeCSF.h: Cleanup of unused ChungLeggeCSF_PEAK_FREQUENCY
+defines.
+
+Man pages for new programs, minor updates to existing man pages.
+
 version 3.1.02
 
 In deva-commandline.c (deva-visibility): Added measurement type options

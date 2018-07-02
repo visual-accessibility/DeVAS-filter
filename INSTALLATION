@@ -11,12 +11,12 @@ To build the software for Linux:
       cd build
       cmake ..
       make
-      cd ..
 
       Copy the executable files deva-filter, deva-visibility,
-      make-coordinates-file, deva-visualize-geometry, and
-      deva-compare-boundaries from the build directory to wherever you
-      want them.
+      make-coordinates-file, deva-visualize-geometry,
+      deva-compare-boundaries, luminance-boundaries, and
+      geometry-boundaries from the build directory to wherever you want
+      them.
 
 3.  To remove everything generated in the build process, run the
     following command from top level of deva-filter source directory:
@@ -64,12 +64,12 @@ To build the software for MacOS:
       cd build
       cmake ..
       make
-      cd ..
 
       Copy the executable files deva-filter, deva-visibility,
-      make-coordinates-file, deva-visualize-geometry, and
-      deva-compare-boundaries from the build directory to wherever you
-      want them.
+      make-coordinates-file, deva-visualize-geometry,
+      deva-compare-boundaries, luminance-boundaries, and
+      geometry-boundaries from the build directory to wherever you want
+      them.
 
 4.  To remove everything generated in the build process, run the
     following command from top level of deva-filter source directory:

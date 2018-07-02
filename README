@@ -1,6 +1,6 @@
-This repository provides source code for five programs: deva-filter,
-deva-visibility, make-coordinates-file, deva-visualize-geometry, and
-deva-compare-boundaries.
+This repository provides source code for seven programs: deva-filter,
+deva-visibility, make-coordinates-file, deva-visualize-geometry,
+deva-compare-boundaries, luminance-boundaries, and geometry-boundaries.
 
 - deva-filter simulates visibility under reduced acuity and contrast
   sensitivity.  It is intended to assist architects and lighting
@@ -29,6 +29,12 @@ deva-compare-boundaries.
   boundary elements is predicted by another set of boundary elements.
   It inputs PNG files plus a coordinates file as produced by
   make-coordinates-file and outputs a PNG file.
+
+- luminance-boundaries computes luminance boundaries using the Canny
+  edge detector applied to a Radiance HDR file.
+
+- geometry-boundaries computes geometry boundaries based on Radiance
+  ASCII files providing information about scene geometry.
 
 The software can be built on either Linux or MacOS.  Windows binaries
 are also provided, cross complied on a Linux system using Mingw-w64.

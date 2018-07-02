@@ -35,7 +35,9 @@
  *   to be below the detectability threshold.
  */
 
-// #define	DEVA_CHECK_BOUNDS
+/* #define	DEVA_CHECK_BOUNDS */
+/* #define	OUTPUT_CONTRAST_BANDS */	/* request debugging output */
+					/* needs to be linked with libpng */
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -47,6 +49,9 @@
 #include "deva-utils.h"
 #include "ChungLeggeCSF.h"
 #include "dilate.h"
+#ifdef OUTPUT_CONTRAST_BANDS
+#include "DEVA-png.h"
+#endif	/* OUTPUT_CONTRAST_BANDS */
 #include "deva-filter-version.h"
 #include "deva-license.h"       /* DEVA open source license */
 
@@ -62,10 +67,9 @@
 #define	SMOOTH_INTERVAL_RATIO	0.35	/* ratio of peak band wavelength */
 					/* to thresholded contrast smothing */
 					/* radius */
-#define	SMOOTH_MAXIMUM_RADIUS	2048.0	/* with Felzenszwalb and Huttenlocher */
-					/* (2012) distance transform, there */
-					/* is no extra cost to large */
-					/* smoothing radii */
+#define	SMOOTH_FEATHER_RATIO	0.5	/* outer portion of smoothing */
+					/* that will be feathered if */
+					/* necessary */
 
 #define	LOG2R_0		-10.0	/* Marker value for value of log2r(0). */
 				/* Can't happen in practice, since r is pixel */
@@ -88,6 +92,7 @@ typedef struct {
 
 int  DEVA_verbose = FALSE;
 int  DEVA_veryverbose = FALSE;
+int  DEVA_band_number = -1;
 
 /*
  * Local functions:
@@ -100,8 +105,8 @@ static void		preallocate_images ( int n_rows, int n_cols,
     			    DEVA_float_image **thresholded_contrast_band,
     			    DEVA_gray_image **threshold_mask_initial_positive,
     			    DEVA_gray_image **threshold_mask_initial_negative,
-    			    DEVA_gray_image **threshold_mask_positive,
-    			    DEVA_gray_image **threshold_mask_negative,
+    			    DEVA_float_image **threshold_distsq_positive,
+    			    DEVA_float_image **threshold_distsq_negative,
 			    DEVA_float_image **filtered_luminance );
 static DEVA_complexf_image *forward_transform ( DEVA_float_image *source );
 static DEVA_float_image	*log2r_prep ( DEVA_complexf_image *transformed_image );
@@ -118,9 +123,11 @@ static void		apply_threshold ( double sensitivity,
 			    DEVA_float_image *thresholded_contrast_band,
 			    DEVA_gray_image *threshold_mask_initial_positive,
 			    DEVA_gray_image *threshold_mask_initial_negative,
-			    DEVA_gray_image *threshold_mask_positive,
-			    DEVA_gray_image *threshold_mask_negative,
+			    DEVA_float_image *threshold_distsq_positive,
+			    DEVA_float_image *threshold_distsq_negative,
 			    int smoothing_flag );
+static float		feather ( float contrast, float distsq,
+			    float smoothing_radius, float smoothing_feather );
 static DEVA_float_image	*CSF_weight_prep ( DEVA_complexf_image *frequency_space,
 				double fov, double acuity,
 				double contrast_sensitivity );
@@ -153,8 +160,8 @@ static void		cleanup ( DEVA_complexf_image *frequency_space,
 			    DEVA_float_image *filtered_luminance,
 			    DEVA_gray_image *threshold_mask_initial_positive,
 			    DEVA_gray_image *threshold_mask_initial_negative,
-			    DEVA_gray_image *threshold_mask_positive,
-			    DEVA_gray_image *threshold_mask_negative,
+			    DEVA_float_image *threshold_distsq_positive,
+			    DEVA_float_image *threshold_distsq_negative,
 			    double saturation,
 			    DEVA_float_image *filtered_x,
 			    DEVA_float_image *filtered_y,
@@ -194,8 +201,8 @@ deva_filter ( DEVA_xyY_image *input_image, double acuity,
     fftwf_plan		fft_inverse_plan;	/* to create bandpass images */
     DEVA_gray_image	*threshold_mask_initial_positive; /* threshold mask */
     DEVA_gray_image	*threshold_mask_initial_negative; /* threshold mask */
-    DEVA_gray_image	*threshold_mask_positive;	 /* threshold mask */
-    DEVA_gray_image	*threshold_mask_negative;	 /* threshold mask */
+    DEVA_float_image	*threshold_distsq_positive;	 /* threshold mask */
+    DEVA_float_image	*threshold_distsq_negative;	 /* threshold mask */
     DEVA_float_image	*filtered_luminance;	/* filtered luminance channel */
     DEVA_float_image	*filtered_x = NULL;	/* filtered x chromaticity */
     						/* not always used */
@@ -272,8 +279,8 @@ deva_filter ( DEVA_xyY_image *input_image, double acuity,
 		&thresholded_contrast_band,
 		&threshold_mask_initial_positive,
 		&threshold_mask_initial_negative,
-		&threshold_mask_positive,
-		&threshold_mask_negative,
+		&threshold_distsq_positive,
+		&threshold_distsq_negative,
 		&filtered_luminance );
 
     frequency_space = forward_transform ( luminance );	/* only done once */
@@ -385,11 +392,15 @@ deva_filter ( DEVA_xyY_image *input_image, double acuity,
 	     * treat bandpass band as local contrast and threshold based
 	     * on CSF sensitivity
 	     */
+#ifdef OUTPUT_CONTRAST_BANDS
+	    DEVA_band_number = band;
+#endif	/* OUTPUT_CONTRAST_BANDS */
+
 	    apply_threshold ( peak_sensitivity, peak_frequency_image,
 		    contrast_band, local_luminance, thresholded_contrast_band,
 		    threshold_mask_initial_positive,
 		    threshold_mask_initial_negative,
-		    threshold_mask_positive, threshold_mask_negative,
+		    threshold_distsq_positive, threshold_distsq_negative,
 		    smoothing_flag );
 
 	    /* add another level to the image pyramid */
@@ -461,8 +472,8 @@ deva_filter ( DEVA_xyY_image *input_image, double acuity,
 		filtered_luminance,
 		threshold_mask_initial_positive,
 		threshold_mask_initial_negative,
-		threshold_mask_positive,
-		threshold_mask_negative,
+		threshold_distsq_positive,
+		threshold_distsq_negative,
 		saturation,
 		filtered_x,
 		filtered_y,
@@ -628,10 +639,23 @@ apply_threshold ( double sensitivity, float peak_frequency_image,
 	DEVA_float_image *thresholded_contrast_band,
 	DEVA_gray_image *threshold_mask_initial_positive,
 	DEVA_gray_image *threshold_mask_initial_negative,
-	DEVA_gray_image *threshold_mask_positive,
-	DEVA_gray_image *threshold_mask_negative,
+	DEVA_float_image *threshold_distsq_positive,
+	DEVA_float_image *threshold_distsq_negative,
 	int smoothing_flag )
 /*
+ * Return (in thresholded_contrast_band) the thresholded contrast band, where
+ * the threshold is applied to the normalized contrast value. If done as
+ * described in Peli (1990), this leaves a sharp edge at the transition between
+ * above and below threshold values (see Thompson, 2017).  This artifact can
+ * be reduced by keeping below thrshold values that are sufficiently close to
+ * an above threshold value of the same sign, where "sufficiently close" is
+ * defined in terms of the peak frequency of the band being processed.
+ * Elongated region of below threshold values that are adjacent to a same-sign
+ * above threshold values can still generate artificats as the "sufficiently
+ * close" boundary.  To address this issue, the the below contrast values
+ * retained by this process are feathered towards 0 at distances approaching
+ * the "sufficiently close" boundary.
+ *
  * sensitivity:			    sensitivity threshold
  * peak_frequency_image:	    peak frequency of band (used for smoothing)
  * contrast_band:		    output of bandpass filter
@@ -640,8 +664,8 @@ apply_threshold ( double sensitivity, float peak_frequency_image,
  * 					set to zero
  * threshold_mask_initial_positive: used to help in smoothing
  * threshold_mask_initial_negative: used to help in smoothing
- * threshold_mask_positive:	    used to help in smoothing
- * threshold_mask_negative:	    used to help in smoothing
+ * threshold_distsq_positive:	    used to help in smoothing
+ * threshold_distsq_negative:	    used to help in smoothing
  * smoothing_flag:		    TRUE if smoothing should be done
  */
 {
@@ -649,6 +673,19 @@ apply_threshold ( double sensitivity, float peak_frequency_image,
     double  threshold;
     double  normalized_contrast;
     double  smoothing_radius;
+    double  smoothing_feather;
+#ifdef OUTPUT_CONTRAST_BANDS
+    DEVA_gray_image	*debug_display_image; /* for thresholded contrast */
+    double		max_thresholded_contrast, min_thresholded_contrast;
+    double		max_contrast, min_contrast;
+    double		norm_thresholded_contrast;
+    double		norm_contrast;
+    char		debug_filename[1000];	/* warning: fixed size!!! */
+
+    debug_display_image =
+	DEVA_gray_image_new ( DEVA_image_n_rows ( contrast_band ),
+		DEVA_image_n_cols ( contrast_band ) );
+#endif	/* OUTPUT_CONTRAST_BANDS */
 
     if ( sensitivity < 1.0 ) {	
 	/* nothing will be visible! (should not happen) */
@@ -664,27 +701,29 @@ apply_threshold ( double sensitivity, float peak_frequency_image,
     smoothing_radius = SMOOTH_INTERVAL_RATIO *
 	((double) imax ( DEVA_image_n_rows ( contrast_band ),
 	    DEVA_image_n_cols ( contrast_band ) ) ) *
-		( 1.0 / peak_frequency_image );
-    if ( smoothing_radius > SMOOTH_MAXIMUM_RADIUS ) {
-	smoothing_radius = SMOOTH_MAXIMUM_RADIUS;
-    }
+	( 1.0 / peak_frequency_image );
+    smoothing_feather = ( 1.0 - SMOOTH_FEATHER_RATIO ) * smoothing_radius;
 
     if ( smoothing_flag && ( smoothing_radius >= 1.0 ) ) {
 	/*
 	 * Smoothing preserves below contrast values that are
-	 * adjecent to above contrast values of the same sign.
+	 * adjacent to above contrast values of the same sign.
 	 */
 
 	/*
 	 * Get maps of above threshold contrasts.  Do this separately
 	 * for positive and negative contrasts.
 	 */
+	if ( DEVA_veryverbose ) {
+	    fprintf ( stderr, "smoothing_radius = %f, smoothing_feather = %f\n",
+		    smoothing_radius, smoothing_feather );
+	}
 	for ( row = 0; row < DEVA_image_n_rows ( contrast_band ); row++ ) {
 	    for ( col = 0; col < DEVA_image_n_cols ( contrast_band ); col++ ) {
 
 		normalized_contrast =
 		    DEVA_image_data ( contrast_band, row, col ) /
-		        fmax (DEVA_image_data ( local_luminance, row, col ),
+		    fmax (DEVA_image_data ( local_luminance, row, col ),
 			    MIN_AVERAGE_LUMINANCE );
 
 		DEVA_image_data ( threshold_mask_initial_positive, row, col ) =
@@ -696,14 +735,13 @@ apply_threshold ( double sensitivity, float peak_frequency_image,
 	}
 
 	/*
-	 * Expand the maps by an amount proportional to the
-	 * peak wavelength of the band.
+	 * Get distance from above threshold positive and negative contrast
+	 * pixels.
 	 */
-	DEVA_gray_dilate2 ( threshold_mask_initial_positive,
-		threshold_mask_positive, smoothing_radius );
-
-	DEVA_gray_dilate2 ( threshold_mask_initial_negative,
-		threshold_mask_negative, smoothing_radius );
+	dt_euclid_sq_2 ( threshold_mask_initial_positive,
+		threshold_distsq_positive );
+	dt_euclid_sq_2 ( threshold_mask_initial_negative,
+		threshold_distsq_negative );
 
 	/*
 	 * Keep any contrast that is flagged by the map of the
@@ -711,20 +749,21 @@ apply_threshold ( double sensitivity, float peak_frequency_image,
 	 */
 	for ( row = 0; row < DEVA_image_n_rows ( contrast_band ); row++ ) {
 	    for ( col = 0; col < DEVA_image_n_cols ( contrast_band ); col++ ) {
-		if ( ( ( DEVA_image_data ( contrast_band, row, col ) > 0.0 )
-			    && DEVA_image_data ( threshold_mask_positive,
-				row, col ) ) ||
-			( ( DEVA_image_data ( contrast_band, row, col ) < 0.0 )
-			  && DEVA_image_data ( threshold_mask_negative,
-			      				row, col ) ) ) {
+
+		if ( DEVA_image_data ( contrast_band, row, col ) > 0.0 ) {
 		    DEVA_image_data ( thresholded_contrast_band, row, col ) =
-			DEVA_image_data ( contrast_band, row, col );
+			feather ( DEVA_image_data ( contrast_band, row, col ),
+			    DEVA_image_data ( threshold_distsq_positive, row,
+				col ), smoothing_radius, smoothing_feather );
 		} else {
 		    DEVA_image_data ( thresholded_contrast_band, row, col ) =
-			0.0;
+			feather ( DEVA_image_data ( contrast_band, row, col ),
+			    DEVA_image_data ( threshold_distsq_negative, row,
+				col ), smoothing_radius, smoothing_feather );
 		}
 	    }
 	}
+
     } else {
 	/*
 	 * No smoothing, so just do straightforward thresholding.
@@ -733,7 +772,7 @@ apply_threshold ( double sensitivity, float peak_frequency_image,
 	    for ( col = 0; col < DEVA_image_n_cols ( contrast_band ); col++ ) {
 		normalized_contrast =
 		    DEVA_image_data ( contrast_band, row, col ) /
-		        fmax (DEVA_image_data ( local_luminance, row, col ),
+		    fmax (DEVA_image_data ( local_luminance, row, col ),
 			    MIN_AVERAGE_LUMINANCE );
 		if ( fabs ( normalized_contrast ) >= threshold ) {
 		    DEVA_image_data ( thresholded_contrast_band, row, col ) =
@@ -741,10 +780,111 @@ apply_threshold ( double sensitivity, float peak_frequency_image,
 		}
 		else {
 		    DEVA_image_data ( thresholded_contrast_band, row, col ) =
-									0.0;
+			0.0;
 		}
 	    }
 	}
+    }
+
+#ifdef OUTPUT_CONTRAST_BANDS
+
+    max_contrast = min_contrast = DEVA_image_data ( contrast_band, 0, 0 );
+    for ( row = 0; row < DEVA_image_n_rows ( contrast_band ); row++ ) {
+	for ( col = 0; col < DEVA_image_n_cols ( contrast_band ); col++ ) {
+	    max_contrast = fmax ( max_contrast,
+		    DEVA_image_data ( contrast_band, row, col ) );
+	    min_contrast = fmin ( min_contrast,
+		    DEVA_image_data ( contrast_band, row, col ) );
+	}
+    }
+    norm_contrast = 0.5 / fmax ( max_contrast, fabs ( min_contrast ) );
+
+    for ( row = 0; row < DEVA_image_n_rows ( contrast_band ); row++ ) {
+	for ( col = 0; col < DEVA_image_n_cols ( contrast_band ); col++ ) {
+	    DEVA_image_data ( debug_display_image, row, col ) =
+		(int) ( 255.99 * ( ( norm_contrast *
+			DEVA_image_data ( contrast_band, row, col ) ) + 0.5 ) );
+	    if ( DEVA_image_data ( debug_display_image, row, col ) < 0 ) {
+		DEVA_image_data ( debug_display_image, row, col ) = 0;
+	    }
+	    if ( DEVA_image_data ( debug_display_image, row, col ) > 255 ) {
+		DEVA_image_data ( debug_display_image, row, col ) = 255;
+	    }
+	}
+    }
+
+    sprintf ( debug_filename, "unthresholded_contrast_band_%02d.png",
+	    DEVA_band_number );
+    DEVA_gray_image_to_filename_png ( debug_filename,
+	    debug_display_image );
+
+    max_thresholded_contrast = min_thresholded_contrast =
+	DEVA_image_data ( thresholded_contrast_band, 0, 0 );
+    for ( row = 0;
+	    row < DEVA_image_n_rows ( thresholded_contrast_band );
+	    row++ ) {
+	for ( col = 0;
+		col < DEVA_image_n_cols ( thresholded_contrast_band );
+		col++ ) {
+	    max_thresholded_contrast = fmax ( max_thresholded_contrast,
+		    DEVA_image_data ( thresholded_contrast_band, row,
+			col ) );
+	    min_thresholded_contrast = fmin ( min_thresholded_contrast,
+		    DEVA_image_data ( thresholded_contrast_band,
+			row, col ) );
+	}
+    }
+    norm_thresholded_contrast = 0.5 / fmax ( max_thresholded_contrast,
+	    fabs ( min_thresholded_contrast ) );
+
+    for ( row = 0;
+	    row < DEVA_image_n_rows ( thresholded_contrast_band );
+	    row++ ) {
+	for ( col = 0;
+		col < DEVA_image_n_cols ( thresholded_contrast_band );
+		col++ ) {
+	    DEVA_image_data ( debug_display_image, row, col ) =
+		(int) ( 255.99 *
+			( ( norm_thresholded_contrast *
+			    DEVA_image_data ( thresholded_contrast_band,
+				row, col ) ) + 0.5 ) );
+	    if ( DEVA_image_data ( debug_display_image, row, col )
+		    < 0 ) {
+		DEVA_image_data ( debug_display_image, row, col ) = 0;
+	    }
+	    if ( DEVA_image_data ( debug_display_image, row, col )
+		    > 255 ) {
+		DEVA_image_data ( debug_display_image, row, col ) = 255;
+	    }
+	}
+    }
+
+    sprintf ( debug_filename, "thresholded_contrast_band_%02d.png",
+	    DEVA_band_number );
+    DEVA_gray_image_to_filename_png ( debug_filename,
+	    debug_display_image );
+
+#endif	/* OUTPUT_CONTRAST_BANDS */
+
+}
+
+static float
+feather ( float contrast, float distsq, float smoothing_radius,
+	float smoothing_feather )
+/*
+ * Restore the full amount of the below contrast value if closer than
+ * smoothing_feather contrast value of the same sign.  When the distance is
+ * in the range [smoothing_feather -- smoothing_radius], linearly reduce this
+ * restored value as the location approaches smoothing_radius.
+ */
+{
+    if ( distsq < ( smoothing_feather * smoothing_feather ) ) {
+	return ( contrast );
+    } else if ( distsq > ( smoothing_radius * smoothing_radius ) ) {
+	return ( 0.0 );
+    } else {
+	return ( ( ( smoothing_radius - sqrt ( distsq ) ) /
+		    ( smoothing_radius - smoothing_feather ) ) * contrast );
     }
 }
 
@@ -1136,8 +1276,8 @@ preallocate_images ( int n_rows, int n_cols,
     DEVA_float_image	**thresholded_contrast_band,
     DEVA_gray_image	**threshold_mask_initial_positive,
     DEVA_gray_image	**threshold_mask_initial_negative,
-    DEVA_gray_image	**threshold_mask_positive,
-    DEVA_gray_image	**threshold_mask_negative,
+    DEVA_float_image	**threshold_distsq_positive,
+    DEVA_float_image	**threshold_distsq_negative,
     DEVA_float_image	**filtered_luminance )
 /*
  * Preallocate image objects that will be reused for each processed band.
@@ -1155,8 +1295,8 @@ preallocate_images ( int n_rows, int n_cols,
     *thresholded_contrast_band = DEVA_float_image_new ( n_rows, n_cols );
     *threshold_mask_initial_positive = DEVA_gray_image_new ( n_rows, n_cols );
     *threshold_mask_initial_negative = DEVA_gray_image_new ( n_rows, n_cols );
-    *threshold_mask_positive = DEVA_gray_image_new ( n_rows, n_cols );
-    *threshold_mask_negative = DEVA_gray_image_new ( n_rows, n_cols );
+    *threshold_distsq_positive = DEVA_float_image_new ( n_rows, n_cols );
+    *threshold_distsq_negative = DEVA_float_image_new ( n_rows, n_cols );
     *filtered_luminance = DEVA_float_image_new ( n_rows, n_cols );
 }
 
@@ -1174,8 +1314,8 @@ cleanup (
     DEVA_float_image *filtered_luminance,
     DEVA_gray_image *threshold_mask_initial_positive,
     DEVA_gray_image *threshold_mask_initial_negative,
-    DEVA_gray_image *threshold_mask_positive,
-    DEVA_gray_image *threshold_mask_negative,
+    DEVA_float_image *threshold_distsq_positive,
+    DEVA_float_image *threshold_distsq_negative,
     double saturation,	/* needed for filtered_x and filtered_y */
     DEVA_float_image *filtered_x,
     DEVA_float_image *filtered_y,
@@ -1196,8 +1336,8 @@ cleanup (
     DEVA_float_image_delete ( filtered_luminance );
     DEVA_gray_image_delete ( threshold_mask_initial_positive );
     DEVA_gray_image_delete ( threshold_mask_initial_negative );
-    DEVA_gray_image_delete ( threshold_mask_positive );
-    DEVA_gray_image_delete ( threshold_mask_negative );
+    DEVA_float_image_delete ( threshold_distsq_positive );
+    DEVA_float_image_delete ( threshold_distsq_negative );
     if ( saturation > 0.0 ) {
 	DEVA_float_image_delete ( filtered_x );
 	DEVA_float_image_delete ( filtered_y );

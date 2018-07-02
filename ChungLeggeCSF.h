@@ -26,18 +26,7 @@
 	/* of 199.  Confirmed by testing minimum contrast of readable */
 	/* characters filtered to simulate normal vision */
 
-// #define ChungLeggeCSF_PEAK_FREQUENCY	1.959	/* cutoff: 30.0 cpd */
-// #define ChungLeggeCSF_PEAK_FREQUENCY	1.306	/* cutoff: 20.0 cpd */
-// #define ChungLeggeCSF_PEAK_FREQUENCY	1.240	/* cutoff: 19.0 cpd */
-// #define ChungLeggeCSF_PEAK_FREQUENCY	1.175	/* cutoff: 18.0 cpd */
-// #define ChungLeggeCSF_PEAK_FREQUENCY	1.110	/* cutoff: 17.0 cpd */
-// #define ChungLeggeCSF_PEAK_FREQUENCY	1.045	/* cutoff: 16.0 cpd */
-// #define ChungLeggeCSF_PEAK_FREQUENCY	0.979	/* cutoff: 15.0 cpd */
 #define ChungLeggeCSF_PEAK_FREQUENCY	0.914	/* cutoff: 14.0 cpd */
-// #define ChungLeggeCSF_PEAK_FREQUENCY	0.849	/* cutoff: 13.0 cpd */
-// #define ChungLeggeCSF_PEAK_FREQUENCY	0.784	/* cutoff: 12.0 cpd */
-// #define ChungLeggeCSF_PEAK_FREQUENCY	0.718	/* cutoff: 11.0 cpd */
-// #define ChungLeggeCSF_PEAK_FREQUENCY	0.653	/* cutoff: 10.0 cpd */
 	/* Set based on empirical testing of smallest readable filtered */
 	/* maximum contrast Sloan characters, using peak sensitivity as above */
 

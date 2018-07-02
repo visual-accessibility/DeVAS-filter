@@ -16,6 +16,7 @@
 #include <string.h>		/* for strcmp, strlen */
 #include <strings.h>		/* for strcasecmp, strncasecmp */
 #include <libgen.h>		/* for basename */
+/* #define	DEVA_CHECK_BOUNDS */
 #include "deva-image.h"
 #include "deva-filter.h"
 #include "deva-utils.h"
@@ -140,13 +141,13 @@ int	args_needed = 4;
 #else	/* DEVA_VISIBILITY */
 
 char	*Usage = /* deva-visibility */
-	    "--mild|--moderate|--severe|--profound [--margin=<value>]"
-	    "\n\t[--red-gray|--red-green]"
-	    "\n\t[--Gaussian=<sigma>|--reciprocal=<scale>|--linear=<max>]"
-	    "\n\t[--luminanceboundaries=<filename.png>]"
-	    "\n\t[--geometryboundaries=<filename.png>]"
-	    "\n\tinput.hdr coordinates xyz.txt dist.txt nor.txt"
-	    "\n\tsimulated-view.hdr hazards.png";
+    "--mild|--moderate|--severe|--profound [--margin=<value>]"
+    "\n\t[--red-gray|--red-green]"
+    "\n\t[--Gaussian=<sigma>|--reciprocal=<scale>|--linear=<max>]"
+    "\n\t[--luminanceboundaries=<filename.png>]"
+    "\n\t[--geometryboundaries=<filename.png>]"
+    "\n\tinput.hdr coordinates xyz.txt dist.txt nor.txt"
+    "\n\tsimulated-view.hdr hazards.png";
 char	*Usage2 = "[--snellen|--logMAR] [--sensitivity-ratio|--pelli-robson]"
     "\n\t[--autoclip|--clip=<level>] [--color|--grayscale|saturation=<value>]"
     "\n\t[--margin=<value>] [--verbose] [--version] [--presets]"
@@ -811,7 +812,9 @@ main ( int argc, char *argv[] )
 
 		clip_type = auto_clip;
 		acuity_type = cutoff;
-		smoothing_type = smoothing;
+		if ( smoothing_type == undefined_smoothing ) {
+		    smoothing_type = smoothing;
+		}
 
 		break;
 
@@ -835,7 +838,9 @@ main ( int argc, char *argv[] )
 
 		clip_type = auto_clip;
 		acuity_type = cutoff;
-		smoothing_type = smoothing;
+		if ( smoothing_type == undefined_smoothing ) {
+		    smoothing_type = smoothing;
+		}
 
 		break;
 
@@ -859,7 +864,9 @@ main ( int argc, char *argv[] )
 
 		clip_type = auto_clip;
 		acuity_type = cutoff;
-		smoothing_type = smoothing;
+		if ( smoothing_type == undefined_smoothing ) {
+		    smoothing_type = smoothing;
+		}
 
 		break;
 
@@ -883,7 +890,9 @@ main ( int argc, char *argv[] )
 
 		clip_type = auto_clip;
 		acuity_type = cutoff;
-		smoothing_type = smoothing;
+		if ( smoothing_type == undefined_smoothing ) {
+		    smoothing_type = smoothing;
+		}
 
 		break;
 
