@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 
 cd build; make clean; cd ..
 rm -rf build/*
@@ -6,8 +6,11 @@ rm -rf build/*
 cd build-windows; make clean; cd ..
 rm -rf build-windows/*
 
+cd build-mac; make clean; cd ..
+rm -rf build-mac/*
+
 cd external-libs/fftw-3.3.7; make distclean; cd ../..
 cd external-libs/zlib-1.2.11; make -f win32/Makefile.gcc clean; cd ../..
 cd external-libs/libpng-1.6.34; make distclean; cd ../..
 
-cd external-libs; rm  -rf bin/* include/* lib64/* lib/* share/* ; cd ..
+cd external-libs; rm  -rf macinstall/* windowsinstall/* ; cd ..

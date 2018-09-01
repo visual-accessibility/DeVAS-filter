@@ -322,8 +322,6 @@ DEVA_xyY_add_margin ( int v_margin, int h_margin, DEVA_xyY_image *original )
 
 #endif	/* DEVA_MARGIN_REFLECT */
 
-    DEVA_xyY_image_to_radfilename ( "margin-test.hdr", with_margin );
-
     return ( with_margin );
 }
 

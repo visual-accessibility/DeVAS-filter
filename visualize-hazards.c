@@ -23,12 +23,14 @@ visualize_hazards ( DEVA_float_image *hazards,
  *
  * hazards:		Visual angle from geometry boundaries to nearest
  *			luminance boundary.
- * Measurement_type:	reciprocal_measure
+ * Measurement_type:	Gaussian_measure
+ * 			    1 - exp ( -0.5 * ( x / Gaussian_sigma ) ^ 2 )
+ * 			reciprocal_measure
  * 			    scale / ( visual_angle + scale )
  * 			linear_measure
  * 			    1 - ( min(visual_angle,max_hazard ) / max_hazard )
  *
- * scale_parameter:	reciprocal_scale, max_hazard, or Gaussian_sigma as
+ * scale_parameter:	Gaussian_sigma, reciprocal_scale, or max_hazard as
  * 			appropriate for measurement type
  *
  * visualization_type:	red_gray_type

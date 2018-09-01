@@ -1,4 +1,8 @@
-#! /bin/sh
+#! /bin/bash
+
+./distclean	# This will remove Mac, Windows, and Linux builds, but
+		# it's the most reliable way to insure that the CMake
+		# caches are cleaned
 
 # Build libfftw3f.a:
 
@@ -8,7 +12,7 @@
        --host=x86_64-w64-mingw32 \
        --build=x86_64-suse-linux-gnu \
        --target=x86_64-w64-mingw32 \
-       --prefix=$PWD/.. \
+       --prefix=$PWD/../windowsinstall \
        --with-our-malloc16 --with-windows-f77-mangling \
        --disable-shared --enable-static --enable-threads \
        --with-combined-threads --enable-sse2 \
@@ -22,10 +26,13 @@
 # Build libz.a
 
     cd external-libs/zlib-1.2.11
+    # use preconfigured Makefile
     make PREFIX=x86_64-w64-mingw32- -fwin32/Makefile.gcc
-    make BINARY_PATH=$PWD/../bin \
-    	INCLUDE_PATH=$PWD/../include \
-    	LIBRARY_PATH=$PWD/../lib64 -fwin32/Makefile.gcc install
+    make BINARY_PATH=$PWD/../windowsinstall/bin \
+    	INCLUDE_PATH=$PWD/../windowsinstall/include \
+    	LIBRARY_PATH=$PWD/../windowsinstall/lib64 \
+	-fwin32/Makefile.gcc \
+		install
     cd ../..
 
 # Build libpng.a
@@ -37,9 +44,9 @@
 	--target=x86_64-w64-mingw32 \
 	--enable-static \
 	--disable-shared \
-	--prefix=$PWD/.. \
-	CPPFLAGS=-I$PWD/../include \
-	LDFLAGS=-L$PWD/../lib64
+	--prefix=$PWD/../windowsinstall \
+	CPPFLAGS=-I$PWD/../windowsinstall/include \
+	LDFLAGS=-L$PWD/../windowsinstall/lib64
     make
     make install
     cd ../..

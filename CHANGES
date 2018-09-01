@@ -1,3 +1,10 @@
+version 3.2.01
+
+Added build process for MacOS and standardized directory layout for
+Windows and MacOS builds.
+
+Removed extraneous debugging command from deva-margin.c
+
 version 3.2.00
 
 Added two new programs: luminance-boundaries, geometry-boundaries.

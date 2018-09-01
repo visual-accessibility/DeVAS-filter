@@ -9,7 +9,9 @@ set_property ( GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS ON )
 INCLUDE ( ${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindZLIB_Windows.cmake )
 if(ZLIB_FOUND)
 
-  set ( CMAKE_FIND_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/external-libs )
+  set ( CMAKE_FIND_ROOT_PATH
+	  ${CMAKE_CURRENT_SOURCE_DIR}/external-libs/windowsinstall )
+
   find_path ( PNG_INCLUDE_DIR png.h )
 
   find_library ( PNG_LIBRARY libpng.a )

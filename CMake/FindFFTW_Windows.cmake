@@ -1,3 +1,5 @@
+# DEVA version of FindPNG that supports Windows build
+
 # - Find FFTW
 # Find the native FFTW includes and library
 # This module defines
@@ -20,13 +22,17 @@
 # See the License for more information.
 #=============================================================================
 
-set ( CMAKE_FIND_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/external-libs )
+if ( NOT CMAKE_SYSTEM_NAME STREQUAL "Windows" )
+  message ( FATAL_ERROR "FindFTW_Windows: not Windows build!" )
+endif ( )
+
+set ( CMAKE_FIND_ROOT_PATH
+	${CMAKE_CURRENT_SOURCE_DIR}/external-libs/windowsinstall )
 
 find_path ( FFTW_INCLUDE_DIR fftw3.h )
 
-# cmake gets confused about /lib vs. /lib64 when cross-compiling
 find_library ( FFTWF_LIBRARY libfftw3f.a
-	${CMAKE_CURRENT_SOURCE_DIR}/external-libs/lib64 )
+	${CMAKE_CURRENT_SOURCE_DIR}/external-libs/windowsinstall )
 
 # handle the QUIETLY and REQUIRED arguments and set FFTW_FOUND to TRUE if
 # all listed variables are TRUE

@@ -1,4 +1,4 @@
-prefix=/home/thompson/research/DEVA-2/deva-filter/external-libs/fftw-3.3.7/..
+prefix=/home/thompson/research/DEVA-2/deva-filter/external-libs/fftw-3.3.7/../windowsinstall
 exec_prefix=${prefix}
 libdir=${exec_prefix}/lib64
 includedir=${prefix}/include

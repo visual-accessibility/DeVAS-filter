@@ -1,48 +1,57 @@
 cmake_minimum_required(VERSION 3.0)
 PROJECT ( DEVA_FILTER )
 
-if ( NOT CMAKE_SYSTEM_NAME STREQUAL "Windows" )
-# Linux, MacOS
-option (DEVA_FILTER_USE_CAIRO "Build using Cairo library" ON )
-else ( )
-# Windows
-option (DEVA_FILTER_USE_CAIRO "Build using Cairo library" OFF )
-endif ( )
-
 message ( STATUS "CMAKE_SYSTEM_NAME = " ${CMAKE_SYSTEM_NAME} )
+
+if ( CMAKE_SYSTEM_NAME STREQUAL "Linux" )
+  # Linux
+  option (DEVA_FILTER_USE_CAIRO "Build using Cairo library" ON )
+elseif ( CMAKE_SYSTEM_NAME STREQUAL "Darwin" )
+  # MacOS
+  option (DEVA_FILTER_USE_CAIRO "Build using Cairo library" OFF )
+elseif ( CMAKE_SYSTEM_NAME STREQUAL "Windows" )
+  # Windows
+  option (DEVA_FILTER_USE_CAIRO "Build using Cairo library" OFF )
+else ( )
+  message ( FATAL_ERROR "unknown CMAKE_SYSTEM_NAME (" ${CMAKE_SYSTEM_NAME} ")" )
+endif ( )
 
 # SET ( CMAKE_VERBOSE_MAKEFILE ON )
 
 if ( CMAKE_SYSTEM_NAME STREQUAL "Windows" )
-# Radiance tries to redefine things it shouldn't with mignw64
-# cross-compiling
-set ( CMAKE_C_FLAGS "-Wall -g -O3 -D_mingw64_cross" )
+  # Radiance tries to redefine things it shouldn't with mignw64 cross-compiling
+  set ( CMAKE_C_FLAGS "-Wall -g -O3 -D_mingw64_cross" )
 else ( )
-set ( CMAKE_C_FLAGS "-Wall -g -O3" )
+  set ( CMAKE_C_FLAGS "-Wall -g -O3" )
 endif ( )
 
 if ( CMAKE_SYSTEM_NAME STREQUAL "Windows" )
-include ( ${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindPNG_Windows.cmake )
-include ( ${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindFFTW_Windows.cmake )
+  include ( ${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindPNG_Windows.cmake )
+  include ( ${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindFFTW_Windows.cmake )
+elseif ( CMAKE_SYSTEM_NAME STREQUAL "Darwin" )
+  include ( ${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindPNG_Mac.cmake )
+  include ( ${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindFFTW_Mac.cmake )
+elseif ( CMAKE_SYSTEM_NAME STREQUAL "Linux" )
+  find_package ( PNG REQUIRED )
+  if ( DEVA_FILTER_USE_CAIRO )
+    include ( ${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindCairo.cmake )
+  endif ( )
+  include ( ${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindFFTW.cmake )
 else ( )
-find_package ( PNG REQUIRED )
-if ( DEVA_FILTER_USE_CAIRO )
-include ( ${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindCairo.cmake )
-endif ( )
-include ( ${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindFFTW.cmake )
+  message ( FATAL_ERROR "unknown CMAKE_SYSTEM_NAME (" ${CMAKE_SYSTEM_NAME} ")" )
 endif ( )
 
 if ( DEVA_FILTER_USE_CAIRO )
-INCLUDE_DIRECTORIES (
-${FFTW_INCLUDE_DIR}
-${PNG_INCLUDE_DIR}
-${CAIRO_INCLUDE_DIR}
-)
+  INCLUDE_DIRECTORIES (
+  ${FFTW_INCLUDE_DIR}
+  ${PNG_INCLUDE_DIR}
+  ${CAIRO_INCLUDE_DIR}
+  )
 else ( )
-INCLUDE_DIRECTORIES (
-${FFTW_INCLUDE_DIR}
-${PNG_INCLUDE_DIR}
-)
+  INCLUDE_DIRECTORIES (
+  ${FFTW_INCLUDE_DIR}
+  ${PNG_INCLUDE_DIR}
+  )
 endif ( )
 
 ADD_EXECUTABLE ( deva-filter deva-commandline.c
@@ -149,7 +158,7 @@ TARGET_LINK_LIBRARIES ( deva-visualize-geometry
 
 if ( DEVA_FILTER_USE_CAIRO )
 
-ADD_EXECUTABLE ( deva-compare-boundaries deva-compare-boundaries.c
+  ADD_EXECUTABLE ( deva-compare-boundaries deva-compare-boundaries.c
 	deva-image.c
 	read-geometry.c
 	dilate.c
@@ -169,8 +178,8 @@ ADD_EXECUTABLE ( deva-compare-boundaries deva-compare-boundaries.c
 	radiance/words.c
 	radiance/timegm.c
 	)
-TARGET_COMPILE_DEFINITIONS ( deva-compare-boundaries PRIVATE DEVA_USE_CAIRO )
-TARGET_LINK_LIBRARIES ( deva-compare-boundaries
+  TARGET_COMPILE_DEFINITIONS ( deva-compare-boundaries PRIVATE DEVA_USE_CAIRO )
+  TARGET_LINK_LIBRARIES ( deva-compare-boundaries
 	${PNG_LIBRARIES}
 	${CAIRO_LIBRARIES}
 	-lm
@@ -178,7 +187,7 @@ TARGET_LINK_LIBRARIES ( deva-compare-boundaries
 
 else ( )
 
-ADD_EXECUTABLE ( deva-compare-boundaries deva-compare-boundaries.c
+  ADD_EXECUTABLE ( deva-compare-boundaries deva-compare-boundaries.c
 	deva-image.c
 	read-geometry.c
 	dilate.c
@@ -197,7 +206,7 @@ ADD_EXECUTABLE ( deva-compare-boundaries deva-compare-boundaries.c
 	radiance/words.c
 	radiance/timegm.c
 	)
-TARGET_LINK_LIBRARIES ( deva-compare-boundaries
+  TARGET_LINK_LIBRARIES ( deva-compare-boundaries
 	${PNG_LIBRARIES}
 	-lm
 	)

@@ -1,0 +1,49 @@
+#! /bin/bash
+
+./distclean	# This will remove Windows and Linux builds, but its
+		# the most reliable way to insure that the CMake caches
+		# are cleaned
+
+# Build libfftw3f.a:
+
+    cd external-libs/fftw-3.3.7
+    ./configure \
+       --prefix=$PWD/../macinstall \
+       --with-our-malloc16 --disable-fortran \
+       --disable-shared --enable-static --enable-threads \
+       --with-combined-threads --enable-sse2 \
+       --with-incoming-stack-boundary=2 \
+       --enable-float
+    make
+    make install
+    cd ../..
+
+# Build libz.a
+
+    cd external-libs/zlib-1.2.11
+    ./configure \
+	--static \
+	--prefix=$PWD/../macinstall
+    make
+    make install
+    cd ../..
+
+# Build libpng.a
+
+    cd external-libs/libpng-1.6.34
+    ./configure \
+	--enable-static \
+	--disable-shared \
+	--prefix=$PWD/../macinstall
+    make
+    make install
+    cd ../..
+
+# Build deva-filter, deva-visibility, deva-compare-boundaries,
+# deva-visualize-geometry, geometry-boundaries, luminance-boundaries,
+# and make-coordinates-file
+
+    cd build-mac
+    cmake ..
+    make
+    cd ..

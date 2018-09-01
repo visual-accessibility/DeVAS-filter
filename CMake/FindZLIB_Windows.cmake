@@ -6,7 +6,8 @@ endif ( )
 
 set_property ( GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS ON )
 
-set ( CMAKE_FIND_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/external-libs )
+set ( CMAKE_FIND_ROOT_PATH
+	${CMAKE_CURRENT_SOURCE_DIR}/external-libs/windowsinstall )
 
 find_path ( ZLIB_INCLUDE_DIR zlib.h )
 
