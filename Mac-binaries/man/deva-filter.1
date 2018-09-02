@@ -1,0 +1,120 @@
+.TH DEVA-FILTER 1 "14 February 2016" "DEVA Project"
+.SH NAME
+deva-filter \- simulate loss of acuity and contrast sensitivity
+.SH SYNOPSIS
+\." \fBdeva-filter\fR \fB\-\-mild|\-\-moderate|\-\-significant|\-\-severe\fR
+\fBdeva-filter\fR \fIpreset-option\fR \
+{\fIinput.hdr\fR | \-} {\fIoutput.hdr\fR | \-}
+.br
+				or
+.br
+\fBdeva-filter\fR [\fIoptions\fR] \fIacuity contrast\fR
+{\fIinput.hdr\fR | \-} {\fIoutput.hdr\fR | \-}
+.SH DESCRIPTION
+Filter a RADIANCE picture to simulate the reduced visibility associated
+with loss of visual acuity and contrast sensitivity, writing the result
+to a new RADIANCE picture.  The input picture must have a VIEW record
+indicating field of view.  It can be in rgbe or xyze pixel format.  The
+input can optionally be "\-", indicating that the original picture
+should be read from standard input.  The output picture will be in rgbe
+pixel format, regardless of the pixel format of input.  The output can
+optionally be "\-", indicating that the filtered picture should be
+written to standard output.
+.PP
+\fIacuity\fR is specified in terms of a Snellen ratio or a logMAR value.
+\fIcontrast\fR is specified in terms of either the ratio of the desired
+Michaelson contrast sensitivity to normal vision contrast sensitivity or
+as a Pelli-Robson Chart score.
+.SH OPTIONS
+.TP
+\fIpreset-options:\fR \
+\fB\-\-mild | \-\-moderate | \-\-significant | \-\-severe\fR
+Specifies use of one of four predefined levels of acuity and contrast
+deficits, along with a corresponding loss in color sensitivity.  When
+used, the \fIacuity\fR and \fIcontrast\fR arguments are left off the
+command line.  Only one of these flags can be specified.  When used, no
+additional flags other than \fB\-\-margin=\fIvalue\fR or
+\fB\-\-verbose\fR are allowed.
+.TP
+\fB\-\-Snellen | \-\-logMAR\fR
+Specifies the format of the \fIacuity\fR argument.  \fB\-\-Snellen\fR is
+the default.  Snellen ratios can be given as a single decimal value or
+in the common "n/m" (in the U.S., usually "20/m") fractional form.
+logMAR values are given in the conventional manner as a single number.
+.TP
+\fB\-\-cutoff | \-\-peak\fR
+Indicates that \fIacuity\fR is specified with respect to cutoff or peak
+contrast sensitivity.  \fB\-\-cutoff\fR is the default, and corresponds
+to the values usually reported in clinical eye examinations.
+.TP
+\fB\-\-sensitivity-ratio | \-\-pelli-robson\fR
+Indicates that \fIcontrast\fR is specified as a ratio of desired
+contrast sensitivity to normal vision contrast sensitivity
+(\fB\-\-sensitivity-ratio\fR) or as a Pelli-Robson Chart score
+(\fB\-\-pelli-robson).  \fB\-\-sensitivity-ratio\fR is the default.
+.TP
+\fB\-\-autoclip | \-\-clip=\fIlevel\fR
+Large magnitude input luminance values are reduced to a lower level.
+This is most useful in reducing filtering artifacts due to small, bright
+light sources.  For \fB\-\-autoclip\fR, the level at which values are
+clipped is chosen automatically.  For \fB\-\-clip\fR, values larger than
+\fIlevel\fR are reduced to \fIlevel\fR, with \fIlevel\fR specified in
+cd/m^2.  Default is no clipping.
+.TP
+\fB\-\-color | \-\-grayscale | \-\-saturation=\fIvalue\fR
+Indicates amount of desaturation.  \fB\-\-color\fR: no desaturation.
+\fB\-\-grayscale\fR: full desturation. \fB\-\-saturation=\fIvalue\fR:
+partial desaturation, scaled by value in range (0.0 - 1.0), with low
+values indicating more desaturation.  \fB\-\-color\fR is the default.
+.TP
+\fB\-\-margin=\fIvalue\fR
+Add a margin around the input file to reduce FFT artifacts due to
+top-bottom and left-right wraparound. \fIvalue\fR is a number in the
+range (0.0 -- 1.0].  It specifies the size of the horizontal and
+vertical padding as a fraction of the original horizontal and vertical
+size.
+.TP
+\fB\-\-version\fR
+Print version number and then exit. No other flags or arguments are
+required.
+.TP
+\fB\-\-presets\fR
+Print out acuity, contrast sensitivity, and color saturation parameters
+associated with the presets \fB\-\-mild\fR, \fB\-\-moderate\fR,
+\fB\-\-severe\fR, and \fB\-\-profound\fR. No other flags or arguments are
+required.
+.TP
+\fB\-\-verbose\fB
+Print possibly informative information about a particular run.
+.SH EXAMPLES
+To simulate moderate loss of acuity, contrast sensitivity, and color
+sensitivity:
+.IP "" .5i
+deva-filter \-\-moderate in.hdr out.hdr
+.PP
+To simulate 20/200 acuity without loss of peak contrast sensitivity:
+.IP "" .5i
+deva-filter 20/200 1 in.hdr out.hdr
+.PP
+Equivalently, using logMAR notation for acuity:
+.IP "" .5i
+deva-filter \-\-logMAR 1.0 1 in.hdr out.hdr
+.PP
+To do the same filtering but output a grayscale image:
+.IP "" .5i
+deva-filter \-\-grayscale \-\-logMAR 1.0 1 in.hdr out.hdr
+.PP
+To simulate a peak frequency sensitivity of 10% of normal vision and a
+peak contrast sensitivity at that frequency corresponding to 20% of
+normal vision:
+.IP "" .5i
+deva-filter \-\-Snellen \-\-peak 0.1 0.2 in.hdr out.hdr
+.PP
+To simulate 20/400 acuity and a contrast sensitivity indicated by a
+Pelli-Robson Chart score of 1.0:
+.IP "" .5i
+deva-filter \-\-pelli-robson 20/400 1.0 in.hdr out.hdr
+\." SH LIMITATIONS
+\." PP
+.SH AUTHOR
+William B. Thompson

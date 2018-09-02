@@ -1,0 +1,12 @@
+.TH LUMINANCE-BOUNDARIES 1 "02 July 2018" "DEVA Project"
+.SH NAME
+luminance-boundaries \- calculate luminance boundaries
+.SH SYNOPSIS
+\fBluminance-boundaries\fR \fIinput.hdr\fR \fIoutput.png\fR
+.SH DESCRIPTION
+Calculate luminance boundaries using the Canny edge detector as in
+\fBdeva-visibility\fR.  Input is a Radiance .hdr image.  Output is a PNG
+file with luminance boundary elements having a value of 255 and all
+other elements having a value of 0.
+.SH AUTHOR
+William B. Thompson

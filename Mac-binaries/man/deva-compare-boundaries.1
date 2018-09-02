@@ -1,0 +1,68 @@
+.TH DEVA-VISIBILITY 1 "18 May 2018" "DEVA Project"
+.SH NAME
+deva-compare-boundaries \- compare one set of boundaries to another
+.SH SYNOPSIS
+\fBdeva-compare-boundaries\fR [\fIoptions\fR] \fIstandard.png\fR
+\fIcomparison.png\fR \fIcoordinates\fR \fIvisualization.png\fR
+.SH DESCRIPTION
+Compares a binary image presumed to represent the location of real
+boundary elements (e.g., from geometry) to a comparison binary image
+presumed to represent the location of boundary elements to be compared
+to the standard (e.g., luminance values).  The output is a visualization
+of the distance, in visual angle, from each real boundary element to the
+nearest comparison boundary element.
+.PP
+.SH OPTIONS
+.TP
+\fB\-\-red\-gray\fR
+Larger distance (usually associated with estimated visibility hazards)
+shown in red and other geometric standard boundary elements that are
+closer (usually associated with elements estimated to be less of a
+potential visibility hazard) shown in dark gray. Default.
+.TP
+\fB\-\-red\-green\fR
+Larger distance (usually associated with estimated visibility hazards)
+shown in red and other geometric standard boundary elements that are
+closer (usually associated with elements estimated to be less of a
+potential visibility hazard) shown in green.
+.TP
+\fB\-\-Gaussian=\fI<sigma>\fR
+Visualization based on distance weighted by an unnormalized Gaussian
+function with standard deviation \fI<sigma>\fR. Default visualization
+weighting is \fB\-\-Gaussian=0.75\fR.
+.TP
+\fB\-\-reciprocal=\fI<scale>\fR
+Visualization based on reciprocal of distance, with distance scaled by
+\fI<scale>\fR.
+.TP
+\fB\-\-linear=\fI<max>\fR
+Visualization linearly scaled to a maximum distance of \fI<max>\fR.
+.TP
+\fB\-\-quantscore\fR
+Annotate the output image with the average hazard value over all of the
+boundary elements in the standard.  Only available if compiled with the
+Cairo library option.
+.SH ARGUMENTS
+.TP
+\fIstandard.png\fR
+Binary image file, with \fITRUE\fR indicated by non-zero value.
+Represents the standard to compare against (e.g., geometry).
+.TP
+\fIcomparison.png\fR
+Binary image file, with \fITRUE\fR indicated by non-zero value.
+Represents the boundary elements to be compare to the standard (e.g.,
+luminance boundaries).
+.TP
+\fIcoordinates\fR
+A two line text file.  The first line specifies the units for the
+\fIxyz.txt\fR and \fIdist.txt\fR files. The second line is the same as
+the VIEW record in \fIinput.hdr\fR.  See \fBmake-coordinates-file\fR for
+information on how to create this file.
+.TP
+\fIvisualization.png\fR
+Output visualization file.
+.\" SH EXAMPLES
+\." SH LIMITATIONS
+\." PP
+.SH AUTHOR
+William B. Thompson
