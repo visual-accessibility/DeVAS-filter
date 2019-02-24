@@ -49,6 +49,7 @@ deva_float_gblur ( DEVA_float_image *input, float st_dev )
     if ( st_dev < GBLUR_STD_DEV_MIN ) {
 	fprintf ( stderr, "DEVA_float_gblur: st_dev too small to use (%g)\n",
 		st_dev );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* can't blur this little! */
     }
 
@@ -71,12 +72,14 @@ deva_float_gblur ( DEVA_float_image *input, float st_dev )
 	    sizeof ( DEVA_float ) );
     if ( tmp_1 == NULL ) {
 	fprintf ( stderr, "malloc failed!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
     tmp_2 = (DEVA_float *) malloc ( imax ( n_rows, n_cols ) *
 	    sizeof ( DEVA_float ) );
     if ( tmp_2 == NULL ) {
 	fprintf ( stderr, "malloc failed!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -150,6 +153,7 @@ gblur_float_convolve_1d ( DEVA_float *in, DEVA_float *out, int in_size,
     if ( ( kernel_size % 2 ) != 1 ) {
 	fprintf ( stderr,
 		"gblur_float_convolve_1d: kernel size must be odd!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -160,6 +164,7 @@ gblur_float_convolve_1d ( DEVA_float *in, DEVA_float *out, int in_size,
 	save_normalize = (double *) malloc ( in_size * sizeof ( double ) );
 	if ( save_normalize == NULL ) {
 	    fprintf ( stderr, "gblur_float_convolve_1d: malloc failed!\n" );
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    exit ( EXIT_FAILURE );
 	}
     }
@@ -246,18 +251,21 @@ DEVA_float_gblur_kernel ( float st_deviation, int kernel_size )
     if ( kernel_size <= 0 ) {
 	fprintf ( stderr,
 		"deva_float_gblur: invalid kernel_size (%i)\n", kernel_size );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
     if ( st_deviation <= 0.0 ) {
 	fprintf ( stderr,
 		"deva_float_gblur: invalid st_deviation (%f)\n", st_deviation );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
     kernel = (float *) malloc ( kernel_size * sizeof ( float ) );
     if ( kernel == NULL ) {
 	fprintf ( stderr, "malloc failed!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 

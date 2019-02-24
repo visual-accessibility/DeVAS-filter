@@ -102,28 +102,33 @@ geometry_discontinuities ( DEVA_coordinates *coordinates, DEVA_XYZ_image *xyz,
 	    !DEVA_image_samesize ( xyz, nor ) ) {
 	fprintf ( stderr,
 		"geometry_discontinuities: geometry image size mismatch!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
     if ( position_patch_size < 3 ) {
 	fprintf ( stderr,
 		"geometry_discontinuities: position_patch_size must >= 3!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
     if ( orientation_patch_size < 3 ) {
 	fprintf ( stderr,
 	    "geometry_discontinuities: orientation_patch_size must >= 3!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
     if ( ( position_patch_size % 2 ) != 1 ) {
 	fprintf ( stderr,
 	    "geometry_discontinuities: position_patch_size must be odd!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
     if ( ( orientation_patch_size % 2 ) != 1 ) {
 	fprintf ( stderr,
 	    "geometry_discontinuities: orientation_patch_size must be odd!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -136,11 +141,13 @@ geometry_discontinuities ( DEVA_coordinates *coordinates, DEVA_XYZ_image *xyz,
     if ( position_patch_size > min_image_size ) {
 	fprintf ( stderr,
       "geometry_discontinuities: position_patch_size exceeds data size!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
     if ( orientation_patch_size > min_image_size ) {
 	fprintf ( stderr,
       "geometry_discontinuities: orientation_patch_size exceeds data size!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -219,18 +226,21 @@ compute_position_deviation ( int position_patch_size, DEVA_XYZ_image *position,
     if ( !DEVA_image_samesize ( position, surface_normal ) ) {
 	fprintf ( stderr,
 		"compute_position_deviation: image sizes don't match!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* error return */
     }
 
     if ( position_patch_size > imin ( n_rows, n_cols ) ) {
 	fprintf ( stderr,
 		"compute_position_deviation: patch size exceeds data size!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* error return */
     }
 
     if ( ( position_patch_size % 2 ) != 1 ) {
 	fprintf ( stderr,
 	    "compute_position_deviation: patch-size must be odd!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* error return */
     }
 
@@ -322,12 +332,14 @@ compute_orientation_deviation ( int orientation_patch_size,
     if ( orientation_patch_size > imin ( n_rows, n_cols ) ) {
 	fprintf ( stderr,
 		"compute_position_deviation: patch size exceeds data size!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );  /* error return */
     }
 
     if ( ( orientation_patch_size % 2 ) != 1 ) {
 	fprintf ( stderr,
 		"compute_position_deviation: patch-size must be odd!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );  /* error return */
     }
 
@@ -451,6 +463,7 @@ DEVA_gray_or ( DEVA_gray_image *i1, DEVA_gray_image *i2 )
 
     if ( !DEVA_image_samesize ( i1, i2 ) ) {
 	fprintf ( stderr, "DEVA_gray_or: image sizes don't match!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* error return */
     }
 

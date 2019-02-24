@@ -216,12 +216,14 @@ deva_filter ( DEVA_xyY_image *input_image, double acuity,
 
     if ( DEVA_image_view ( input_image ) . type == 0 ) {
 	fprintf ( stderr, "missing or invalid view record in input image!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
     if ( ( acuity <= 0.0 ) || ( acuity > MAX_PLAUSIBLE_ACUITY ) ) {
 	fprintf ( stderr, "invalid or implausible acuity value (%f)!\n",
 		acuity );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -229,12 +231,14 @@ deva_filter ( DEVA_xyY_image *input_image, double acuity,
 	    ( contrast_sensitivity > MAX_PLAUSIBLE_CONTRAST ) ) {
 	fprintf ( stderr, "invalid or implausible contrast value (%f)!\n",
 		contrast_sensitivity );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
     if ( ( saturation < 0.0 ) || ( saturation > 1.0 ) ) {
 	fprintf ( stderr, "invalid or implausible saturation value (%f)!\n",
 		saturation );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -251,7 +255,7 @@ deva_filter ( DEVA_xyY_image *input_image, double acuity,
      * necessary to accociate image with spatial frequencies.  FOV is (or
      * at least should be) in VIEW record in Radiance input .hdr image.
      * deva_commandline copies the VIEW record from the Radiance file to the
-     * xyY input_image object.  disassemble_input copies to VIEW record from
+     * xyY input_image object.  disassemble_input copies the VIEW record from
      * the input_image object to the luminance, x, and y image objects.
      *
      * The fov used in the computation is the larger of the horizontal and
@@ -263,6 +267,7 @@ deva_filter ( DEVA_xyY_image *input_image, double acuity,
 	fprintf ( stderr, "deva_filter: invalid or missing fov (%f, %f)!\n",
 		DEVA_image_view ( luminance ) . vert,
 		DEVA_image_view ( luminance ) . horiz );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
     if ( DEVA_verbose ) {
@@ -1141,6 +1146,7 @@ desaturate ( double saturation, DEVA_float_image *x, DEVA_float_image *y )
 
     if ( !DEVA_float_image_samesize ( x, y ) ) {
 	fprintf ( stderr, "desaturate: incompatible inputs!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -1219,6 +1225,7 @@ clip_to_xyY_gamut ( DEVA_xyY xyY )
     }
 
     fprintf ( stderr, "clip_to_xyY_gamut: internal error!\n" );
+    DEVA_print_file_lineno ( __FILE__, __LINE__ );
     exit ( EXIT_FAILURE );
 }
 
@@ -1246,6 +1253,7 @@ line_intersection ( XY_point line_1_p1, XY_point line_1_p2, XY_point line_2_p1,
     if ( fabs ( denominator ) < LINE_INTERSECTION_EPSILON ) {
 	fprintf ( stderr,
 	    "line_intersection: coincident or parallel lines or points!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 

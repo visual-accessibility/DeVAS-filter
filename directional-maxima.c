@@ -34,11 +34,13 @@ find_directional_maxima ( int patch_size, double threshold,
 	fprintf ( stderr,
 		"find_directional_maxima: invalid patch_size (%d)!\n",
 		patch_size );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
     if ( ( patch_size % 2 ) != 1 ) {
 	fprintf ( stderr,
 		"find_directional_maxima: patch_size must be odd!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -218,6 +220,7 @@ gblur_3x3 ( DEVA_float_image *values )
     n_cols = DEVA_image_n_cols ( values );
     if ( ( n_rows < 3 ) || ( n_cols < 3 ) ) {
 	fprintf ( stderr, "gblur_3x3: image too small!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -286,6 +289,7 @@ gblur_3x3_3d ( DEVA_XYZ_image *values )
     n_cols = DEVA_image_n_cols ( values );
     if ( ( n_rows < 3 ) || ( n_cols < 3 ) ) {
 	fprintf ( stderr, "gblur_3x3: image too small!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 

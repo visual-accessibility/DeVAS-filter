@@ -1,0 +1,42 @@
+#ifndef __DEVA_PRESETS_H
+#define __DEVA_PRESETS_H
+
+/* preset values */
+
+#define	PRESET_NORMAL			"normal"
+#define	NORMAL_SNELLEN			(20.0/20.0)
+#define	NORMAL_LOGMAR			0.0
+#define	NORMAL_PELLI_ROBSON		2.0
+#define	NORMAL_SATURATION		1.0
+
+#define	PRESET_MILD			"mild"
+#define	MILD_SNELLEN			(20.0/45.0)
+#define	MILD_LOGMAR			0.35
+#define	MILD_PELLI_ROBSON		1.6
+#define	MILD_SATURATION			.75
+
+#define	PRESET_MODERATE			"moderate"
+#define	MODERATE_SNELLEN		(20.0/115.0)
+#define	MODERATE_LOGMAR			0.75
+#define	MODERATE_PELLI_ROBSON		1.0
+#define	MODERATE_SATURATION		.4
+
+#define	PRESET_LEGALBLIND		"legalblind"
+#define	LEGALBLIND_SNELLEN		(20.0/200.0)
+#define	LEGALBLIND_LOGMAR		1.0
+#define	LEGALBLIND_PELLI_ROBSON		0.84
+#define	LEGALBLIND_SATURATION		.3
+
+#define	PRESET_SEVERE			"severe"
+#define	SEVERE_SNELLEN			(20.0/285.0)
+#define	SEVERE_LOGMAR			1.15
+#define	SEVERE_PELLI_ROBSON		0.75
+#define	SEVERE_SATURATION		.25
+
+#define	PRESET_PROFOUND			"profound"
+#define	PROFOUND_SNELLEN		(20.0/710.0)
+#define	PROFOUND_LOGMAR			1.55
+#define	PROFOUND_PELLI_ROBSON		0.5
+#define	PROFOUND_SATURATION		0.0
+
+#endif	/* __DEVA_PRESETS_H */

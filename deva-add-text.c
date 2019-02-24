@@ -65,6 +65,7 @@ DEVA_RGB_cairo_open ( DEVA_RGB_image *DEVA_image )
     if ( cairo_surface_status ( cairo_surface ) != CAIRO_STATUS_SUCCESS ) {
 	fprintf ( stderr,
 		"cairo_from_DEVA_RGB: failed to create cairo surface!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -122,6 +123,7 @@ DEVA_RGB_cairo_close_inplace ( cairo_surface_t *cairo_surface,
     if ( cairo_surface_status ( cairo_surface ) != CAIRO_STATUS_SUCCESS ) {
 	fprintf ( stderr,
 		"DEVA_RGB_image_from_cairo: invalid cairo surface!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -136,6 +138,7 @@ DEVA_RGB_cairo_close_inplace ( cairo_surface_t *cairo_surface,
 	    ( n_cols != DEVA_image_n_cols ( DEVA_image ) ) ) {
 	fprintf ( stderr,
 		"DEVA_RGB_image_from_cairo: size mismatch!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 

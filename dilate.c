@@ -63,11 +63,13 @@ DEVA_gray_dilate_2 ( DEVA_gray_image *input, DEVA_gray_image *output,
     if ( !DEVA_gray_image_samesize ( input, output ) ) {
 	fprintf ( stderr,
 	    "DEVA_gray_dilate2: input and output image sizes don't match!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
     if ( radius < 1.0 ) {
 	fprintf ( stderr, "DEVA_gray_dilate: invalid radius (%f)!\n", radius );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -130,6 +132,7 @@ dt_euclid_sq_2 ( DEVA_gray_image *input, DEVA_float_image *output )
 
     if ( !DEVA_image_samesize ( input, output ) ) {
 	fprintf ( stderr, "dt_euclid_sq_2: input and output not same size!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -147,6 +150,7 @@ dt_euclid_sq_2 ( DEVA_gray_image *input, DEVA_float_image *output )
 
     if ( ( v == NULL ) || ( z == NULL ) || ( f == NULL ) || ( D_f == NULL ) ) {
 	fprintf ( stderr, "dt_euclid_sq: malloc failed!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 

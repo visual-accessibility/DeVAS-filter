@@ -8,6 +8,10 @@
  * Define DEVA_VISIBILITY to generate command line version of deva-visibility.  
  * Leave undefined for command line version of deva-filter.
  *
+ * Define DEVA_USE_CAIRO if the CAIRO graphics library is available.  CAIRO
+ * is used by deva-visibility to annotate the image visualizing potential
+ * visibility hazards.
+ *
  * This is currently handled in CMakeLists.txt.
  */
 
@@ -16,9 +20,10 @@
 #include <string.h>		/* for strcmp, strlen */
 #include <strings.h>		/* for strcasecmp, strncasecmp */
 #include <libgen.h>		/* for basename */
-/* #define	DEVA_CHECK_BOUNDS */
+/* #define DEVA_CHECK_BOUNDS */	/* optional DEVA_image bounds checking */
 #include "deva-image.h"
 #include "deva-filter.h"
+#include "deva-presets.h"
 #include "deva-utils.h"
 #include "deva-margin.h"
 #include "radianceIO.h"
@@ -29,13 +34,22 @@
 #include "deva-visibility.h"
 #include "visualize-hazards.h"
 #include "DEVA-png.h"
+#include "deva-gblur-fft.h"
+#ifdef DEVA_USE_CAIRO
+#include "deva-add-text.h"
+#endif  /* DEVA_USE_CAIRO */
 #endif	/* DEVA_VISIBILITY */
 #include "deva-license.h"	/* DEVA open source license */
 
 /* #define	UNIFORM_MARGINS */	/* make top/bottom and lef/right */
 					/* margins all the same size */
 
-#ifdef DEVA_VISIBILITY
+#ifdef DEVA_VISIBILITY		/* code specific to deva-visibility */
+
+#ifdef DEVA_USE_CAIRO
+#define TEXT_DEFAULT_FONT_SIZE		24.0
+#endif	/* DEVA_USE_CAIRO */
+
 
 /* The following need tuning!!! */
 
@@ -44,15 +58,20 @@
 #define	POSITION_THRESHOLD		2 /* cm */
 #define	ORIENTATION_THRESHOLD		20 /* degrees */
 
+#define	LOW_LUMINANCE_LEVEL	1.0	/* in cd/m^2 */
+#define	LOW_LUMINANCE_SIGMA	0.2	/* in degrees of visual angle */
+
 #endif	/* DEVA_VISIBILITY */
+
+    /* code used by both deva-filter and deva-visibility */
 
 char	*progname;	/* one radiance routine requires this as a global */
 
-#ifndef DEVA_VISIBILITY
+#ifndef DEVA_VISIBILITY	/* code specific to deva-filter */
 
 char	*Usage = /* deva-filter */
-	    "--mild|--moderate|--severe|--profound [--margin=<value>]"
-	    "\n\tinput.hdr output.hdr";
+	    "--mild|--moderate|--severe|--profound|--legalblind"
+	    "\n\t[--presets] [--margin=<value>] input.hdr output.hdr";
 char	*Usage2 = "[--snellen|--logMAR] [--sensitivity-ratio|--pelli-robson]"
     "\n\t[--autoclip|--clip=<level>] [--color|--grayscale|saturation=<value>]"
     "\n\t[--margin=<value>] [--verbose] [--version] [--presets]"
@@ -60,16 +79,15 @@ char	*Usage2 = "[--snellen|--logMAR] [--sensitivity-ratio|--pelli-robson]"
 int	args_needed = 4;
 
 /*
- * Options:
+ * Options (can be in any order):
  *
- *   --mild | --moderate | --significant | --severe
+ *   --mild | --moderate | --significant | --severe | --legalblind
  *
- *   		Specifies use of one of four predefined levels of acuity and
+ *   		Specifies use of one of five predefined levels of acuity and
  *   		contrast deficits, along with a corresponding loss in color
  *   		sensitivity.  When used, the *acuity* and *contrast*
  *   		arguments are left off the command line.  Only one of these
- *   		flags can be specified.  When used, no additional flags other
- *   		than --margin=<value> or --verbose are allowed.
+ *   		flags can be specified.
  *
  *   --Snellen | --logMAR
  *
@@ -120,8 +138,8 @@ int	args_needed = 4;
  *
  *   --presets	Print out acuity, contrast sensitivity, and color saturation
  *		parameters associated with the presets --mild, --moderate,
- *		--severe, and --profound.  No other flags or arguments are
- *		required.
+ *		--severe, --profound, and --legalblind.  No other flags or
+ *		arguments are required.
  *
  *   --verbose
  *		Print possibly informative information about a particular run.
@@ -138,23 +156,32 @@ int	args_needed = 4;
  *   output.hdr	Low vision simulation.
  */
 
-#else	/* DEVA_VISIBILITY */
+#else	/* code specific to deva-visibility */
 
 char	*Usage = /* deva-visibility */
     "--mild|--moderate|--severe|--profound [--margin=<value>]"
-    "\n\t[--red-gray|--red-green]"
+    "\n\t[--red-green|--red-gray] [--printaverage|--printaveragena]"
+#ifdef DEVA_USE_CAIRO
+    "\n\t[--quantscore] [--fontsize=<n>]"
+#endif	/* DEVA_USE_CAIRO */
+    "\n\t[--ROI=<filename>.png]"
     "\n\t[--Gaussian=<sigma>|--reciprocal=<scale>|--linear=<max>]"
-    "\n\t[--luminanceboundaries=<filename.png>]"
-    "\n\t[--geometryboundaries=<filename.png>]"
-    "\n\tinput.hdr coordinates xyz.txt dist.txt nor.txt"
-    "\n\tsimulated-view.hdr hazards.png";
+    "\n\t[--luminanceboundaries=<filename>.png]"
+    "\n\t[--geometryboundaries=<filename>.png]"
+    "\n\t[--lowluminance=<filename>.png]"
+    "\n\t[--falsepositives=<filename>.png]"
+    "\n\t\tinput.hdr coordinates xyz.txt dist.txt nor.txt"
+    "\n\t\tsimulated-view.hdr hazards.png";
 char	*Usage2 = "[--snellen|--logMAR] [--sensitivity-ratio|--pelli-robson]"
     "\n\t[--autoclip|--clip=<level>] [--color|--grayscale|saturation=<value>]"
     "\n\t[--margin=<value>] [--verbose] [--version] [--presets]"
-    "\n\t[--red-gray|--red-green]"
+    "\n\t[--red-green|--red-gray] [--printaverage|--printaveragena]"
+    "\n\t[--ROI=<filename>.png]"
     "\n\t[--Gaussian=<sigma>|--reciprocal=<scale>|--linear=<max>]"
-    "\n\t[--luminanceboundaries=<filename.png>]"
-    "\n\t[--geometryboundaries=<filename.png>]"
+    "\n\t[--luminanceboundaries=<filename>.png]"
+    "\n\t[--geometryboundaries=<filename>.png]"
+    "\n\t[--lowluminance=<filename>.png]"
+    "\n\t[--falsepositives=<filename>.png]"
 	    "\n\t\tacuity contrast input.hdr coordinates xyz.txt dist.txt"
 	    "\n\t\tnor.txt simulated-view.hdr hazards.png";
 int	args_needed = 9;
@@ -164,15 +191,57 @@ int	args_needed = 9;
  *
  *   All of the deva-filter options, plus:
  *
+ *   --red-green
+ *
+ *   		Predicted geometry discontinuities that will not be visible
+ *   		under the specified loss of acuity and contrast sensitivity
+ *   		will be shown in shades of red, while those predicted to be
+ *   		visible will be shown in shades of green.  Default.
+ *
+ *   --red-green
+ *
+ *   		Predicted geometry discontinuities that will not be visible
+ *   		under the specified loss of acuity and contrast sensitivity
+ *   		will be shown in shades of red, while those predicted to be
+ *   		visible will be shown in shades of gray.
+ *
+ *   --ROI=<filename>.png
+ *
+ *   		Read in a region-of-interest file of the same dimensions as
+ *   		input.hdr.  Only analyze visibility of pixel locations that
+ *   		have a non-zero value in the ROI file.
+ *
+ *   --Gaussian=<sigma>
+ *
+ *   		Hazard visibility score based on visual angle weighted by
+ *   		an unnormalized Gaussian function with standard deviation
+ *   		<sigma>.  Default (sigma = 0.75 degrees).
+ *
+ *   --reciprocal=<scale>
+ *
+ *   		Hazard visibility score based on reciprocal of angular
+ *   		distance, with distance scaled by <scale>.
+ *
+ *   --linear=<max>
+ *
+ *   		Hazard visibility score based on linearly scaled angular
+ *   		distance, to a maximum angular distance of <max>.
+ *
  *   --luminanceboundaries==<filename>.png
  *
  *		Write a grayscale PNG image file indicating the location of
  *		detected luminance boundaries.
  *
- *   --luminanceboundaries==<filename>.png
+ *   --lowluminance==<filename>.png
+ *   
+ *   		Write a grayscale PNG image file indicating the location of
+ *   		detected low luminance regions.
  *
- *		Write a grayscale PNG image file indicating the location of
- *		detected luminance boundaries.
+ *   --falsepositives=<filename>.png
+ *   		Write an output color PNG image indicating likely potential
+ *   		false positive area in the input image where visual contours
+ *   		do not correspond to actual scene geometry.  Uses a gray-cyan
+ *   		colormap.
  *
  * Arguments:
  *
@@ -213,8 +282,11 @@ int	args_needed = 9;
 
 #endif	/* DEVA_VISIBILITY */
 
+/* code used by both deva-filter and deva-visibility */
+
 /* option flags */
-typedef enum { no_preset, mild, moderate, severe, profound } PresetType;
+typedef enum { no_preset, normal, mild, moderate, severe, profound,
+    legalblind } PresetType;
 typedef	enum { undefined_acuity_format, Snellen, logMAR } AcuityFormat;
 typedef enum { undefined_sensitivity, sensitivity_ratio, pelli_robson }
 							SensitivityType;
@@ -243,55 +315,8 @@ typedef enum { undefined_smoothing, no_smoothing, smoothing } SmoothingType;
 
 #define	DEFAULT_MEASUREMENT_TYPE	Gaussian_measure
 #define	DEFAULT_SCALE_PARAMETER		0.75
-#define	DEFAULT_VISUALIZATION_TYPE	red_gray_type;
-
-/* preset values */
-
-#ifndef DEVA_USE_OLD_PRESETS
-
-#define	PRESET_MILD			"mild"
-#define	MILD_SNELLEN			(20.0/45.0)
-#define	MILD_LOGMAR			0.35
-#define	MILD_PELLI_ROBSON		1.6
-#define	MILD_SATURATION			.75
-
-#define	PRESET_MODERATE			"moderate"
-#define	MODERATE_SNELLEN		(20.0/115.0)
-#define	MODERATE_LOGMAR			0.75
-#define	MODERATE_PELLI_ROBSON		1.0
-#define	MODERATE_SATURATION		.4
-
-#define	PRESET_SEVERE			"severe"
-#define	SEVERE_SNELLEN			(20.0/285.0)
-#define	SEVERE_LOGMAR			1.15
-#define	SEVERE_PELLI_ROBSON		0.75
-#define	SEVERE_SATURATION		.25
-
-#define	PRESET_PROFOUND			"profound"
-#define	PROFOUND_SNELLEN		(20.0/710.0)
-#define	PROFOUND_LOGMAR			1.55
-#define	PROFOUND_PELLI_ROBSON		0.5
-#define	PROFOUND_SATURATION		0.0
-
-#else	/* DEVA_USE_OLD_PRESETS */
-
-#define	MILD_SNELLEN			(20.0/80.0)	/* logMAR 0.6 */
-#define	MILD_PELLI_ROBSON		1.5
-#define	MILD_SATURATION			.75
-
-#define	MODERATE_SNELLEN		(20.0/250.0)	/* logMAR 1.1 */
-#define	MODERATE_PELLI_ROBSON		1.0
-#define	MODERATE_SATURATION		.4
-
-#define	SIGNIFICANT_SNELLEN		(20.0/450.0)	/* logMAR 1.35 */
-#define	SIGNIFICANT_PELLI_ROBSON	0.75
-#define	SIGNIFICANT_SATURATION		.25
-
-#define	SEVERE_SNELLEN			(20.0/800.0)	/* logMAR 1.6 */
-#define	SEVERE_PELLI_ROBSON		0.5
-#define	SEVERE_SATURATION		0.0
-
-#endif	/* DEVA_USE_OLD_PRESETS */
+#define	DEFAULT_VISUALIZATION_TYPE	red_green_type;
+#define FP_VISUALIZATION_TYPE		gray_cyan_type;
 
 #define	LOGMAR_MAX		2.3
 #define	LOGMAR_MIN		(-0.65)
@@ -328,6 +353,24 @@ static double	auto_clip_level ( DEVA_xyY_image *image );
 static double	auto_clip_level_median ( DEVA_xyY_image *image );
 #endif	/* AUTO_CLIP_MEDIAN */
 static void	clip_max_value ( DEVA_xyY_image *image, double clip_value );
+
+#ifdef DEVA_VISIBILITY	/* code specific to deva-visibility */
+static DEVA_float_image
+		*xyY2Y_image ( DEVA_xyY_image *xyY_image );
+static DEVA_gray_image
+		*luminance_threshold ( double low_luminace_level,
+		    DEVA_float_image *luminance_smoothed );
+static double	angle2pixels ( double low_lum_sigma_angle,
+		    DEVA_float_image *input_float );
+static void	make_visible ( DEVA_gray_image *boundaries );
+#ifdef DEVA_USE_CAIRO
+static void	add_quantscore ( DEVA_RGB_image *hazards_visualization,
+		    double text_font_size, double hazard_average );
+#endif	/* DEVA_USE_CAIRO */
+#endif	/* DEVA_VISIBILITY */
+
+/* code used by both deva-filter and deva-visibility */
+
 static void	deva_filter_print_defaults ( void );
 static void	deva_filter_print_presets ( void );
 
@@ -340,27 +383,26 @@ main ( int argc, char *argv[] )
     SensitivityType	sensitivity_type = undefined_sensitivity;
     ColorType		color_type = undefined_color;
     ClipType		clip_type = undefined_clip;
-
     /* hidden option flags */
     AcuityType		acuity_type = undefined_acuity_type;
     SmoothingType	smoothing_type = undefined_smoothing;
 
     /* initialized next four variables to quiet uninitialized warning */
     double		saturation = -1.0;	/* Saturation adjustment: */
-    						/* 0 => full desaturation */
-						/* (0-1) => partial desat */
-    						/* 1 => leave sat as is */
+    /* 0 => full desaturation */
+    /* (0-1) => partial desat */
+    /* 1 => leave sat as is */
     double		clip_value = -1.0;
     double		acuity = -1.0;		/* ratio to normal */
     double		contrast_ratio = -1.0;	/* ratio to normal */
     int			smoothing_flag;		/* reduce banding artifacts */
-    						/* due to thresholding */
+    /* due to thresholding */
     double		acuity_adjustment;	/* CSF peak adjustment */
     double		logMAR_arg;		/* used for sanity check */
     double		pelli_robson_score;	/* log contrast */
     double		margin = -1.0;		/* width of margin to add */
-						/* to mitigate FFT */
-						/* wraparound artificats */
+    /* to mitigate FFT */
+    /* wraparound artificats */
     int			v_margin, h_margin;	/* in pixels */
     char		*input_file_name;
 
@@ -370,14 +412,21 @@ main ( int argc, char *argv[] )
     char		*filtered_image_file_name;
     DEVA_xyY_image	*filtered_image;	/* Y values in cd/m^2 */
 
-#ifdef DEVA_VISIBILITY
+#ifdef DEVA_VISIBILITY	/* code specific to deva-visibility */
     char		*coordinates_file_name;
     char		*xyz_file_name;
     char		*dist_file_name;
     char		*nor_file_name;
     char		*hazards_file_name;
+    char		*ROI_file_name = NULL;
+    DEVA_gray_image	*ROI = NULL;
     char		*luminance_boundaries_file_name = NULL;
+    DEVA_gray_image	*luminance_boundaries = NULL;
     char		*geometry_boundaries_file_name = NULL;
+    DEVA_gray_image	*geometry_boundaries = NULL;
+    char		*low_luminance_file_name = NULL;
+    char		*false_positives_file_name = NULL;
+    DEVA_float_image	*false_positive_hazards = NULL;
     DEVA_coordinates	*coordinates;
     DEVA_XYZ_image	*xyz;
     DEVA_float_image	*dist;
@@ -386,6 +435,14 @@ main ( int argc, char *argv[] )
     Measurement_type	measurement_type = DEFAULT_MEASUREMENT_TYPE;
     double		scale_parameter = DEFAULT_SCALE_PARAMETER;
     Visualization_type	visualization_type = DEFAULT_VISUALIZATION_TYPE;
+    Visualization_type	visualization_type_fp = FP_VISUALIZATION_TYPE;
+    int			print_average = FALSE;
+    int			print_average_na = FALSE;
+    double		hazard_average;
+#ifdef DEVA_USE_CAIRO
+    int                 quantscore = FALSE;
+    double		text_font_size = TEXT_DEFAULT_FONT_SIZE;
+#endif  /* DEVA_USE_CAIRO */
 
     /* Hardwired parameters for detection of geometry boundaries. */
     int			position_patch_size = POSITION_PATCH_SIZE;
@@ -393,16 +450,30 @@ main ( int argc, char *argv[] )
     int			position_threshold = POSITION_THRESHOLD;
     int			orientation_threshold = ORIENTATION_THRESHOLD;
 
+    double		low_luminace_level = LOW_LUMINANCE_LEVEL;
+    double		low_lum_sigma_angle = LOW_LUMINANCE_SIGMA;
+    double		low_lum_sigma_pixels;
+
+    DEVA_gray_image	*low_luminance;
+    DEVA_float_image	*luminance_smoothed_margin;
+    DEVA_float_image	*luminance_smoothed;
+    DEVA_float_image	*input_float;
+    DEVA_float_image	*margin_float;
+
     DEVA_float_image	*hazards;	/* Visual angle between geometry */
-    					/* boundaries and nearest low vision */
-    					/* luminance boundaries. */
+    /* boundaries and nearest low vision */
+    /* boundaries and nearest low vision */
+    /* luminance boundaries. */
     DEVA_RGB_image	*hazards_visualization;
-    					/* Displayable image indicating */
-    					/* potentially invisible geometry */
-    					/* boundaries in red.  Optionally, */
-    					/* geometry boundaries predicted to */
-    					/* be visible can be marked in green. */
+    /* Displayable image indicating */
+    /* potentially invisible geometry */
+    /* using visualization_type color */
+    /* map. */
+    DEVA_RGB_image	*fp_visualization;
+    /* Same for false positives. */
 #endif	/* DEVA_VISIBILITY */
+
+    /* code used by both deva-filter and deva-visibility */
 
     int			argpt = 1;
 
@@ -414,12 +485,24 @@ main ( int argc, char *argv[] )
 	    break;	/* read/write from/to stdin/stdout? */
 	}
 
-	if ( ( strcasecmp ( argv[argpt], "--mild" ) == 0 ) ||
+	if ( ( strcasecmp ( argv[argpt], "--normal" ) == 0 ) ||
+		( strcasecmp ( argv[argpt], "-normal" ) == 0 ) ) {
+	    /* preset for normal acuity and contrast sensitivity */
+	    if ( ! ( ( preset_type == no_preset ) ||
+			( preset_type == normal ) ) ) {
+		fprintf ( stderr, "conflicting preset values!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
+		exit ( EXIT_FAILURE );
+	    }
+	    preset_type = mild;
+	    argpt++;
+	} else if ( ( strcasecmp ( argv[argpt], "--mild" ) == 0 ) ||
 		( strcasecmp ( argv[argpt], "-mild" ) == 0 ) ) {
 	    /* preset for mild loss of acuity and contrast */
 	    if ( ! ( ( preset_type == no_preset ) ||
 			( preset_type == mild ) ) ) {
 		fprintf ( stderr, "conflicting preset values!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );
 	    }
 	    preset_type = mild;
@@ -431,6 +514,7 @@ main ( int argc, char *argv[] )
 	    if ( ! ( ( preset_type == no_preset ) ||
 			( preset_type == moderate ) ) ) {
 		fprintf ( stderr, "conflicting preset values!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );
 	    }
 	    preset_type = moderate;
@@ -442,6 +526,7 @@ main ( int argc, char *argv[] )
 	    if ( ! ( ( preset_type == no_preset ) ||
 			( preset_type == severe ) ) ) {
 		fprintf ( stderr, "conflicting preset values!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );
 	    }
 	    preset_type = severe;
@@ -453,9 +538,22 @@ main ( int argc, char *argv[] )
 	    if ( ! ( ( preset_type == no_preset ) ||
 			( preset_type == profound ) ) ) {
 		fprintf ( stderr, "conflicting preset values!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );
 	    }
 	    preset_type = profound;
+	    argpt++;
+
+	} else if ( ( strcasecmp ( argv[argpt], "--legalblind" ) == 0 ) ||
+		( strcasecmp ( argv[argpt], "-legalblind" ) == 0 ) ) {
+	    /* preset for legalblind loss of acuity and contrast */
+	    if ( ! ( ( preset_type == no_preset ) ||
+			( preset_type == legalblind ) ) ) {
+		fprintf ( stderr, "conflicting preset values!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
+		exit ( EXIT_FAILURE );
+	    }
+	    preset_type = legalblind;
 	    argpt++;
 
 	} else if ( ( strcasecmp ( argv[argpt], "--Snellen" ) == 0 ) ||
@@ -463,6 +561,7 @@ main ( int argc, char *argv[] )
 	    /* acuity specified as Snellen fraction or Snellen decimal */
 	    if ( acuity_format == logMAR ) {
 		fprintf ( stderr, "conflicting --Snellen/--logMAR!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );
 	    }
 	    acuity_format = Snellen;
@@ -473,6 +572,7 @@ main ( int argc, char *argv[] )
 	    /* acuity specified as logMAR value */
 	    if ( acuity_format == Snellen ) {
 		fprintf ( stderr, "conflicting --Snellen/--logMAR!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );
 	    }
 	    acuity_format = logMAR;
@@ -485,6 +585,7 @@ main ( int argc, char *argv[] )
 	    if ( sensitivity_type == pelli_robson ) {
 		fprintf ( stderr,
 			"conflicting --sensitivity-ratio/--pelli_robson!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );
 	    }
 	    sensitivity_type = sensitivity_ratio;
@@ -496,6 +597,7 @@ main ( int argc, char *argv[] )
 	    if ( sensitivity_type == sensitivity_ratio ) {
 		fprintf ( stderr,
 			"conflicting --sensitivity-ratio/--pelli_robson!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );
 	    }
 	    sensitivity_type = pelli_robson;
@@ -508,6 +610,7 @@ main ( int argc, char *argv[] )
 			( color_type == color ) ) ) {
 		fprintf ( stderr,
 			"can't mix --color, --grayscale, and --saturation!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );
 	    }
 	    color_type = color;
@@ -520,6 +623,7 @@ main ( int argc, char *argv[] )
 			( color_type == grayscale ) ) ) {
 		fprintf ( stderr,
 			"can't mix --color, --grayscale, and --saturation!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );
 	    }
 	    color_type = grayscale;
@@ -532,10 +636,12 @@ main ( int argc, char *argv[] )
 			( color_type == saturation_value ) ) ) {
 		fprintf ( stderr,
 			"can't mix --color, --grayscale, and --saturation!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );
 	    }
 	    if ( color_type == saturation_value ) {
 		fprintf ( stderr, "multiple --saturation=<value> flags!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );
 	    }
 	    color_type = saturation_value;
@@ -549,10 +655,12 @@ main ( int argc, char *argv[] )
 			( color_type == saturation_value ) ) ) {
 		fprintf ( stderr,
 			"can't mix --color, --grayscale, and --saturation!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );
 	    }
 	    if ( color_type == saturation_value ) {
 		fprintf ( stderr, "multiple --saturation=<value> flags!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );
 	    }
 	    color_type = saturation_value;
@@ -565,6 +673,7 @@ main ( int argc, char *argv[] )
 	    if ( clip_type == value_clip ) {
 		fprintf ( stderr,
 			"can't mix --clip=<value> and --autoclip!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );
 	    }
 	    clip_type = auto_clip;
@@ -576,10 +685,12 @@ main ( int argc, char *argv[] )
 	    if ( clip_type == auto_clip ) {
 		fprintf ( stderr,
 			"can't mix --clip=<value> and --autoclip!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );
 	    }
 	    if ( clip_type == value_clip ) {
 		fprintf ( stderr, "multiple --clip=<value> flags!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );
 	    }
 	    clip_type = value_clip;
@@ -592,10 +703,12 @@ main ( int argc, char *argv[] )
 	    if ( clip_type == auto_clip ) {
 		fprintf ( stderr,
 			"can't mix -clip=<value> and -autoclip!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );
 	    }
 	    if ( clip_type == value_clip ) {
 		fprintf ( stderr, "multiple --clip=<value> flags!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );
 	    }
 	    clip_type = value_clip;
@@ -608,6 +721,7 @@ main ( int argc, char *argv[] )
 	    if ( ( margin < 0.0 ) || ( margin > 1.0 ) ) {
 		printf ( "margin (%f) must be in range [0.0 -- 1.0]!\n",
 			margin );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );
 	    }
 	    argpt++;
@@ -618,6 +732,7 @@ main ( int argc, char *argv[] )
 	    if ( ( margin < 0.0 ) || ( margin > 1.0 ) ) {
 		printf ( "margin (%f) must be in range [0.0 -- 1.0]!\n",
 			margin );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );
 	    }
 	    argpt++;
@@ -627,21 +742,21 @@ main ( int argc, char *argv[] )
 	    /* print version number then exit */
 	    deva_filter_print_version ( );
 	    /* argpt++; */
-	    exit ( EXIT_FAILURE );
+	    exit ( EXIT_SUCCESS );
 
 	} else if ( ( strcasecmp ( argv[argpt], "--presets" ) == 0 ) ||
 		( strcasecmp ( argv[argpt], "-presets" ) == 0 ) ) {
 	    /* print presets number then exit */
 	    deva_filter_print_presets ( );
 	    /* argpt++; */
-	    exit ( EXIT_FAILURE );
+	    exit ( EXIT_SUCCESS );
 
 	} else if ( ( strcasecmp ( argv[argpt], "--defaults" ) == 0 ) ||
 		( strcasecmp ( argv[argpt], "-defaults" ) == 0 ) ) {
 	    /* print default values then exit */
 	    deva_filter_print_defaults ( );
 	    /* argpt++; */
-	    exit ( EXIT_FAILURE );
+	    exit ( EXIT_SUCCESS );
 
 	} else if ( ( strcasecmp ( argv[argpt], "--verbose" ) == 0 ) ||
 		( strcasecmp ( argv[argpt], "-verbose" ) == 0 ) ) {
@@ -662,6 +777,7 @@ main ( int argc, char *argv[] )
 	    /* adjust acuity by shifting peak of CSF */
 	    if ( acuity_type == cutoff ) {
 		fprintf ( stderr, "conflicting --peak/--cutoff!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );
 	    }
 	    acuity_type = peak_sensitivity;
@@ -672,6 +788,7 @@ main ( int argc, char *argv[] )
 	    /* adjust acuity by shifting high-frequency cutoff of CSF */
 	    if ( acuity_type == peak_sensitivity ) {
 		fprintf ( stderr, "conflicting --peak/--cutoff!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );
 	    }
 	    acuity_type = cutoff;
@@ -682,6 +799,7 @@ main ( int argc, char *argv[] )
 	    /* smooth thresholded contrast bands */
 	    if ( smoothing_type == no_smoothing ) {
 		fprintf ( stderr, "conflicting --smooth/-nosmooth!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );
 	    }
 	    smoothing_type = smoothing;
@@ -692,6 +810,7 @@ main ( int argc, char *argv[] )
 	    /* don't smooth thresholded contrast bands */
 	    if ( smoothing_type == smoothing ) {
 		fprintf ( stderr, "conflicting --smooth/-nosmooth!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );
 	    }
 	    smoothing_type = no_smoothing;
@@ -702,9 +821,19 @@ main ( int argc, char *argv[] )
 	    /* print CSF parameters then exit */
 	    ChungLeggeCSF_print_parms ( );
 	    /* argpt++; */
-	    exit ( EXIT_FAILURE );
+	    exit ( EXIT_SUCCESS );
 
-#ifdef DEVA_VISIBILITY
+#ifdef DEVA_VISIBILITY	/* code specific to deva-visibility */
+
+	} else if ( strncasecmp ( argv[argpt], "--ROI=",
+		    strlen ( "--ROI=" ) ) == 0 ) {
+	    ROI_file_name = argv[argpt] + strlen ( "--ROI=" );
+	    argpt++;
+
+	} else if ( strncasecmp ( argv[argpt], "-ROI=",
+		    strlen ( "-ROI=" ) ) == 0 ) {
+	    ROI_file_name = argv[argpt] + strlen ( "-ROI=" );
+	    argpt++;
 
 	} else if ( strncasecmp ( argv[argpt], "--luminanceboundaries=",
 		    strlen ( "--luminanceboundaries=" ) ) == 0 ) {
@@ -728,6 +857,30 @@ main ( int argc, char *argv[] )
 		    strlen ( "-geometryboundaries=" ) ) == 0 ) {
 	    geometry_boundaries_file_name = argv[argpt] +
 		strlen ( "-geometryboundaries=" );
+	    argpt++;
+
+	} else if ( strncasecmp ( argv[argpt], "--lowluminance=",
+		    strlen ( "--lowluminance=" ) ) == 0 ) {
+	    low_luminance_file_name = argv[argpt] +
+		strlen ( "--lowluminance=" );
+	    argpt++;
+
+	} else if ( strncasecmp ( argv[argpt], "-lowluminance=",
+		    strlen ( "-lowluminance=" ) ) == 0 ) {
+	    low_luminance_file_name = argv[argpt] +
+		strlen ( "-lowluminance=" );
+	    argpt++;
+
+	} else if ( strncasecmp ( argv[argpt], "--falsepositives=",
+		    strlen ( "--falsepositives=" ) ) == 0 ) {
+	    false_positives_file_name = argv[argpt] +
+		strlen ( "--falsepositives=" );
+	    argpt++;
+
+	} else if ( strncasecmp ( argv[argpt], "-falsepositives=",
+		    strlen ( "-falsepositives=" ) ) == 0 ) {
+	    false_positives_file_name = argv[argpt] +
+		strlen ( "-falsepositives=" );
 	    argpt++;
 
 	} else if ( strncasecmp ( argv[argpt], "--reciprocal=",
@@ -770,15 +923,50 @@ main ( int argc, char *argv[] )
 		( strcasecmp ( argv[argpt], "-red-gray" ) == 0 ) ) {
 	    visualization_type = red_gray_type;
 	    argpt++;
+	} else if ( ( strcasecmp ( argv[argpt], "--printaverage" ) == 0 ) ||
+		( strcasecmp ( argv[argpt], "-printaverage" ) == 0 ) ) {
+	    print_average = TRUE;
+	    argpt++;
+	} else if ( ( strcasecmp ( argv[argpt], "--printaveragena" ) == 0 ) ||
+		( strcasecmp ( argv[argpt], "-printaveragena" ) == 0 ) ) {
+	    print_average_na = TRUE;
+	    argpt++;
+#ifdef DEVA_USE_CAIRO
+	} else if ( ( strcasecmp ( argv[argpt], "--quantscore" ) == 0 ) ||
+		( strcasecmp ( argv[argpt], "-quantscore" ) == 0 ) ) {
+	    quantscore = TRUE;
+	    argpt++;
+	} else if ( strncasecmp ( argv[argpt], "--fontsize=",
+		    strlen ( "--fontsize=" ) ) == 0 ) {
+	    text_font_size = atof ( argv[argpt] +
+		    strlen ( "--fontsize=" ) );
+	    argpt++;
+	} else if ( strncasecmp ( argv[argpt], "-fontsize=",
+		    strlen ( "-fontsize=" ) ) == 0 ) {
+	    text_font_size = atof ( argv[argpt] +
+		    strlen ( "-fontsize=" ) );
+	    argpt++;
+#endif	/* DEVA_USE_CAIRO */
 
 #endif	/* DEVA_VISIBILITY */
+
+        /* code used by both deva-filter and deva-visibility */
 
 	} else {
 	    fprintf ( stderr, "%s: invalid flag (%s)!\n", progname,
 		    argv[argpt] );
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    return ( EXIT_FAILURE );    /* error exit */
 	}
     }
+
+#ifdef DEVA_VISIBILITY	/* code specific to deva-visibility */
+    if ( print_average && print_average_na ) {
+	fprintf ( stderr, "--print_average and --print_average_na both set\n" );
+	fprintf ( stderr, "--print_average_na ignored \n" );
+	print_average_na = FALSE;
+    }
+#endif	/* DEVA_VISIBILITY */
 
     if ( preset_type != no_preset ) {
 	if ( ( acuity_format != undefined_acuity_format ) ||
@@ -786,6 +974,7 @@ main ( int argc, char *argv[] )
 		( color_type != undefined_color ) ||
 		( clip_type != undefined_clip ) ) {
 	    fprintf ( stderr, "can't mix other arguements with preset!\n" );
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    return ( EXIT_FAILURE );	/* error return */
 	}
 	args_needed -= 2;	/* no acuity or contrast sensitivity values */
@@ -896,8 +1085,35 @@ main ( int argc, char *argv[] )
 
 		break;
 
+	    case legalblind:
+
+		acuity_format = Snellen;
+		acuity = LEGALBLIND_SNELLEN;
+
+		sensitivity_type = pelli_robson;
+		contrast_ratio =
+		    PelliRobson2contrastratio ( LEGALBLIND_PELLI_ROBSON );
+
+		if ( LEGALBLIND_SATURATION == 1.0 ) {
+		    color_type = color;
+		} else if ( LEGALBLIND_SATURATION == 0.0 ) {
+		    color_type = grayscale;
+		} else {
+		    color_type = saturation_value;
+		}
+		saturation = LEGALBLIND_SATURATION;
+
+		clip_type = auto_clip;
+		acuity_type = cutoff;
+		if ( smoothing_type == undefined_smoothing ) {
+		    smoothing_type = smoothing;
+		}
+
+		break;
+
 	    default:
 
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		internal_error ( );
 
 		break;
@@ -940,6 +1156,7 @@ main ( int argc, char *argv[] )
     if ( color_type == saturation_value ) {
 	if ( ( saturation < 0.0 ) || ( saturation > 1.0 ) ) {
 	    fprintf ( stderr, "invalid saturation value (%f)!\n", saturation );
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    exit ( EXIT_FAILURE );
 	}
 	if ( DEVA_verbose ) {
@@ -950,6 +1167,7 @@ main ( int argc, char *argv[] )
     if ( clip_type == value_clip ) {
 	if ( clip_value <= 0.0 ) {
 	    fprintf ( stderr, "invalid clip value (%f)!\n", clip_value );
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    exit ( EXIT_FAILURE );
 	}
 	if ( DEVA_verbose ) {
@@ -984,10 +1202,10 @@ main ( int argc, char *argv[] )
 	default:
 
 	    internal_error ( );
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 
 	    break;
     }
-
 
     /* boolean flag setting */
 
@@ -1017,6 +1235,7 @@ main ( int argc, char *argv[] )
 	default:
 
 	    internal_error ( );
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 
 	    break;
     }
@@ -1032,6 +1251,7 @@ main ( int argc, char *argv[] )
 		if ( ( acuity > SNELLEN_MAX ) || ( acuity < SNELLEN_MIN ) ) {
 		    fprintf ( stderr, "implausible Snellen value (%s)!\n",
 			    argv[argpt-1] );
+		    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		    exit ( EXIT_FAILURE );
 		}
 
@@ -1044,6 +1264,7 @@ main ( int argc, char *argv[] )
 			( logMAR_arg < LOGMAR_MIN ) ) {
 		    fprintf ( stderr, "implausible logMAR value (%f)!\n",
 			    logMAR_arg );
+		    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		    exit ( EXIT_FAILURE );
 		}
 		acuity = logMAR_to_Snellen_decimal ( logMAR_arg );
@@ -1054,6 +1275,7 @@ main ( int argc, char *argv[] )
 	    default:
 
 		internal_error ( );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 
 		break;
 	}
@@ -1067,6 +1289,7 @@ main ( int argc, char *argv[] )
 			( contrast_ratio < CONTRAST_RATIO_MIN ) ) {
 		    fprintf ( stderr, "implausible contrast ratio (%f)!\n",
 			    contrast_ratio );
+		    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		    exit ( EXIT_FAILURE );
 		}
 
@@ -1079,6 +1302,7 @@ main ( int argc, char *argv[] )
 			( pelli_robson_score < PELLI_ROBSON_MIN ) ) {
 		    fprintf ( stderr, "implausible Pelli-Robson score (%f)!\n",
 			    pelli_robson_score );
+		    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		    exit ( EXIT_FAILURE );
 		}
 
@@ -1090,6 +1314,7 @@ main ( int argc, char *argv[] )
 	    case undefined_sensitivity:
 	    default:
 
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		internal_error ( );
 
 		break;
@@ -1099,7 +1324,7 @@ main ( int argc, char *argv[] )
     /* fine name of original Radiance file */
     input_file_name = argv[argpt++];
 
-#ifdef DEVA_VISIBILITY
+#ifdef DEVA_VISIBILITY	/* code specific to deva-visibility */
 
     /* file names of geometry files */
     coordinates_file_name = argv[argpt++];
@@ -1109,15 +1334,19 @@ main ( int argc, char *argv[] )
 
 #endif	/* DEVA_VISIBILITY */
 
+    /* code used by both deva-filter and deva-visibility */
+
     /* file name of output simulated low vision file */
     filtered_image_file_name = argv[argpt++];
 
-#ifdef DEVA_VISIBILITY
+#ifdef DEVA_VISIBILITY	/* code specific to deva-visibility */
 
     /* file name of output prediction of difficult-to-see geometry */
     hazards_file_name = argv[argpt++];
 
 #endif	/* DEVA_VISIBILITY */
+
+    /* code used by both deva-filter and deva-visibility */
 
     if ( DEVA_verbose ) {
 	/* needs to go to stderr in case output is sent to stdout */
@@ -1149,10 +1378,10 @@ main ( int argc, char *argv[] )
     }
 
     input_image = DEVA_xyY_image_from_radfilename ( input_file_name );
-    	/*
-	 * DEVA_xyY_image_from_radfilename copies VIEW record from Radiance
-	 * .hdr file to input_image object.
-	 */
+    /*
+     * DEVA_xyY_image_from_radfilename copies VIEW record from Radiance
+     * .hdr file to input_image object.
+     */
 
     switch ( clip_type ) {
 
@@ -1185,6 +1414,7 @@ main ( int argc, char *argv[] )
 	default:
 
 	    internal_error ( );
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 
 	    break;
     }
@@ -1229,6 +1459,58 @@ main ( int argc, char *argv[] )
 	filtered_image = DEVA_xyY_strip_margin ( v_margin, h_margin,
 		margin_filtered_image );
 
+#ifdef DEVA_VISIBILITY	/* code specific to deva-visibility */
+
+	/*
+	 * Find areas darker than visibility threshold.
+	 */
+
+	/* add the margin */
+	input_float = xyY2Y_image ( input_image );
+	margin_float =  DEVA_float_add_margin ( v_margin, h_margin,
+		input_float );
+	low_lum_sigma_pixels = angle2pixels ( low_lum_sigma_angle,
+		input_float );
+	if ( low_lum_sigma_pixels < STD_DEV_MIN ) {
+	    if ( DEVA_verbose ) {
+		fprintf ( stderr,
+			"resetting low_lum_sigma_pixels from %.2f to %.2f\n",
+			low_lum_sigma_pixels, STD_DEV_MIN );
+	    }
+	    low_lum_sigma_pixels = STD_DEV_MIN;
+	}
+	luminance_smoothed_margin = DEVA_float_gblur_fft ( margin_float,
+		low_lum_sigma_pixels );
+	DEVA_image_view ( luminance_smoothed_margin ) . vert =
+	    DEVA_image_view ( margin_float ) .vert;
+	DEVA_image_view ( luminance_smoothed_margin ) . horiz =
+	    DEVA_image_view ( margin_float ) .horiz;
+
+	luminance_smoothed = DEVA_float_strip_margin ( v_margin, h_margin,
+		luminance_smoothed_margin );
+	DEVA_float_image_delete ( input_float );
+	DEVA_float_image_delete ( margin_float );
+	DEVA_float_image_delete ( luminance_smoothed_margin );
+
+	low_luminance = luminance_threshold ( low_luminace_level,
+		luminance_smoothed );
+	DEVA_float_image_delete ( luminance_smoothed );
+
+	if ( low_luminance_file_name != NULL ) {
+	    if ( low_luminance == NULL ) {
+		fprintf ( stderr,
+	"No low luminance pixels, so no low luminance file written\n" );
+	    } else {
+		make_visible ( low_luminance );
+
+		DEVA_gray_image_to_filename_png ( low_luminance_file_name,
+			low_luminance );
+	    }
+	}
+#endif	/* DEVA_VISIBILITY */
+
+    /* code used by both deva-filter and deva-visibility */
+
 	/* clean up */
 	DEVA_xyY_image_delete ( margin_image );
 	DEVA_xyY_image_delete ( margin_filtered_image );
@@ -1245,6 +1527,23 @@ main ( int argc, char *argv[] )
 		    input_file_name, acuity_adjustment, contrast_ratio,
 		    smoothing_flag, saturation );
 	}
+
+#ifdef DEVA_VISIBILITY	/* code specific to deva-visibility */
+	/*
+	 * Find areas darker than visibility threshold.
+	 */
+
+	input_float = xyY2Y_image ( input_image );
+	low_lum_sigma_pixels = angle2pixels ( low_lum_sigma_angle,
+		input_float );
+	luminance_smoothed = DEVA_float_gblur_fft ( input_float,
+		low_lum_sigma_pixels );
+	low_luminance = luminance_threshold ( low_luminace_level,
+		luminance_smoothed );
+	DEVA_float_image_delete ( luminance_smoothed );
+#endif	/* DEVA_VISIBILITY */
+    /* code used by both deva-filter and deva-visibility */
+
     }
 
     /* add command line to description */
@@ -1256,13 +1555,42 @@ main ( int argc, char *argv[] )
     /* clean up */
     DEVA_xyY_image_delete ( input_image );
 
-#ifdef DEVA_VISIBILITY
+#ifdef DEVA_VISIBILITY	/* code specific to deva-visibility */
 
     /* read in geometry files */
     coordinates = DEVA_coordinates_from_filename ( coordinates_file_name );
     xyz = DEVA_geom3d_from_radfilename ( xyz_file_name );
     dist = DEVA_geom1d_from_radfilename ( dist_file_name );
     nor = DEVA_geom3d_from_radfilename ( nor_file_name );
+
+    if ( !DEVA_image_samesize ( xyz, filtered_image ) ) {
+	fprintf ( stderr, "size mismatch with xyz image!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
+	exit (EXIT_FAILURE );
+    }
+
+    if ( !DEVA_image_samesize ( dist, filtered_image ) ) {
+	fprintf ( stderr, "size mismatch with dist image!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
+	exit (EXIT_FAILURE );
+    }
+
+    if ( !DEVA_image_samesize ( nor, filtered_image ) ) {
+	fprintf ( stderr, "size mismatch with nor image!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
+	exit (EXIT_FAILURE );
+    }
+
+    /* read in region-of-interest file */
+    if ( ROI_file_name != NULL ) {
+	ROI = DEVA_gray_image_from_filename_png ( ROI_file_name );
+
+	if ( !DEVA_image_samesize ( ROI, filtered_image ) ) {
+	    fprintf ( stderr, "size mismatch with ROI image!\n" );
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
+	    exit (EXIT_FAILURE );
+	}
+    }
 
     /* standardize distances (to cm) */
     standard_units_1D ( dist, coordinates );
@@ -1272,32 +1600,97 @@ main ( int argc, char *argv[] )
      * Compute visual angle from geometry boundaries to nearest luminance
      * boundary.
      */
-    hazards = deva_visibility ( filtered_image, coordinates, xyz, dist, nor,
-	    position_patch_size, orientation_patch_size,
-	    position_threshold, orientation_threshold,
-	    luminance_boundaries_file_name, geometry_boundaries_file_name );
+
+    if ( false_positives_file_name != NULL ) {
+	hazards = deva_visibility ( filtered_image, coordinates, xyz, dist, nor,
+		position_patch_size, orientation_patch_size,
+		position_threshold, orientation_threshold,
+		&luminance_boundaries, &geometry_boundaries,
+		&false_positive_hazards );
+    } else {
+	hazards = deva_visibility ( filtered_image, coordinates, xyz, dist, nor,
+		position_patch_size, orientation_patch_size,
+		position_threshold, orientation_threshold,
+		&luminance_boundaries, &geometry_boundaries, NULL );
+    }
+
+    if ( luminance_boundaries_file_name != NULL ) {
+	make_visible ( luminance_boundaries );
+	DEVA_gray_image_to_filename_png ( luminance_boundaries_file_name,
+		luminance_boundaries );
+    }
+
+    if ( geometry_boundaries_file_name != NULL ) {
+	make_visible ( geometry_boundaries );
+	DEVA_gray_image_to_filename_png ( geometry_boundaries_file_name,
+		geometry_boundaries );
+    }
 
     /* clean up */
-    DEVA_coordinates_delete ( coordinates );
     DEVA_XYZ_image_delete ( xyz );
     DEVA_float_image_delete ( dist );
     DEVA_XYZ_image_delete ( nor );
+    DEVA_coordinates_delete ( coordinates );
 
     /*
      * Make displayable file showing predicted geometry discontinuities that
      * are not visible at specified level of low vision.
      */
+
     hazards_visualization =
 	visualize_hazards ( hazards, measurement_type, scale_parameter,
-		visualization_type );
+		visualization_type, low_luminance, ROI, &geometry_boundaries,
+		&hazard_average );
+
+    if ( print_average ) {
+	printf ( "Hazard Visibility Score = %.3f\n", hazard_average );
+    }
+
+    if ( print_average_na ) { /* print without annotation or trailing \n */
+	printf ( "%.3f", hazard_average );
+    }
+
+#ifdef DEVA_USE_CAIRO
+    if ( quantscore ) {
+	add_quantscore ( hazards_visualization, text_font_size,
+		hazard_average );
+    }
+#endif	/* DEVA_USE_CAIRO */
 
     DEVA_RGB_image_to_filename_png ( hazards_file_name, hazards_visualization );
+
 
     /* clean up */
     DEVA_float_image_delete ( hazards );
     DEVA_RGB_image_delete ( hazards_visualization );
+    if ( low_luminance != NULL ) {
+	DEVA_gray_image_delete ( low_luminance );
+    }
+    if ( ROI != NULL ) {
+	DEVA_gray_image_delete (ROI );
+    }
+
+    /* compute and write false positive information if requested */
+    if ( false_positives_file_name != NULL ) {
+	fp_visualization = 
+	    visualize_hazards ( false_positive_hazards, measurement_type,
+		    scale_parameter, visualization_type_fp,
+		    				NULL, NULL, NULL, NULL );
+
+	DEVA_RGB_image_to_filename_png ( false_positives_file_name,
+		fp_visualization );
+
+	DEVA_float_image_delete ( false_positive_hazards );
+	DEVA_RGB_image_delete ( fp_visualization );
+    }
+
+    /* clean up */
+    DEVA_gray_image_delete ( luminance_boundaries );
+    DEVA_gray_image_delete ( geometry_boundaries );
 
 #endif	/* DEVA_VISIBILITY */
+
+    /* code used by both deva-filter and deva-visibility */
 
     /* clean up */
     DEVA_xyY_image_delete ( filtered_image );
@@ -1316,6 +1709,7 @@ add_description_arguments ( DEVA_xyY_image *image, int argc, char *argv[] )
     if ( argc <= 0 ) {
 	fprintf ( stderr, "add_description_arguments: invalid argc (%d)!\n",
 		argc );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -1371,6 +1765,7 @@ PelliRobson2contrastratio ( double PelliRobson_score )
     if ( requested_michelson <= 0.0 ) {
 	fprintf ( stderr, "PelliRobson2contrastratio: invalid contrast (%f)\n",
 		requested_michelson );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
     requested_sensitivity = 1.0 / requested_michelson;
@@ -1536,6 +1931,7 @@ auto_clip_level_median ( DEVA_xyY_image *image )
 
     if ( max_luminance <= 0.0 ) {
 	fprintf ( stderr, "auto_clip_median: no non-zero luminance!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -1601,6 +1997,155 @@ clip_max_value ( DEVA_xyY_image *image, double clip_value )
     }
 }
 
+#ifdef DEVA_VISIBILITY	/* code specific to deva-visibility */
+
+static DEVA_float_image *
+xyY2Y_image ( DEVA_xyY_image *xyY_image )
+{
+    int			row, col;
+    int			n_rows, n_cols;
+    DEVA_float_image	*float_image;
+
+    n_rows = DEVA_image_n_rows ( xyY_image );
+    n_cols = DEVA_image_n_cols ( xyY_image );
+
+    float_image = DEVA_float_image_new ( n_rows, n_cols );
+
+    DEVA_image_view ( float_image ) . vert =
+	DEVA_image_view ( xyY_image ) . vert;
+    DEVA_image_view ( float_image ) . horiz =
+	DEVA_image_view ( xyY_image ) . horiz;
+
+    for ( row = 0; row < n_rows; row++ ) {
+	for ( col = 0; col < n_cols; col++ ) {
+	    DEVA_image_data ( float_image, row, col ) =
+		DEVA_image_data ( xyY_image, row, col ) . Y;
+	}
+    }
+
+    return ( float_image );
+}
+
+static DEVA_gray_image *
+luminance_threshold ( double low_luminace_level,
+		DEVA_float_image *luminance_smoothed )
+{
+    int		    row, col;
+    int		    n_rows, n_cols;
+    DEVA_gray_image *low_luminance;
+    int		    low_luminance_found;
+
+    n_rows = DEVA_image_n_rows ( luminance_smoothed );
+    n_cols = DEVA_image_n_cols ( luminance_smoothed );
+
+    low_luminance = DEVA_gray_image_new ( n_rows, n_cols );
+    low_luminance_found = FALSE;
+
+    for ( row = 0; row < n_rows; row++ ) {
+	for ( col = 0; col < n_cols; col++ ) {
+	    if ( DEVA_image_data ( luminance_smoothed, row, col )
+		    <= low_luminace_level ) {
+		DEVA_image_data ( low_luminance, row, col ) = 255;
+		low_luminance_found = TRUE;
+	    } else {
+		DEVA_image_data ( low_luminance, row, col ) = 0;
+	    }
+	}
+    }
+
+    if ( !low_luminance_found ) {
+	DEVA_gray_image_delete ( low_luminance );
+	low_luminance = NULL;
+    }
+
+    return ( low_luminance );
+}
+
+static double
+angle2pixels ( double low_lum_sigma_angle, DEVA_float_image *input_float )
+{
+    double  fov_angle, fov_pixels;
+    double  low_lum_sigma_pixels;
+
+    fov_angle = fmax ( DEVA_image_view ( input_float ) . vert,
+	    DEVA_image_view ( input_float ) . horiz );
+    if ( fov_angle <= 0.0 ) {
+	fprintf ( stderr, "angle2pixels: invalid or missing fov (%f, %f)!\n",
+		DEVA_image_view ( input_float ) . vert,
+		DEVA_image_view ( input_float ) . horiz );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
+	exit ( EXIT_FAILURE );
+    }
+
+    fov_pixels = imax ( DEVA_image_n_rows ( input_float ),
+	    DEVA_image_n_cols ( input_float ) );
+
+    low_lum_sigma_pixels = low_lum_sigma_angle * ( fov_pixels / fov_angle );
+
+    if ( DEVA_verbose ) {
+	fprintf ( stderr,
+		"low_lum_sigma_angle = %.2f, low_lum_sigma_pixels = %.2f\n",
+		    low_lum_sigma_angle, low_lum_sigma_pixels );
+    }
+
+    return ( low_lum_sigma_pixels );
+}
+
+static void
+make_visible ( DEVA_gray_image *boundaries )
+/*
+ * Change 0,1 values in a boolean file to 0,255.  This preserves TRUE/FALSE,
+ * while making the file directly displayable.
+ */
+{
+    int     row, col;
+
+    for ( row = 0; row < DEVA_image_n_rows ( boundaries ); row ++ ) {
+	for ( col = 0; col < DEVA_image_n_cols ( boundaries );
+		col ++ ) {
+	    if ( DEVA_image_data ( boundaries, row, col ) ) {
+		DEVA_image_data ( boundaries, row, col ) = 255;
+	    }
+	}
+    }
+}
+
+#ifdef DEVA_USE_CAIRO
+
+#define TEXT_ROW		30.0
+#define TEXT_COL		10.0
+#define TEXT_RED		1.0
+#define TEXT_GREEN		1.0
+#define TEXT_BLUE		1.0
+#define BUFF_SIZE		200
+
+static void
+add_quantscore ( DEVA_RGB_image *hazards_visualization, double text_font_size,
+	double hazard_average )
+{
+    char	    text[BUFF_SIZE];
+    DEVA_RGBf	    text_color;
+    cairo_surface_t *cairo_surface;
+
+    text_color.red = TEXT_RED;
+    text_color.green = TEXT_GREEN;
+    text_color.blue = TEXT_BLUE;
+
+    cairo_surface = DEVA_RGB_cairo_open ( hazards_visualization );
+    snprintf ( text, BUFF_SIZE, "Hazard Visibility Score = %.3f",
+	    hazard_average );
+
+    DEVA_cairo_add_text ( cairo_surface, TEXT_ROW, TEXT_COL,
+	                    text_font_size, text_color, text );
+
+    DEVA_RGB_cairo_close_inplace ( cairo_surface, hazards_visualization );
+}
+#endif /* DEVA_USE_CAIRO */
+
+#endif	/* DEVA_VISIBILITY */
+
+    /* code used by both deva-filter and deva-visibility */
+
 #define	TYPE_FIELD_LENGTH	14
 
 static void
@@ -1614,12 +2159,12 @@ deva_filter_print_presets ( void )
     }
     printf ( "Snellen 20/%d",
 	    (int) Snellen_decimal_to_Snellen_denominator ( MILD_SNELLEN ) );
-    printf ( " (logMAR %g)\n", MILD_LOGMAR );
+    printf ( " (logMAR %.2f)\n", MILD_LOGMAR );
 
     for ( i = 0; i < TYPE_FIELD_LENGTH; i++ ) {
 	printf ( " " );
     }
-    printf ( "Pelli-Robson score %g\n", MILD_PELLI_ROBSON );
+    printf ( "Pelli-Robson score %.2f\n", MILD_PELLI_ROBSON );
 
     for ( i = 0; i < TYPE_FIELD_LENGTH; i++ ) {
 	printf ( " " );
@@ -1632,17 +2177,36 @@ deva_filter_print_presets ( void )
     }
     printf ( "Snellen 20/%d",
 	    (int) Snellen_decimal_to_Snellen_denominator ( MODERATE_SNELLEN ) );
-    printf ( " (logMAR %g)\n", MODERATE_LOGMAR );
+    printf ( " (logMAR %.2f)\n", MODERATE_LOGMAR );
 
     for ( i = 0; i < TYPE_FIELD_LENGTH; i++ ) {
 	printf ( " " );
     }
-    printf ( "Pelli-Robson score %g\n", MODERATE_PELLI_ROBSON );
+    printf ( "Pelli-Robson score %.2f\n", MODERATE_PELLI_ROBSON );
 
     for ( i = 0; i < TYPE_FIELD_LENGTH; i++ ) {
 	printf ( " " );
     }
     printf ( "color saturation %.0f%%\n", 100.0 * MODERATE_SATURATION );
+
+    printf ( "%s:", PRESET_LEGALBLIND );
+    for ( i = 0; i < TYPE_FIELD_LENGTH -
+	    strlen ( PRESET_LEGALBLIND ) - 1; i++ ) {
+	printf ( " " );
+    }
+    printf ( "Snellen 20/%d",
+	(int) Snellen_decimal_to_Snellen_denominator ( LEGALBLIND_SNELLEN ) );
+    printf ( " (logMAR %.2f)\n", LEGALBLIND_LOGMAR );
+
+    for ( i = 0; i < TYPE_FIELD_LENGTH; i++ ) {
+	printf ( " " );
+    }
+    printf ( "Pelli-Robson score %.2f\n", LEGALBLIND_PELLI_ROBSON );
+
+    for ( i = 0; i < TYPE_FIELD_LENGTH; i++ ) {
+	printf ( " " );
+    }
+    printf ( "color saturation %.0f%%\n", 100.0 * LEGALBLIND_SATURATION );
 
     printf ( "%s:", PRESET_SEVERE );
     for ( i = 0; i < TYPE_FIELD_LENGTH - strlen ( PRESET_SEVERE ) - 1; i++ ) {
@@ -1650,12 +2214,12 @@ deva_filter_print_presets ( void )
     }
     printf ( "Snellen 20/%d",
 	    (int) Snellen_decimal_to_Snellen_denominator ( SEVERE_SNELLEN ) );
-    printf ( " (logMAR %g)\n", SEVERE_LOGMAR );
+    printf ( " (logMAR %.2f)\n", SEVERE_LOGMAR );
 
     for ( i = 0; i < TYPE_FIELD_LENGTH; i++ ) {
 	printf ( " " );
     }
-    printf ( "Pelli-Robson score %g\n", SEVERE_PELLI_ROBSON );
+    printf ( "Pelli-Robson score %.2f\n", SEVERE_PELLI_ROBSON );
 
     for ( i = 0; i < TYPE_FIELD_LENGTH; i++ ) {
 	printf ( " " );
@@ -1668,12 +2232,12 @@ deva_filter_print_presets ( void )
     }
     printf ( "Snellen 20/%d",
 	    (int) Snellen_decimal_to_Snellen_denominator ( PROFOUND_SNELLEN ) );
-    printf ( " (logMAR %g)\n", PROFOUND_LOGMAR );
+    printf ( " (logMAR %.2f)\n", PROFOUND_LOGMAR );
 
     for ( i = 0; i < TYPE_FIELD_LENGTH; i++ ) {
 	printf ( " " );
     }
-    printf ( "Pelli-Robson score %g\n", PROFOUND_PELLI_ROBSON );
+    printf ( "Pelli-Robson score %.2f\n", PROFOUND_PELLI_ROBSON );
 
     for ( i = 0; i < TYPE_FIELD_LENGTH; i++ ) {
 	printf ( " " );

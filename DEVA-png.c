@@ -24,6 +24,7 @@ DEVA_RGB_image_from_filename_png ( char *filename )
     file = fopen ( filename, "rb" );
     if ( file == NULL ) {
 	perror ( filename );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -49,6 +50,7 @@ DEVA_RGB_image_from_file_png ( FILE *input )
 
     if ( png_image_begin_read_from_stdio ( &png_output, input ) == 0 ) {
 	fprintf ( stderr, "DEVA_RGB_image_from_file_png: error reading file!" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -60,6 +62,7 @@ DEVA_RGB_image_from_file_png ( FILE *input )
 	    (void *) ( &DEVA_image_data ( image, 0, 0 ) ), 0 /*row_stride*/,
 	    NULL/*colormap*/) == 0 ) {
 	fprintf ( stderr, "DEVA_RGB_image_from_file_png: error reading file!" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -81,6 +84,7 @@ DEVA_gray_image_from_filename_png ( char *filename )
     file = fopen ( filename, "rb" );
     if ( file == NULL ) {
 	perror ( filename );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -107,6 +111,7 @@ DEVA_gray_image_from_file_png ( FILE *input )
     if ( png_image_begin_read_from_stdio ( &png_output, input ) == 0 ) {
 	fprintf ( stderr,
 		"DEVA_gray_image_from_file_png: error reading file!" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -119,6 +124,7 @@ DEVA_gray_image_from_file_png ( FILE *input )
 	    NULL/*colormap*/) == 0 ) {
 	fprintf ( stderr,
 		"DEVA_gray_image_from_file_png: error reading file!" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -146,6 +152,7 @@ DEVA_RGB_image_to_filename_png ( char *filename, DEVA_RGB_image *image )
     file = fopen ( filename, "wb" );
     if ( file == NULL ) {
 	perror ( filename );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -181,6 +188,7 @@ DEVA_RGB_image_to_file_png ( FILE *output, DEVA_RGB_image *image )
 	    (void *) ( &DEVA_image_data ( image, 0, 0 ) ), 0 /*row_stride*/,
 	    NULL /*colormap*/) == 0 ) {
 	fprintf ( stderr, "DEVA_RGB_image_to_file_png: error writing file!" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 }
@@ -198,6 +206,7 @@ DEVA_gray_image_to_filename_png ( char *filename, DEVA_gray_image *image )
     file = fopen ( filename, "wb" );
     if ( file == NULL ) {
 	perror ( filename );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 

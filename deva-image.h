@@ -220,6 +220,8 @@ DEVA_PROTOTYPE_IMAGE_DELETE ( DEVA_complexf )
 void	DEVA_image_check_bounds ( DEVA_gray_image *deva_image, int row,
 	    int col, int lineno, char *file );
 
+void	DEVA_print_file_lineno ( char *file, int line );
+
 #define DEVA_PROTOTYPE_IMAGE_SAMESIZE( TYPE )				\
 int	TYPE##_image_samesize ( TYPE##_image *i1, TYPE##_image *i2 );
 

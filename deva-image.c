@@ -20,7 +20,7 @@
  *   DEVA_RGB       3 x 8 bit RGB
  *   DEVA_RGBf      3 x 32 bit float RGB
  *   DEVA_XYZ       3 x 32 bit float CIE XYC
- *   DEVA_xyY       3 x 32 bit float CIT xyY
+ *   DEVA_xyY       3 x 32 bit float CIE xyY
  *   DEVA_complexf  32 bit float complex
  *   DEVA_complexd  64 bit double complex
  *
@@ -78,6 +78,11 @@
  *
  * 					The exposure value (only valid if
  *					DEVA_image_exposure_set is TRUE).
+ */
+
+/*
+ * This routine requires linking in the Radiance routines color.c and
+ * spec_rgb.c to provide transform matricies.
  */
 
 #include <stdlib.h>
@@ -219,6 +224,7 @@ TYPE##_image_new ( unsigned int n_rows, unsigned int n_cols  )		\
     new_image = ( TYPE##_image * ) malloc ( sizeof ( TYPE##_image ) );	\
     if ( new_image == NULL ) {						\
 	fprintf ( stderr, "DEVA_image_new: malloc failed!" );		\
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );			\
         exit ( EXIT_FAILURE );						\
     }									\
 									\
@@ -235,12 +241,14 @@ TYPE##_image_new ( unsigned int n_rows, unsigned int n_cols  )		\
 	        sizeof ( TYPE ) );					\
     if ( new_image->start_data == NULL ) {				\
 	fprintf ( stderr, "DEVA_image_new: malloc failed!" );		\
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );			\
         exit ( EXIT_FAILURE );						\
     }									\
 									\
     line_pointers = (TYPE **) malloc ( n_rows * sizeof ( TYPE * ) );	\
     if ( line_pointers == NULL ) {					\
-	fprintf ( stderr, "DEVA_image_new: malloc failed!" );	\
+	fprintf ( stderr, "DEVA_image_new: malloc failed!" );		\
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );			\
         exit ( EXIT_FAILURE );						\
     }									\
 									\
@@ -265,6 +273,7 @@ TYPE##_image_new ( unsigned int n_rows, unsigned int n_cols  )		\
     new_image = ( TYPE##_image * ) malloc ( sizeof ( TYPE##_image ) );	\
     if ( new_image == NULL ) {						\
 	fprintf ( stderr, "DEVA_image_new: malloc failed!" );		\
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );			\
         exit ( EXIT_FAILURE );						\
     }									\
 									\
@@ -283,13 +292,15 @@ TYPE##_image_new ( unsigned int n_rows, unsigned int n_cols  )		\
     new_image->start_data = (TYPE *) fftwf_malloc ( n_rows * n_cols *	\
 	        sizeof ( TYPE ) );					\
     if ( new_image->start_data == NULL ) {				\
-	fprintf ( stderr, "DEVA_image_new: malloc failed!" );	\
+	fprintf ( stderr, "DEVA_image_new: malloc failed!" );		\
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );			\
         exit ( EXIT_FAILURE );						\
     }									\
 									\
     line_pointers = (TYPE **) malloc ( n_rows * sizeof ( TYPE * ) );	\
     if ( line_pointers == NULL ) {					\
-	fprintf ( stderr, "DEVA_image_new: malloc failed!" );	\
+	fprintf ( stderr, "DEVA_image_new: malloc failed!" );		\
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );			\
         exit ( EXIT_FAILURE );						\
     }									\
 									\
@@ -322,6 +333,12 @@ DEVA_IMAGE_NEW_FFTW_SINGLE ( DEVA_complexf )
 void									\
 TYPE##_image_delete ( TYPE##_image *image )				\
 {									\
+    if ( image == NULL ) {						\
+	fprintf ( stderr,						\
+		"Attempt to delete empty image object (warning)\n" );	\
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );			\
+	return;								\
+    }									\
     if ( image->image_info.description != NULL ) {			\
 	free ( image->image_info.description );				\
 	image->image_info.description = NULL;				\
@@ -367,9 +384,15 @@ DEVA_image_check_bounds ( DEVA_gray_image *deva_image, int row, int col,
     if ( ( row < 0 ) || ( row >= DEVA_image_n_rows ( deva_image ) ) ||
 	    ( col < 0 ) || ( col >= DEVA_image_n_cols ( deva_image ) ) ) {
 	fprintf ( stderr, "DEVA_image_data out-of-bounds reference!\n" );
-	fprintf ( stderr, "line %d in file %s\n", line, file );
+	DEVA_print_file_lineno ( file, line );
 	exit ( EXIT_FAILURE );
     }
+}
+
+void
+DEVA_print_file_lineno ( char *file, int line )
+{
+    fprintf ( stderr, "line %d in file %s\n", line, file );
 }
 
 #define	DEVA_IMAGE_SAMESIZE( TYPE )					\

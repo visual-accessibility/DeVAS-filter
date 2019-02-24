@@ -30,10 +30,15 @@ as a Pelli-Robson Chart score.
 \fIpreset-options:\fR \
 \fB\-\-mild | \-\-moderate | \-\-significant | \-\-severe\fR
 Specifies use of one of four predefined levels of acuity and contrast
-deficits, along with a corresponding loss in color sensitivity.  When
-used, the \fIacuity\fR and \fIcontrast\fR arguments are left off the
-command line.  Only one of these flags can be specified.  When used, no
-additional flags other than \fB\-\-margin=\fIvalue\fR or
+deficits, along with a corresponding loss in color sensitivity.  A fifth
+preset is also available, \fB\-\-legalblind\fR. This specifies the U.S.
+"legal blindness" acuity level along with appropriate contrast
+sensitivity and color sensitivity values.  Note that this specifies a
+level of visual impairment right at the legal blindness cutoff point.
+It is not some sort of test of legal blindness.  When any of the presets
+are specified, the \fIacuity\fR and \fIcontrast\fR arguments are left
+off the command line.  Only one of these flags can be specified.  When
+used, no additional flags other than \fB\-\-margin=\fIvalue\fR or
 \fB\-\-verbose\fR are allowed.
 .TP
 \fB\-\-Snellen | \-\-logMAR\fR
@@ -63,7 +68,7 @@ cd/m^2.  Default is no clipping.
 .TP
 \fB\-\-color | \-\-grayscale | \-\-saturation=\fIvalue\fR
 Indicates amount of desaturation.  \fB\-\-color\fR: no desaturation.
-\fB\-\-grayscale\fR: full desturation. \fB\-\-saturation=\fIvalue\fR:
+\fB\-\-grayscale\fR: full desaturation. \fB\-\-saturation=\fIvalue\fR:
 partial desaturation, scaled by value in range (0.0 - 1.0), with low
 values indicating more desaturation.  \fB\-\-color\fR is the default.
 .TP

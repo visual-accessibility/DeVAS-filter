@@ -14,17 +14,17 @@ nearest comparison boundary element.
 .PP
 .SH OPTIONS
 .TP
-\fB\-\-red\-gray\fR
-Larger distance (usually associated with estimated visibility hazards)
-shown in red and other geometric standard boundary elements that are
-closer (usually associated with elements estimated to be less of a
-potential visibility hazard) shown in dark gray. Default.
-.TP
 \fB\-\-red\-green\fR
 Larger distance (usually associated with estimated visibility hazards)
 shown in red and other geometric standard boundary elements that are
 closer (usually associated with elements estimated to be less of a
-potential visibility hazard) shown in green.
+potential visibility hazard) shown in green. Default.
+.TP
+\fB\-\-red\-gray\fR
+Larger distance (usually associated with estimated visibility hazards)
+shown in red and other geometric standard boundary elements that are
+closer (usually associated with elements estimated to be less of a
+potential visibility hazard) shown in dark gray.
 .TP
 \fB\-\-Gaussian=\fI<sigma>\fR
 Visualization based on distance weighted by an unnormalized Gaussian
@@ -42,6 +42,12 @@ Visualization linearly scaled to a maximum distance of \fI<max>\fR.
 Annotate the output image with the average hazard value over all of the
 boundary elements in the standard.  Only available if compiled with the
 Cairo library option.
+.TP
+\fB\-\-mask=\fI<filename.png>\fR
+Name of existing PNG file where pixels that are TRUE should be marked
+specially in the output visualization file.  This is usually the output
+file from deva-visualize-geometry that is generated when the
+\fB\-\-mask\fR flag is specified for that program.
 .SH ARGUMENTS
 .TP
 \fIstandard.png\fR

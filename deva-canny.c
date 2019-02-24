@@ -165,6 +165,7 @@ canny_base ( DEVA_float_image *input, double st_dev, double high_threshold,
 
     if ( ( n_rows < 5 ) || ( n_cols < 5 ) ) {
 	fprintf ( stderr, "canny: input image too small!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -173,6 +174,7 @@ canny_base ( DEVA_float_image *input, double st_dev, double high_threshold,
     } else if ( low_threshold > high_threshold ) {
 	fprintf ( stderr,
 		"canny: can't have low_threshold > high_threshold!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -205,6 +207,7 @@ canny_base ( DEVA_float_image *input, double st_dev, double high_threshold,
 	fprintf ( stderr,
 		"canny: can't handle small standard devations (%f)!\n",
 			st_dev );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -374,6 +377,7 @@ gradient_magnitude ( DEVA_float_image *image, DEVA_float_image **grad_Y_p,
 	*grad_Y_p = grad_Y;
     } else {
 	fprintf ( stderr, "canny: gradient_magnitude argument error!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -381,6 +385,7 @@ gradient_magnitude ( DEVA_float_image *image, DEVA_float_image **grad_Y_p,
 	*grad_X_p = grad_X;
     } else {
 	fprintf ( stderr, "canny: gradient_magnitude argument error!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -426,6 +431,7 @@ auto_thresh_values ( DEVA_float_image *magnitude, double *high_threshold,
 	    if ( DEVA_image_data ( magnitude, row, col ) < 0.0 ) {
 		fprintf ( stderr,
 			"canny_autothresh: gradient magnitude < 0.0!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );
 	    }
 
@@ -437,6 +443,7 @@ auto_thresh_values ( DEVA_float_image *magnitude, double *high_threshold,
     if ( magnitude_max <= 0.0 ) {
 	fprintf ( stderr,
 		"canny_autothresh: no non-zero gradient magnitude!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 

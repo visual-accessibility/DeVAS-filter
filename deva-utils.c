@@ -36,6 +36,7 @@ strcat_safe ( char *dest, char *src )
 	    strcat ( returned_string, src );
 	} else {
 	    fprintf ( stderr, "DEVA:strcat_safe: malloc failed!\n" );
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    exit ( EXIT_FAILURE );
 	}
     }
@@ -64,6 +65,7 @@ DEVA_float_image_dup ( DEVA_float_image *original_image )
 	    strdup ( DEVA_image_description ( original_image ) );
 	if ( DEVA_image_description ( duplicate_image ) == NULL ) {
 	    fprintf ( stderr, "DEVA_float_image_dup: malloc failed!\n" );
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    exit ( EXIT_FAILURE );
 	}
     }
@@ -89,6 +91,7 @@ DEVA_float_image_addto ( DEVA_float_image *i1, DEVA_float_image *i2 )
     if ( ! DEVA_float_image_samesize ( i1, i2 ) ) {
 	fprintf ( stderr,
 		"DEVA_float_image_addto: array sizes don't match!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 

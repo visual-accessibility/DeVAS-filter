@@ -5,6 +5,7 @@
 #include <strings.h>
 #include <string.h>
 #include "dilate.h"
+#include "deva-visibility.h"
 #include "visualize-hazards.h"
 #include "deva-image.h"
 #ifdef DEVA_USE_CAIRO
@@ -19,11 +20,12 @@
 #define	SQ(x)	((x) * (x))
 
 char	*Usage =
-"deva-compare-boundaries [--red-gray|--red-green]"
+"deva-compare-boundaries [--red-green|--red-gray]"
 	"\n\t[--Gaussian=<sigma>|--reciprocal=<scale>|--linear=<max>]"
 #ifdef DEVA_USE_CAIRO
 	"\n\t[--quantscore] [--fontsize=<n>]"
 #endif	/* DEVA_USE_CAIRO */
+	"\n\t[--mask=<mask-filename>]"
 	"\n\tstandard.png comparison.png coord visualization.png";
 int	args_needed = 4;
 
@@ -72,6 +74,8 @@ main ( int argc, char *argv[] )
     DEVA_float_image	*comparison_edge_distance;
     DEVA_float_image	*hazards;
     DEVA_RGB_image	*hazards_visualization;
+    char		*mask_file_name = NULL;
+    DEVA_gray_image	*mask = NULL;
     int			argpt = 1;
 
     while ( ( ( argc - argpt ) >= 1 ) && ( argv[argpt][0] == '-' ) ) {
@@ -132,6 +136,16 @@ main ( int argc, char *argv[] )
 	    Gaussian_sigma = atof ( argv[argpt] + strlen ( "-Gaussian=" ) );
 	    argpt++;
 
+	} else if ( strncasecmp ( argv[argpt], "--mask=",
+		    strlen ( "--mask=" ) ) == 0 ) {
+	    mask_file_name = argv[argpt] + strlen ( "--mask=" );
+	    argpt++;
+
+	} else if ( strncasecmp ( argv[argpt], "-mask=",
+		    strlen ( "-mask=" ) ) == 0 ) {
+	    mask_file_name = argv[argpt] + strlen ( "-mask=" );
+	    argpt++;
+
 	/* hidden options */
 #ifdef DEVA_USE_CAIRO
 	} else if ( strncasecmp ( argv[argpt], "--log=",
@@ -165,6 +179,7 @@ main ( int argc, char *argv[] )
     if ( !DEVA_image_samesize ( standard, comparison ) ) {
 	fprintf ( stderr, "%s and %s not same size!\n", standard_name,
 		comparison_name );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	return ( EXIT_FAILURE );        /* error return */
     }
 
@@ -187,7 +202,6 @@ main ( int argc, char *argv[] )
 	    degrees_per_pixel );
 
     /* clean up */
-    DEVA_gray_image_delete ( standard );
     DEVA_gray_image_delete ( comparison );
     DEVA_float_image_delete ( comparison_edge_distance );
 
@@ -206,11 +220,20 @@ main ( int argc, char *argv[] )
 
 	default:
 	    fprintf ( stderr, "invalid measurement_type!\n" );
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    exit ( EXIT_FAILURE );
     }
 
+    if ( mask_file_name != NULL ) {
+	mask = DEVA_gray_image_from_filename_png ( mask_file_name );
+    }
+
     hazards_visualization = visualize_hazards ( hazards, measurement_type,
-	    scale_parameter, visualization_type );
+	    scale_parameter, visualization_type, mask, NULL, &standard, NULL );
+
+    /* clean up */
+    DEVA_gray_image_delete ( standard );
+
 #ifdef DEVA_USE_CAIRO
     if ( quantscore ) {
 	add_quantscore ( standard_name, comparison_name, hazards,
@@ -226,6 +249,10 @@ main ( int argc, char *argv[] )
     /* clean up */
     DEVA_float_image_delete ( hazards );
     DEVA_RGB_image_delete ( hazards_visualization );
+    DEVA_coordinates_delete ( coordinates );
+    if ( mask_file_name != NULL ) {
+	DEVA_gray_image_delete ( mask );
+    }
 
     return ( EXIT_SUCCESS );	/* normal exit */
 }
@@ -266,12 +293,14 @@ compute_hazards ( DEVA_gray_image *standard,
 
     if ( ! DEVA_image_samesize ( standard, comparison_edge_distance ) ) {
 	fprintf ( stderr, "compute_hazards: argument size mismatch!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
     if ( degrees_per_pixel <= 0.0 ) {
 	fprintf ( stderr, "compute_hazards: invalid degrees_per_pixel (%f)\n",
 		degrees_per_pixel );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -355,8 +384,8 @@ add_quantscore ( char *standard_name, char *comparison_name,
 	    if ( DEVA_image_data ( hazards, row, col ) >= 0 ) {
 
 		/*
-		 * For matching measures, hight values are good, low values
-		 * are bad.  (This is opposite the convensions for hazard
+		 * For matching measures, high values are good, low values
+		 * are bad.  (This is opposite the conventions for hazard
 		 * visualization.)
 		 */
 
@@ -381,6 +410,7 @@ add_quantscore ( char *standard_name, char *comparison_name,
 		    default:
 			fprintf ( stderr,
 				"deva-compare-boundaries: internal error!\n" );
+			DEVA_print_file_lineno ( __FILE__, __LINE__ );
 			exit ( EXIT_FAILURE );	/* error return */
 			break;
 		}
@@ -448,6 +478,7 @@ add_quantscore ( char *standard_name, char *comparison_name,
 	    default:
 		fprintf ( stderr,
 			"deva-compare-boundaries: internal error!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );	/* error return */
 		break;
 	}
@@ -467,6 +498,7 @@ add_quantscore ( char *standard_name, char *comparison_name,
 	log_file_fd = fopen ( log_output_filename, "a" );
 	if ( log_file_fd == NULL ) {
 	    perror ( log_output_filename );
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    exit ( EXIT_FAILURE );
 	}
 

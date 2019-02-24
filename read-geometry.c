@@ -57,6 +57,7 @@ deva_get_VIEW_from_filename ( char *filename, int *n_rows_p, int *n_cols_p )
     radiance_fp = fopen ( filename, "r" );
     if ( radiance_fp == NULL ) {
 	perror ( filename );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -138,6 +139,7 @@ DEVA_geom_dim_from_radfilename ( char *filename )
     radiance_fp = fopen ( filename, "r" );
     if ( radiance_fp == NULL ) {
 	perror ( filename );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -167,6 +169,7 @@ DEVA_geom_dim_from_radfile ( FILE *radiance_fp, char *filename )
 	} else {
 	    perror ( "DEVA_geom_dim_from_radfile" );
 	}
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* error return */
     }
     if ( strcmp ( header_line, "#?RADIANCE\n" ) != 0 ) {
@@ -176,6 +179,7 @@ DEVA_geom_dim_from_radfile ( FILE *radiance_fp, char *filename )
 	    fprintf ( stderr,
 		    "DEVA_geom_dim_from_radfile: not RADIANCE file!\n" );
 	}
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* error return */
     }
 
@@ -186,6 +190,7 @@ DEVA_geom_dim_from_radfile ( FILE *radiance_fp, char *filename )
 	} else {
 	    perror ( "DEVA_geom_dim_from_radfile" );
 	}
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* error return */
     }
     if ( ( strlen ( header_line ) > 1 ) &&
@@ -195,6 +200,7 @@ DEVA_geom_dim_from_radfile ( FILE *radiance_fp, char *filename )
 	} else {
 	    fprintf ( stderr, "DEVA_geom_dim_from_radfile: line too long!\n" );
 	}
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* error return */
     }
 
@@ -207,6 +213,7 @@ DEVA_geom_dim_from_radfile ( FILE *radiance_fp, char *filename )
 	    } else {
 		perror ( "DEVA_geom_dim_from_radfile" );
 	    }
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    exit ( EXIT_FAILURE );	/* error return */
 	}
 	if ( ( strlen ( header_line ) > 1 ) &&
@@ -217,6 +224,7 @@ DEVA_geom_dim_from_radfile ( FILE *radiance_fp, char *filename )
 		fprintf ( stderr,
 			"DEVA_geom_dim_from_radfile: line too long!\n" );
 	    }
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    exit ( EXIT_FAILURE );	/* error return */
 	}
     }
@@ -225,6 +233,7 @@ DEVA_geom_dim_from_radfile ( FILE *radiance_fp, char *filename )
     if ( fscanf ( radiance_fp, "-Y %d +X %d\n", &n_rows, &n_cols ) != 2 ) {
 	fprintf ( stderr,
 		"DEVA_geom_dim_from_radfile: invalid RADIANCE file!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );        /* error return */
     }
 
@@ -240,6 +249,7 @@ DEVA_geom_dim_from_radfile ( FILE *radiance_fp, char *filename )
 	} else {
 	    perror ( "DEVA_geom_dim_from_radfile" );
 	}
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* error return */
     }
     if ( ( strlen ( header_line ) > 1 ) &&
@@ -249,6 +259,7 @@ DEVA_geom_dim_from_radfile ( FILE *radiance_fp, char *filename )
 	} else {
 	    fprintf ( stderr, "DEVA_geom_dim_from_radfile: line too long!\n" );
 	}
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* error return */
     }
 
@@ -264,6 +275,7 @@ DEVA_geom_dim_from_radfile ( FILE *radiance_fp, char *filename )
 	    fprintf ( stderr,
 		    "DEVA_geom_dim_from_radfile: not 1-D or 3-D data!\n" );
 	}
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* error return */
     }
 }
@@ -282,6 +294,7 @@ DEVA_geom3d_from_radfilename ( char *filename )
     radiance_fp = fopen ( filename, "r" );
     if ( radiance_fp == NULL ) {
 	perror ( filename );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -315,6 +328,7 @@ DEVA_geom3d_from_radfile ( FILE *radiance_fp, char *filename )
 	} else {
 	    perror ( "DEVA_geom3d_from_radfile" );
 	}
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* error return */
     }
     if ( strcmp ( header_line, "#?RADIANCE\n" ) != 0 ) {
@@ -324,6 +338,7 @@ DEVA_geom3d_from_radfile ( FILE *radiance_fp, char *filename )
 	    fprintf ( stderr,
 		    "DEVA_geom3d_from_radfile: not RADIANCE file!\n" );
 	}
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* error return */
     }
 
@@ -334,6 +349,7 @@ DEVA_geom3d_from_radfile ( FILE *radiance_fp, char *filename )
 	} else {
 	    perror ( "DEVA_geom3d_from_radfile" );
 	}
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* error return */
     }
     if ( ( strlen ( header_line ) > 1 ) &&
@@ -343,6 +359,7 @@ DEVA_geom3d_from_radfile ( FILE *radiance_fp, char *filename )
 	} else {
 	    fprintf ( stderr, "DEVA_geom3d_from_radfile: line too long!\n" );
 	}
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* error return */
     }
 
@@ -355,6 +372,7 @@ DEVA_geom3d_from_radfile ( FILE *radiance_fp, char *filename )
 	    } else {
 		perror ( "DEVA_geom3d_from_radfile" );
 	    }
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    exit ( EXIT_FAILURE );	/* error return */
 	}
 	if ( ( strlen ( header_line ) > 1 ) &&
@@ -365,6 +383,7 @@ DEVA_geom3d_from_radfile ( FILE *radiance_fp, char *filename )
 		fprintf ( stderr,
 			"DEVA_geom3d_from_radfile: line too long!\n" );
 	    }
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    exit ( EXIT_FAILURE );	/* error return */
 	}
     }
@@ -377,6 +396,7 @@ DEVA_geom3d_from_radfile ( FILE *radiance_fp, char *filename )
 	    fprintf ( stderr,
 		    "DEVA_geom3d_from_radfile: invalid RADIANCE file!\n" );
 	}
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );        /* error return */
     }
 
@@ -392,6 +412,7 @@ DEVA_geom3d_from_radfile ( FILE *radiance_fp, char *filename )
 	} else {
 	    perror ( "DEVA_geom3d_from_radfile" );
 	}
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* error return */
     }
     if ( ( strlen ( header_line ) > 1 ) &&
@@ -401,6 +422,7 @@ DEVA_geom3d_from_radfile ( FILE *radiance_fp, char *filename )
 	} else {
 	    fprintf ( stderr, "DEVA_geom3d_from_radfile: line too long!\n" );
 	}
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* error return */
     }
 
@@ -412,6 +434,7 @@ DEVA_geom3d_from_radfile ( FILE *radiance_fp, char *filename )
 	} else {
 	    fprintf ( stderr, "DEVA_geom3d_from_radfile: not 3-D data!\n" );
 	}
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* error return */
     } else {
 	/* first line of input file */
@@ -430,6 +453,7 @@ DEVA_geom3d_from_radfile ( FILE *radiance_fp, char *filename )
 	    } else {
 		perror ( "DEVA_geom3d_from_radfile" );
 	    }
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    exit ( EXIT_FAILURE );	/* error return */
 	}
 	if ( ( strlen ( header_line ) > 1 ) &&
@@ -440,6 +464,7 @@ DEVA_geom3d_from_radfile ( FILE *radiance_fp, char *filename )
 		fprintf ( stderr,
 			"DEVA_geom3d_from_radfile: line too long!\n" );
 	    }
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    exit ( EXIT_FAILURE );	/* error return */
 	}
 
@@ -449,6 +474,7 @@ DEVA_geom3d_from_radfile ( FILE *radiance_fp, char *filename )
 	    } else {
 		fprintf ( stderr, "DEVA_geom3d_from_radfile: not 3-D data!\n" );
 	    }
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    exit ( EXIT_FAILURE );	/* error return */
 	}
 
@@ -466,6 +492,7 @@ DEVA_geom3d_from_radfile ( FILE *radiance_fp, char *filename )
 		} else {
 		    perror ( "DEVA_geom3d_from_radfile" );
 		}
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );	/* error return */
 	    }
 
@@ -477,6 +504,7 @@ DEVA_geom3d_from_radfile ( FILE *radiance_fp, char *filename )
 		    fprintf ( stderr,
 			    "DEVA_geom3d_from_radfile: line too long!\n" );
 		}
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );	/* error return */
 	    }
 
@@ -488,6 +516,7 @@ DEVA_geom3d_from_radfile ( FILE *radiance_fp, char *filename )
 		    fprintf ( stderr,
 			    "DEVA_geom3d_from_radfile: not 3-D data!\n" );
 		}
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );	/* error return */
 	    }
 
@@ -513,6 +542,7 @@ DEVA_geom1d_from_radfilename ( char *filename )
     radiance_fp = fopen ( filename, "r" );
     if ( radiance_fp == NULL ) {
 	perror ( filename );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -544,6 +574,7 @@ DEVA_geom1d_from_radfile ( FILE *radiance_fp, char *filename )
 	} else {
 	    perror ( "DEVA_geom1d_from_radfile" );
 	}
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* error return */
     }
     if ( strcmp ( header_line, "#?RADIANCE\n" ) != 0 ) {
@@ -553,6 +584,7 @@ DEVA_geom1d_from_radfile ( FILE *radiance_fp, char *filename )
 	    fprintf ( stderr,
 		    "DEVA_geom1d_from_radfile: not RADIANCE file!\n" );
 	}
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* error return */
     }
 
@@ -563,6 +595,7 @@ DEVA_geom1d_from_radfile ( FILE *radiance_fp, char *filename )
 	} else {
 	    perror ( "DEVA_geom1d_from_radfile" );
 	}
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* error return */
     }
     if ( ( strlen ( header_line ) > 1 ) &&
@@ -572,6 +605,7 @@ DEVA_geom1d_from_radfile ( FILE *radiance_fp, char *filename )
 	} else {
 	    fprintf ( stderr, "DEVA_geom1d_from_radfile: line too long!\n" );
 	}
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* error return */
     }
 
@@ -583,6 +617,7 @@ DEVA_geom1d_from_radfile ( FILE *radiance_fp, char *filename )
 	    } else {
 		perror ( "DEVA_geom1d_from_radfile" );
 	    }
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    exit ( EXIT_FAILURE );	/* error return */
 	}
 	if ( ( strlen ( header_line ) > 1 ) &&
@@ -593,6 +628,7 @@ DEVA_geom1d_from_radfile ( FILE *radiance_fp, char *filename )
 		fprintf ( stderr,
 			"DEVA_geom1d_from_radfile: line too long!\n" );
 	    }
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    exit ( EXIT_FAILURE );	/* error return */
 	}
     }
@@ -605,6 +641,7 @@ DEVA_geom1d_from_radfile ( FILE *radiance_fp, char *filename )
 	    fprintf ( stderr,
 		    "DEVA_geom1d_from_radfile: invalid RADIANCE file!\n" );
 	}
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );        /* error return */
     }
 
@@ -620,6 +657,7 @@ DEVA_geom1d_from_radfile ( FILE *radiance_fp, char *filename )
 	} else {
 	    perror ( "DEVA_geom1d_from_radfile" );
 	}
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* error return */
     }
     if ( ( strlen ( header_line ) > 1 ) &&
@@ -629,6 +667,7 @@ DEVA_geom1d_from_radfile ( FILE *radiance_fp, char *filename )
 	} else {
 	    fprintf ( stderr, "DEVA_geom1d_from_radfile: line too long!\n" );
 	}
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* error return */
     }
 
@@ -640,6 +679,7 @@ DEVA_geom1d_from_radfile ( FILE *radiance_fp, char *filename )
 	} else {
 	    fprintf ( stderr, "DEVA_geom1d_from_radfile: not 1-D data!\n" );
 	}
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* error return */
     } else {
 	/* first line of input file */
@@ -656,6 +696,7 @@ DEVA_geom1d_from_radfile ( FILE *radiance_fp, char *filename )
 	    } else {
 		perror ( "DEVA_geom3d_from_radfile" );
 	    }
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    exit ( EXIT_FAILURE );	/* error return */
 	}
 	if ( ( strlen ( header_line ) > 1 ) &&
@@ -666,6 +707,7 @@ DEVA_geom1d_from_radfile ( FILE *radiance_fp, char *filename )
 		fprintf ( stderr,
 			"DEVA_geom3d_from_radfile: line too long!\n" );
 	    }
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    exit ( EXIT_FAILURE );	/* error return */
 	}
 
@@ -675,6 +717,7 @@ DEVA_geom1d_from_radfile ( FILE *radiance_fp, char *filename )
 	    } else {
 		fprintf ( stderr, "DEVA_geom1d_from_radfile: not 1-D data!\n" );
 	    }
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    exit ( EXIT_FAILURE );	/* error return */
 	}
 
@@ -690,6 +733,7 @@ DEVA_geom1d_from_radfile ( FILE *radiance_fp, char *filename )
 		} else {
 		    perror ( "DEVA_geom3d_from_radfile" );
 		}
+	        DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );	/* error return */
 	    }
 
@@ -701,6 +745,7 @@ DEVA_geom1d_from_radfile ( FILE *radiance_fp, char *filename )
 		    fprintf ( stderr,
 			    "DEVA_geom3d_from_radfile: line too long!\n" );
 		}
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );	/* error return */
 	    }
 
@@ -712,6 +757,7 @@ DEVA_geom1d_from_radfile ( FILE *radiance_fp, char *filename )
 		    fprintf ( stderr,
 			    "DEVA_geom1d_from_radfile: not 1-D data!\n" );
 		}
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );	/* error return */
 	    }
 
@@ -736,6 +782,7 @@ DEVA_coordinates_from_filename ( char *filename )
     file = fopen ( filename, "r" );
     if ( file == NULL ) {
 	perror ( filename );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -771,6 +818,7 @@ DEVA_coordinates_from_file ( FILE *file, char *filename )
 	} else {
 	    fprintf ( stderr, "invalid coordinates file!\n" );
 	}
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE ); }
 
     if ( sscanf ( header_string, "distance-units=%100s", units_string ) != 1 ) {
@@ -779,6 +827,7 @@ DEVA_coordinates_from_file ( FILE *file, char *filename )
 	} else {
 	    fprintf ( stderr, "invalid coordinates file!\n" );
 	}
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -796,6 +845,7 @@ DEVA_coordinates_from_file ( FILE *file, char *filename )
 	    } else {
 		fprintf ( stderr, "invalid UNITS value!\n" );
 	    }
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    exit ( EXIT_FAILURE );
 
 	} else if ( strncmp ( header_string, "VIEW=", strlen ( "VIEW=" ) )
@@ -809,6 +859,7 @@ DEVA_coordinates_from_file ( FILE *file, char *filename )
 	    } else {
 		fprintf ( stderr, "invalid UNITS value!\n" );
 	    }
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    exit ( EXIT_FAILURE );
 	}
     }
@@ -827,6 +878,7 @@ DEVA_coordinates_from_file ( FILE *file, char *filename )
 	coordinates->convert_to_centimeters = FEET_TO_CENTIMETERS;
     } else {
 	fprintf ( stderr, "invalid UNITS value!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -839,6 +891,7 @@ DEVA_print_coordinates ( DEVA_coordinates *coordinates )
     switch ( coordinates->units ) {
 	case unknown_unit:
 	    fprintf ( stderr, "DEVA_print_coordinates: invalid units!\n" );
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    exit ( EXIT_FAILURE );
 	    break;
 
@@ -860,6 +913,7 @@ DEVA_print_coordinates ( DEVA_coordinates *coordinates )
 
 	default:
 	    fprintf ( stderr, "DEVA_print_coordinates: invalid units!\n" );
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    exit ( EXIT_FAILURE );
     }
 
@@ -876,6 +930,7 @@ DEVA_coordinates_new ( void )
     coordinates = (DEVA_coordinates *) malloc ( sizeof ( DEVA_coordinates ) );
     if ( coordinates == NULL ) {
 	fprintf ( stderr, "DEVA_coordinates_new: malloc failed!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 

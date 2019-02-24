@@ -131,11 +131,13 @@ main ( int argc, char *argv[] )
     if ( ( dim_to_show != 'n' ) && ( dim_to_show != 'x' ) &&
 	    ( dim_to_show != 'y' ) && ( dim_to_show != 'z' ) )  {
 	fprintf ( stderr, "invalid dim_to_show (%d)!\n", dim_to_show );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	return ( EXIT_FAILURE );    /* error exit */
     }
 
     if ( outline_flag && !print_flag ) {
 	fprintf ( stderr, "invalid dim_to_show (%d)!\n", dim_to_show );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	return ( EXIT_FAILURE );    /* error exit */
     }
 
@@ -152,6 +154,7 @@ main ( int argc, char *argv[] )
     /* argument compatibility check */
     if ( ( geo_dim == 1 ) && ( dim_to_show != 'n' ) ) {
 	fprintf ( stderr, "can't specify --3dx1 for 1D data!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	return ( EXIT_FAILURE );    /* error exit */
     }
 
@@ -166,7 +169,8 @@ main ( int argc, char *argv[] )
 			DEVA_image_n_rows ( data_1d ),
 			DEVA_image_n_cols ( data_1d ) ) ) {
 		fprintf ( stderr,
-			"print points outsize image or otherwise invalid!" );
+			"print points outsize image or otherwise invalid!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );
 	    }
 
@@ -195,6 +199,7 @@ main ( int argc, char *argv[] )
 	}
 	if ( !found_valid_point ) {
 	    fprintf ( stderr, "no valid data!\n" );
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    exit ( EXIT_FAILURE );
 	}
 
@@ -217,6 +222,7 @@ main ( int argc, char *argv[] )
 
 	if ( ( max_1d - min_1d ) == 0 ) {
 	    fprintf ( stderr, "no dynamic range in geometry file!\n" );
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    return ( EXIT_FAILURE );	/* error exit */
 	}
 
@@ -284,11 +290,13 @@ main ( int argc, char *argv[] )
 
 	if ( fullrange ) {
 	    fprintf ( stderr, "--fullrange not valid for 3D data!\n" );
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    exit ( EXIT_FAILURE );
 	}
 
 	if ( reverse ) {
 	    fprintf ( stderr, "--reverse not valid for 3D data!\n" );
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    exit ( EXIT_FAILURE );
 	}
 
@@ -300,7 +308,8 @@ main ( int argc, char *argv[] )
 			DEVA_image_n_rows ( data_3d ),
 			DEVA_image_n_cols ( data_3d ) ) ) {
 		fprintf ( stderr,
-			"print points outsize image or otherwise invalid!" );
+			"print points outsize image or otherwise invalid!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );
 	    }
 
@@ -366,6 +375,7 @@ main ( int argc, char *argv[] )
 	if ( ( max_all_dimensions - min_all_dimensions ) == 0 ) {
 	    fprintf ( stderr,
 		    "no dynamic range in geometry file!\n" );
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    return ( EXIT_FAILURE );	/* error exit */
 	}
 
@@ -434,6 +444,7 @@ main ( int argc, char *argv[] )
 
 	    default:
 		fprintf ( stderr, "internal error!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		return ( EXIT_FAILURE );    /* error exit */
 		break;
 	}
@@ -444,7 +455,8 @@ main ( int argc, char *argv[] )
 			DEVA_image_n_rows ( data_1d ),
 			DEVA_image_n_cols ( data_1d ) ) ) {
 		fprintf ( stderr,
-			"print points outsize image or otherwise invalid!" );
+			"print points outsize image or otherwise invalid!\n" );
+		DEVA_print_file_lineno ( __FILE__, __LINE__ );
 		exit ( EXIT_FAILURE );
 	    }
 
@@ -479,6 +491,7 @@ main ( int argc, char *argv[] )
 	if ( ( max_1d - min_1d ) == 0 ) {
 	    fprintf ( stderr,
 		    "no dynamic range in geometry file!\n" );
+	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    return ( EXIT_FAILURE );	/* error exit */
 	}
 
@@ -509,6 +522,7 @@ main ( int argc, char *argv[] )
 
     } else {
 	fprintf ( stderr, "internal error!\n" );
+	DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	return ( EXIT_FAILURE );    /* error exit */
     }
 
