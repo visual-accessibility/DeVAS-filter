@@ -744,6 +744,13 @@ main ( int argc, char *argv[] )
 	    /* argpt++; */
 	    exit ( EXIT_SUCCESS );
 
+	} else if ( ( strcasecmp ( argv[argpt], "--v" ) == 0 ) ||
+		( strcasecmp ( argv[argpt], "-v" ) == 0 ) ) {
+	    /* print version number then exit */
+	    deva_filter_print_version ( );
+	    /* argpt++; */
+	    exit ( EXIT_SUCCESS );
+
 	} else if ( ( strcasecmp ( argv[argpt], "--presets" ) == 0 ) ||
 		( strcasecmp ( argv[argpt], "-presets" ) == 0 ) ) {
 	    /* print presets number then exit */
