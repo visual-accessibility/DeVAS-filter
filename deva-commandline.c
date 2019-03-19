@@ -70,8 +70,8 @@ char	*progname;	/* one radiance routine requires this as a global */
 #ifndef DEVA_VISIBILITY	/* code specific to deva-filter */
 
 char	*Usage = /* deva-filter */
-	    "--mild|--moderate|--severe|--profound|--legalblind"
-	    "\n\t[--presets] [--margin=<value>] input.hdr output.hdr";
+	"--mild|--moderate|--severe|--profound|--legalblind [--margin=<value>]"
+	    "\n\tinput.hdr output.hdr";
 char	*Usage2 = "[--snellen|--logMAR] [--sensitivity-ratio|--pelli-robson]"
     "\n\t[--autoclip|--clip=<level>] [--color|--grayscale|saturation=<value>]"
     "\n\t[--margin=<value>] [--verbose] [--version] [--presets]"
@@ -159,7 +159,7 @@ int	args_needed = 4;
 #else	/* code specific to deva-visibility */
 
 char	*Usage = /* deva-visibility */
-    "--mild|--moderate|--severe|--profound [--margin=<value>]"
+    "--mild|--moderate|--severe|--profound|--legalblind [--margin=<value>]"
     "\n\t[--red-green|--red-gray] [--printaverage|--printaveragena]"
 #ifdef DEVA_USE_CAIRO
     "\n\t[--quantscore] [--fontsize=<n>]"

@@ -368,10 +368,11 @@ DEVA_geom3d_from_radfile ( FILE *radiance_fp, char *filename )
 
 	if ( fgets ( header_line, HEADER_MAXLINE, radiance_fp ) == NULL ) {
 	    if ( filename != NULL ) {
-		perror ( filename );
+		fprintf ( stderr,"%s: ", filename );
 	    } else {
-		perror ( "DEVA_geom3d_from_radfile" );
+		fprintf ( stderr, "DEVA_geom3d_from_radfile: " );
 	    }
+	    fprintf ( stderr, "unexpected end-of-file in header!\n" );
 	    DEVA_print_file_lineno ( __FILE__, __LINE__ );
 	    exit ( EXIT_FAILURE );	/* error return */
 	}

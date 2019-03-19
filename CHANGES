@@ -1,3 +1,13 @@
+version 3.3.02
+
+Issue --legalblind prompt when executing deva-visibility with no
+arguements.
+
+version 3.3.01
+
+Better error reporting in read-geometry for Radiance .txt file with no
+empty line terminating header.
+
 version 3.3.00
 
 Most fatal errors now print out the line number and file where the error
