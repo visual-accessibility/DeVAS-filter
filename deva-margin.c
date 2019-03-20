@@ -16,11 +16,20 @@ DEVA_xyY_image *
 DEVA_xyY_add_margin ( int v_margin, int h_margin, DEVA_xyY_image *original )
 /*
  * Add a margin around the input file to reduce FFT artifacts due to
- * top-bottom and left-right wraparound. Values in the margin are a blend
- * of the nearest edge pixel in the input and the average of all edge pixels.
- * The blend is weighted by a sigmod function of the distance from the edge
- * pixel.  Only the luminance component is affected by this weighting, since
- * that is the only part processed by the FFT in the deva-filter code.
+ * top-bottom and left-right wraparound.
+ *
+ * If DEVA_MARGIN_REFLECT is set, margin pixels come are a blend of the
+ * reflection of the original image pixels around the image edge and the
+ * average luminance of the original image (DEVA_MARGIN_AVERAGE_ALL set) or
+ * the average luminance of all bounder pixels in the original image
+ * (DEVA_MARGIN_AVERAGE_ALL not set).  If DEVA_MARGIN_REFLECT is not set,
+ * values in the margin are a blend of the nearest boundary pixel in the input
+ * and the average of all edge pixels (DEVA_MARGIN_AVERAGE_ALL set) or the
+ * average luminance of all bounder pixels in the original image
+ * (DEVA_MARGIN_AVERAGE_ALL not set).  The blend is weighted by a sigmod
+ * function of the distance from the boundary pixel.  Only the luminance
+ * component is affected by this weighting, since that is the only part
+ * processed by the FFT in the deva-filter code.
  *
  * Field-of-view is updated in the output to keep degrees-per-pixel the
  * same as for the input.
@@ -96,7 +105,7 @@ DEVA_xyY_add_margin ( int v_margin, int h_margin, DEVA_xyY_image *original )
 
 #ifdef DEVA_MARGIN_AVERAGE_ALL
 
-    /* computer average luminance of all pixels in original image */
+    /* compute average luminance of all pixels in original image */
     average_luminance = 0.0;
 
     for ( row = 0; row < n_rows; row++ ) {
@@ -109,7 +118,7 @@ DEVA_xyY_add_margin ( int v_margin, int h_margin, DEVA_xyY_image *original )
 
 #else
 
-    /* computer average luminance of all border pixels in original image */
+    /* compute average luminance of all border pixels in original image */
     average_luminance = 0.0;
     for ( col = 0; col < n_cols; col++ ) {
 	average_luminance += DEVA_image_data ( original, 0, col ).Y;
