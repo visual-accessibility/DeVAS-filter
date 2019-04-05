@@ -7,44 +7,44 @@
 #include <stdlib.h>
 #include <math.h>
 #include "geometry-discontinuities.h"
-#include "deva-utils.h"
-#include "deva-image.h"
+#include "devas-utils.h"
+#include "devas-image.h"
 #include "read-geometry.h"
 #include "directional-maxima.h"
-#include "deva-license.h"	/* DEVA open source license */
+#include "devas-license.h"	/* DeVAS open source license */
 
 /*******************
-#define	DEBUG_POSITION		"deva-visibility-debug-position.png"
-#define	DEBUG_ORIENTATION	"deva-visibility-debug-orientation.png"
-#define	DEBUG_COMBINED		"deva-visibility-debug-combined.png"
+#define	DEBUG_POSITION		"devas-visibility-debug-position.png"
+#define	DEBUG_ORIENTATION	"devas-visibility-debug-orientation.png"
+#define	DEBUG_COMBINED		"devas-visibility-debug-combined.png"
  *******************/
 
 #if defined(DEBUG_POSITION)||defined(DEBUG_ORIENTATION)||defined(DEBUG_COMBINED)
-#include "DEVA-png.h"
+#include "devas-png.h"
 #endif
 
-static DEVA_float_image	*compute_position_deviation ( int position_patch_size,
-			    DEVA_XYZ_image *position,
-			    DEVA_XYZ_image *surface_normal );
-static DEVA_float_image	*compute_orientation_deviation (
+static DeVAS_float_image	*compute_position_deviation ( int position_patch_size,
+			    DeVAS_XYZ_image *position,
+			    DeVAS_XYZ_image *surface_normal );
+static DeVAS_float_image	*compute_orientation_deviation (
 			    int orientation_patch_size,
-			    DEVA_XYZ_image *surface_normal );
-#ifdef DEVA_CONVEX	/* needed to distinguish between convex and concave */
+			    DeVAS_XYZ_image *surface_normal );
+#ifdef DeVAS_CONVEX	/* needed to distinguish between convex and concave */
 			/* creases */
-static double		DEVA_distance_point_plane ( DEVA_XYZ point,
-			    DEVA_XYZ surface_normal, DEVA_XYZ point_on_plane );
-#endif	/* DEVA_CONVEX */
-static DEVA_XYZ		v3d_subtract ( DEVA_XYZ v1, DEVA_XYZ v2 );
-static double		v3d_dotprod ( DEVA_XYZ v1, DEVA_XYZ v2 );
-static DEVA_gray_image	*DEVA_gray_or ( DEVA_gray_image *i1,
-			    DEVA_gray_image *i2 );
+static double		DeVAS_distance_point_plane ( DeVAS_XYZ point,
+			    DeVAS_XYZ surface_normal, DeVAS_XYZ point_on_plane );
+#endif	/* DeVAS_CONVEX */
+static DeVAS_XYZ		v3d_subtract ( DeVAS_XYZ v1, DeVAS_XYZ v2 );
+static double		v3d_dotprod ( DeVAS_XYZ v1, DeVAS_XYZ v2 );
+static DeVAS_gray_image	*DeVAS_gray_or ( DeVAS_gray_image *i1,
+			    DeVAS_gray_image *i2 );
 #if defined(DEBUG_POSITION)||defined(DEBUG_ORIENTATION)||defined(DEBUG_COMBINED)
-static void		make_visible ( DEVA_gray_image *boundaries );
+static void		make_visible ( DeVAS_gray_image *boundaries );
 #endif
 
-DEVA_gray_image *
-geometry_discontinuities ( DEVA_coordinates *coordinates, DEVA_XYZ_image *xyz,
-	DEVA_float_image *dist, DEVA_XYZ_image *nor,
+DeVAS_gray_image *
+geometry_discontinuities ( DeVAS_coordinates *coordinates, DeVAS_XYZ_image *xyz,
+	DeVAS_float_image *dist, DeVAS_XYZ_image *nor,
 	int position_patch_size, int orientation_patch_size,
 	int position_threshold, int orientation_threshold )
 /*
@@ -86,68 +86,68 @@ geometry_discontinuities ( DEVA_coordinates *coordinates, DEVA_XYZ_image *xyz,
  */
 {
     int			min_image_size;
-    DEVA_float_image	*position_deviations;	    /* position difference */
-    DEVA_gray_image	*position_discontinuities;  /* directional local max */
+    DeVAS_float_image	*position_deviations;	    /* position difference */
+    DeVAS_gray_image	*position_discontinuities;  /* directional local max */
     						    /* of pos differences */
-    DEVA_float_image	*orientation_deviations;    /* orientation diffs */
-    DEVA_gray_image	*orientation_discontinuities;/* directional local max */
+    DeVAS_float_image	*orientation_deviations;    /* orientation diffs */
+    DeVAS_gray_image	*orientation_discontinuities;/* directional local max */
     						     /* of pos differences */
-    DEVA_gray_image	*combined_discontinuities;  /* union of positional */
+    DeVAS_gray_image	*combined_discontinuities;  /* union of positional */
     						    /* and orientational */
     						    /* discontinuities */
 
     /* sanity check of arguments */
 
-    if ( !DEVA_image_samesize ( xyz, dist ) ||
-	    !DEVA_image_samesize ( xyz, nor ) ) {
+    if ( !DeVAS_image_samesize ( xyz, dist ) ||
+	    !DeVAS_image_samesize ( xyz, nor ) ) {
 	fprintf ( stderr,
 		"geometry_discontinuities: geometry image size mismatch!\n" );
-	DEVA_print_file_lineno ( __FILE__, __LINE__ );
+	DeVAS_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
     if ( position_patch_size < 3 ) {
 	fprintf ( stderr,
 		"geometry_discontinuities: position_patch_size must >= 3!\n" );
-	DEVA_print_file_lineno ( __FILE__, __LINE__ );
+	DeVAS_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
     if ( orientation_patch_size < 3 ) {
 	fprintf ( stderr,
 	    "geometry_discontinuities: orientation_patch_size must >= 3!\n" );
-	DEVA_print_file_lineno ( __FILE__, __LINE__ );
+	DeVAS_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
     if ( ( position_patch_size % 2 ) != 1 ) {
 	fprintf ( stderr,
 	    "geometry_discontinuities: position_patch_size must be odd!\n" );
-	DEVA_print_file_lineno ( __FILE__, __LINE__ );
+	DeVAS_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
     if ( ( orientation_patch_size % 2 ) != 1 ) {
 	fprintf ( stderr,
 	    "geometry_discontinuities: orientation_patch_size must be odd!\n" );
-	DEVA_print_file_lineno ( __FILE__, __LINE__ );
+	DeVAS_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
-    if ( DEVA_image_n_rows ( xyz ) < DEVA_image_n_cols ( xyz ) ) {
-	min_image_size = DEVA_image_n_rows ( xyz );
+    if ( DeVAS_image_n_rows ( xyz ) < DeVAS_image_n_cols ( xyz ) ) {
+	min_image_size = DeVAS_image_n_rows ( xyz );
     } else {
-	min_image_size = DEVA_image_n_cols ( xyz );
+	min_image_size = DeVAS_image_n_cols ( xyz );
     }
 
     if ( position_patch_size > min_image_size ) {
 	fprintf ( stderr,
       "geometry_discontinuities: position_patch_size exceeds data size!\n" );
-	DEVA_print_file_lineno ( __FILE__, __LINE__ );
+	DeVAS_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
     if ( orientation_patch_size > min_image_size ) {
 	fprintf ( stderr,
       "geometry_discontinuities: orientation_patch_size exceeds data size!\n" );
-	DEVA_print_file_lineno ( __FILE__, __LINE__ );
+	DeVAS_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -160,7 +160,7 @@ geometry_discontinuities ( DEVA_coordinates *coordinates, DEVA_XYZ_image *xyz,
 #ifdef DEBUG_POSITION
     /* output viewable indication of position discontinuities */
     make_visible ( position_discontinuities );
-    DEVA_gray_image_to_filename_png ( DEBUG_POSITION,
+    DeVAS_gray_image_to_filename_png ( DEBUG_POSITION,
 	    position_discontinuities );
 #endif	/* DEBUG_POSITION */
 
@@ -173,33 +173,33 @@ geometry_discontinuities ( DEVA_coordinates *coordinates, DEVA_XYZ_image *xyz,
 #ifdef DEBUG_ORIENTATION
     /* output viewable indication of orientation discontinuities */
     make_visible ( orientation_discontinuities );
-    DEVA_gray_image_to_filename_png ( DEBUG_ORIENTATION,
+    DeVAS_gray_image_to_filename_png ( DEBUG_ORIENTATION,
 	    orientation_discontinuities );
 #endif	/* DEBUG_ORIENTATION */
 
     /* compute union of two types of discontinuities */
-    combined_discontinuities = DEVA_gray_or ( position_discontinuities,
+    combined_discontinuities = DeVAS_gray_or ( position_discontinuities,
 	    orientation_discontinuities );
 
 #ifdef DEBUG_COMBINED
     /* output viewable indication of combined discontinuities */
     make_visible ( combined_discontinuities );
-    DEVA_gray_image_to_filename_png ( DEBUG_COMBINED,
+    DeVAS_gray_image_to_filename_png ( DEBUG_COMBINED,
 	    combined_discontinuities );
 #endif	/* DEBUG_COMBINED */
 
     /* clean up */
-    DEVA_float_image_delete ( position_deviations );
-    DEVA_gray_image_delete ( position_discontinuities );
-    DEVA_float_image_delete ( orientation_deviations );
-    DEVA_gray_image_delete ( orientation_discontinuities );
+    DeVAS_float_image_delete ( position_deviations );
+    DeVAS_gray_image_delete ( position_discontinuities );
+    DeVAS_float_image_delete ( orientation_deviations );
+    DeVAS_gray_image_delete ( orientation_discontinuities );
 
     return ( combined_discontinuities );
 }
 
-static DEVA_float_image *
-compute_position_deviation ( int position_patch_size, DEVA_XYZ_image *position,
-	DEVA_XYZ_image *surface_normal )
+static DeVAS_float_image *
+compute_position_deviation ( int position_patch_size, DeVAS_XYZ_image *position,
+	DeVAS_XYZ_image *surface_normal )
 /*
  * Measure is based on average over patch of distance from pixel positions
  * to a plane going through the center pixel and oriented perpendicularly
@@ -211,42 +211,42 @@ compute_position_deviation ( int position_patch_size, DEVA_XYZ_image *position,
 {
     int			n_rows, n_cols;
     int			row, col;
-    DEVA_float_image	*position_deviation;
+    DeVAS_float_image	*position_deviation;
     int			half_patch_size;	/* excluding center */
     int			i, j;
     double		deviation;
     double		total_deviation;
-    DEVA_XYZ		center_position;
-    DEVA_XYZ		center_normal;
-    DEVA_XYZ		deviation_vector;
+    DeVAS_XYZ		center_position;
+    DeVAS_XYZ		center_normal;
+    DeVAS_XYZ		deviation_vector;
 
-    n_rows = DEVA_image_n_rows ( position );
-    n_cols = DEVA_image_n_cols ( position );
+    n_rows = DeVAS_image_n_rows ( position );
+    n_cols = DeVAS_image_n_cols ( position );
 
-    if ( !DEVA_image_samesize ( position, surface_normal ) ) {
+    if ( !DeVAS_image_samesize ( position, surface_normal ) ) {
 	fprintf ( stderr,
 		"compute_position_deviation: image sizes don't match!\n" );
-	DEVA_print_file_lineno ( __FILE__, __LINE__ );
+	DeVAS_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* error return */
     }
 
     if ( position_patch_size > imin ( n_rows, n_cols ) ) {
 	fprintf ( stderr,
 		"compute_position_deviation: patch size exceeds data size!\n" );
-	DEVA_print_file_lineno ( __FILE__, __LINE__ );
+	DeVAS_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* error return */
     }
 
     if ( ( position_patch_size % 2 ) != 1 ) {
 	fprintf ( stderr,
 	    "compute_position_deviation: patch-size must be odd!\n" );
-	DEVA_print_file_lineno ( __FILE__, __LINE__ );
+	DeVAS_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* error return */
     }
 
-    position_deviation = DEVA_float_image_new ( n_rows, n_cols );
+    position_deviation = DeVAS_float_image_new ( n_rows, n_cols );
 
-    DEVA_float_image_setvalue ( position_deviation, 0.0 );
+    DeVAS_float_image_setvalue ( position_deviation, 0.0 );
     					/* initialize to all 0.0 */
 
     half_patch_size = ( position_patch_size - 1 ) / 2;
@@ -254,8 +254,8 @@ compute_position_deviation ( int position_patch_size, DEVA_XYZ_image *position,
     for ( row = half_patch_size; row < ( n_rows - half_patch_size ); row++ ) {
 	for ( col = half_patch_size; col < ( n_cols - half_patch_size );
 		col++ ) {
-	    center_position = DEVA_image_data ( position, row, col );
-	    center_normal = DEVA_image_data ( surface_normal, row, col );
+	    center_position = DeVAS_image_data ( position, row, col );
+	    center_normal = DeVAS_image_data ( surface_normal, row, col );
 
 	    total_deviation = 0.0;
 
@@ -265,7 +265,7 @@ compute_position_deviation ( int position_patch_size, DEVA_XYZ_image *position,
 		     * Generate vector from patch point to center position.
 		     */
 		    deviation_vector =
-			v3d_subtract ( DEVA_image_data ( position, row + i,
+			v3d_subtract ( DeVAS_image_data ( position, row + i,
 				    col + j ), center_position );
 
 		    /*
@@ -291,12 +291,12 @@ compute_position_deviation ( int position_patch_size, DEVA_XYZ_image *position,
 
 	    if ( total_deviation < 0.0 ) {
 		/* behind center point */
-		DEVA_image_data ( position_deviation, row, col ) =
+		DeVAS_image_data ( position_deviation, row, col ) =
 		    -total_deviation /
 		    	((double) ( half_patch_size * position_patch_size ) );
 			/* normalization assumes occluding surface is flat */
 	    } else {
-		DEVA_image_data ( position_deviation, row, col ) = 0.0;
+		DeVAS_image_data ( position_deviation, row, col ) = 0.0;
 	    }
 	}
     }
@@ -304,9 +304,9 @@ compute_position_deviation ( int position_patch_size, DEVA_XYZ_image *position,
     return ( position_deviation );
 }
 
-static DEVA_float_image *
+static DeVAS_float_image *
 compute_orientation_deviation ( int orientation_patch_size,
-	DEVA_XYZ_image *surface_normal )
+	DeVAS_XYZ_image *surface_normal )
 /*
  * Measure is based on average angular distance of orientation vectors at
  * equal but opposite distances from the center of the patch.  One consequence
@@ -316,35 +316,35 @@ compute_orientation_deviation ( int orientation_patch_size,
 {
     int			n_rows, n_cols;
     int			row, col;
-    DEVA_float_image	*orientation_deviation;
+    DeVAS_float_image	*orientation_deviation;
 #ifdef SMOOTH_ORIENTATION
     /* define this is smoothing of orientation vectors is requested */
-    DEVA_float_image	*smoothed_orientation_deviation;
+    DeVAS_float_image	*smoothed_orientation_deviation;
 #endif	/* SMOOTH_ORIENTATION */
     int			half_patch_size;	/* excluding center */
     int			i, j;
     double		total_deviation;
     double		deviation_angle;
 
-    n_rows = DEVA_image_n_rows ( surface_normal );
-    n_cols = DEVA_image_n_cols ( surface_normal );
+    n_rows = DeVAS_image_n_rows ( surface_normal );
+    n_cols = DeVAS_image_n_cols ( surface_normal );
 
     if ( orientation_patch_size > imin ( n_rows, n_cols ) ) {
 	fprintf ( stderr,
 		"compute_position_deviation: patch size exceeds data size!\n" );
-	DEVA_print_file_lineno ( __FILE__, __LINE__ );
+	DeVAS_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );  /* error return */
     }
 
     if ( ( orientation_patch_size % 2 ) != 1 ) {
 	fprintf ( stderr,
 		"compute_position_deviation: patch-size must be odd!\n" );
-	DEVA_print_file_lineno ( __FILE__, __LINE__ );
+	DeVAS_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );  /* error return */
     }
 
-    orientation_deviation = DEVA_float_image_new ( n_rows, n_cols );
-    DEVA_float_image_setvalue ( orientation_deviation, 0.0 );
+    orientation_deviation = DeVAS_float_image_new ( n_rows, n_cols );
+    DeVAS_float_image_setvalue ( orientation_deviation, 0.0 );
 
     half_patch_size = ( orientation_patch_size - 1 ) / 2;
 
@@ -367,9 +367,9 @@ compute_orientation_deviation ( int orientation_patch_size,
 		     */
 		    deviation_angle = radian2degree ( acos ( fmin (
 			v3d_dotprod (
-			    DEVA_image_data ( surface_normal, row + i,
+			    DeVAS_image_data ( surface_normal, row + i,
 				    col + j ),
-			    DEVA_image_data ( surface_normal, row - i,
+			    DeVAS_image_data ( surface_normal, row - i,
 				    col - j ) ),
 			1.0 ) ) );
 
@@ -380,14 +380,14 @@ compute_orientation_deviation ( int orientation_patch_size,
 	    for ( j = -half_patch_size; j < 0; j++ ) {
 		deviation_angle = radian2degree ( acos ( fmin (
 			v3d_dotprod (
-			    DEVA_image_data ( surface_normal, row, col + j ),
-			    DEVA_image_data ( surface_normal, row, col - j ) ),
+			    DeVAS_image_data ( surface_normal, row, col + j ),
+			    DeVAS_image_data ( surface_normal, row, col - j ) ),
 			1.0 ) ) );
 
 		total_deviation += deviation_angle;
 	    }
 
-	    DEVA_image_data ( orientation_deviation, row, col ) =
+	    DeVAS_image_data ( orientation_deviation, row, col ) =
 		total_deviation /
 		    ((double) ( ( orientation_patch_size + 1 ) *
 			half_patch_size ) );
@@ -402,7 +402,7 @@ compute_orientation_deviation ( int orientation_patch_size,
      */
 
     smoothed_orientation_deviation = gblur_3x3 ( orientation_deviation );
-    DEVA_float_image_delete ( orientation_deviation );
+    DeVAS_float_image_delete ( orientation_deviation );
 
     return ( smoothed_orientation_deviation );
 #else
@@ -410,18 +410,18 @@ compute_orientation_deviation ( int orientation_patch_size,
 #endif	/* SMOOTH_ORIENTATION */
 }
 
-#ifdef DEVA_CONVEX
+#ifdef DeVAS_CONVEX
 /*
  * Used to differentiate between convex and concave corners.
  */
 static double
-DEVA_distance_point_plane ( DEVA_XYZ point, DEVA_XYZ surface_normal,
-	DEVA_XYZ point_on_plane )
+DeVAS_distance_point_plane ( DeVAS_XYZ point, DeVAS_XYZ surface_normal,
+	DeVAS_XYZ point_on_plane )
 /*
  * From <http://mathworld.wolfram.com/Point-PlaneDistance.html>.
  */
 {
-    DEVA_XYZ	w;
+    DeVAS_XYZ	w;
     double	distance;	/* signed distance! */
 
     w = v3d_subtract ( point, point_on_plane );
@@ -430,12 +430,12 @@ DEVA_distance_point_plane ( DEVA_XYZ point, DEVA_XYZ surface_normal,
 
     return ( distance );
 }
-#endif	/* DEVA_CONVEX */
+#endif	/* DeVAS_CONVEX */
 
-static DEVA_XYZ
-v3d_subtract ( DEVA_XYZ v1, DEVA_XYZ v2 )
+static DeVAS_XYZ
+v3d_subtract ( DeVAS_XYZ v1, DeVAS_XYZ v2 )
 {
-    DEVA_XYZ	diff;
+    DeVAS_XYZ	diff;
 
     diff.X = v1.X - v2.X;
     diff.Y = v1.Y - v2.Y;
@@ -445,7 +445,7 @@ v3d_subtract ( DEVA_XYZ v1, DEVA_XYZ v2 )
 }
 
 double
-v3d_dotprod ( DEVA_XYZ v1, DEVA_XYZ v2 )
+v3d_dotprod ( DeVAS_XYZ v1, DeVAS_XYZ v2 )
 {
     double	prod;
 
@@ -454,29 +454,29 @@ v3d_dotprod ( DEVA_XYZ v1, DEVA_XYZ v2 )
     return ( prod );
 }
 
-static DEVA_gray_image *
-DEVA_gray_or ( DEVA_gray_image *i1, DEVA_gray_image *i2 )
+static DeVAS_gray_image *
+DeVAS_gray_or ( DeVAS_gray_image *i1, DeVAS_gray_image *i2 )
 {
-    DEVA_gray_image *new;
+    DeVAS_gray_image *new;
     int		    n_rows, n_cols;
     int		    row, col;
 
-    if ( !DEVA_image_samesize ( i1, i2 ) ) {
-	fprintf ( stderr, "DEVA_gray_or: image sizes don't match!\n" );
-	DEVA_print_file_lineno ( __FILE__, __LINE__ );
+    if ( !DeVAS_image_samesize ( i1, i2 ) ) {
+	fprintf ( stderr, "DeVAS_gray_or: image sizes don't match!\n" );
+	DeVAS_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );	/* error return */
     }
 
-    n_rows = DEVA_image_n_rows ( i1 );
-    n_cols = DEVA_image_n_cols ( i1 );
+    n_rows = DeVAS_image_n_rows ( i1 );
+    n_cols = DeVAS_image_n_cols ( i1 );
 
-    new = DEVA_gray_image_new ( n_rows, n_cols );
+    new = DeVAS_gray_image_new ( n_rows, n_cols );
 
     for ( row = 0; row < n_rows; row++ ) {
 	for ( col = 0; col < n_cols; col++ ) {
-	    DEVA_image_data ( new, row, col ) =
-		DEVA_image_data ( i1, row, col ) ||
-		DEVA_image_data ( i2, row, col );
+	    DeVAS_image_data ( new, row, col ) =
+		DeVAS_image_data ( i1, row, col ) ||
+		DeVAS_image_data ( i2, row, col );
 	}
     }
 
@@ -485,14 +485,14 @@ DEVA_gray_or ( DEVA_gray_image *i1, DEVA_gray_image *i2 )
 
 #if defined(DEBUG_POSITION)||defined(DEBUG_ORIENTATION)||defined(DEBUG_COMBINED)
 static void
-make_visible ( DEVA_gray_image *boundaries )
+make_visible ( DeVAS_gray_image *boundaries )
 {
     int     row, col;
 
-    for ( row = 0; row < DEVA_image_n_rows ( boundaries ); row ++ ) {
-	for ( col = 0; col < DEVA_image_n_cols ( boundaries ); col ++ ) {
-	    if ( DEVA_image_data ( boundaries, row, col ) ) {
-		DEVA_image_data ( boundaries, row, col ) = 255;
+    for ( row = 0; row < DeVAS_image_n_rows ( boundaries ); row ++ ) {
+	for ( col = 0; col < DeVAS_image_n_cols ( boundaries ); col ++ ) {
+	    if ( DeVAS_image_data ( boundaries, row, col ) ) {
+		DeVAS_image_data ( boundaries, row, col ) = 255;
 	    }
 	}
     }

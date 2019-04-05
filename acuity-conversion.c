@@ -8,7 +8,7 @@
 #include <strings.h>
 #include <math.h>
 #include "acuity-conversion.h"
-#include "deva-license.h"	/* DEVA open source license */
+#include "devas-license.h"	/* DeVAS open source license */
 
 /* The following are support routines for parse_snellen () */
 static int	count_character ( char *string, char c );

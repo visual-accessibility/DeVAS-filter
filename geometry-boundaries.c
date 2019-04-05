@@ -1,17 +1,17 @@
 /*
  * Calculate geometry boundaries from geometry files.  This is normally done
- * in the deva-visibility program.
+ * in the devas-visibility program.
  */
 
 #include <stdlib.h>
 #include <stdio.h>
-/* #define	DEVA_CHECK_BOUNDS */
-#include "deva-image.h"
+/* #define	DeVAS_CHECK_BOUNDS */
+#include "devas-image.h"
 #include "read-geometry.h"
 #include "geometry-discontinuities.h"
-#include "deva-utils.h"
-#include "DEVA-png.h"
-#include "deva-license.h"	/* DEVA open source license */
+#include "devas-utils.h"
+#include "devas-png.h"
+#include "devas-license.h"	/* DeVAS open source license */
 
 /* The following need tuning!!! */
 
@@ -60,11 +60,11 @@ main ( int argc, char *argv[] )
     char		*dist_file_name;
     char		*nor_file_name;
     char		*geometry_boundaries_file_name;
-    DEVA_coordinates	*coordinates;
-    DEVA_XYZ_image	*xyz;
-    DEVA_float_image	*dist;
-    DEVA_XYZ_image	*nor;
-    DEVA_gray_image	*geometry_boundaries;
+    DeVAS_coordinates	*coordinates;
+    DeVAS_XYZ_image	*xyz;
+    DeVAS_float_image	*dist;
+    DeVAS_XYZ_image	*nor;
+    DeVAS_gray_image	*geometry_boundaries;
     int			row, col;
 
     /* Hardwired parameters for detection of geometry boundaries. */
@@ -87,10 +87,10 @@ main ( int argc, char *argv[] )
     nor_file_name = argv[argpt++];
     geometry_boundaries_file_name = argv[argpt++];
 
-    coordinates = DEVA_coordinates_from_filename ( coordinates_file_name );
-    xyz = DEVA_geom3d_from_radfilename ( xyz_file_name );
-    dist = DEVA_geom1d_from_radfilename ( dist_file_name );
-    nor = DEVA_geom3d_from_radfilename ( nor_file_name );
+    coordinates = DeVAS_coordinates_from_filename ( coordinates_file_name );
+    xyz = DeVAS_geom3d_from_radfilename ( xyz_file_name );
+    dist = DeVAS_geom1d_from_radfilename ( dist_file_name );
+    nor = DeVAS_geom3d_from_radfilename ( nor_file_name );
 
     /* standardize distances (to cm) */
     standard_units_1D ( dist, coordinates );
@@ -100,26 +100,26 @@ main ( int argc, char *argv[] )
 	    nor, position_patch_size, orientation_patch_size,
 	    position_threshold, orientation_threshold );
 
-    for ( row = 0; row < DEVA_image_n_rows ( geometry_boundaries ); row++ ) {
-	for ( col = 0; col < DEVA_image_n_cols ( geometry_boundaries );
+    for ( row = 0; row < DeVAS_image_n_rows ( geometry_boundaries ); row++ ) {
+	for ( col = 0; col < DeVAS_image_n_cols ( geometry_boundaries );
 		col++ ) {
-	    if ( DEVA_image_data ( geometry_boundaries, row, col ) ) {
-		DEVA_image_data ( geometry_boundaries, row, col ) = 255;
+	    if ( DeVAS_image_data ( geometry_boundaries, row, col ) ) {
+		DeVAS_image_data ( geometry_boundaries, row, col ) = 255;
 	    } else {
-		DEVA_image_data ( geometry_boundaries, row, col ) = 0;
+		DeVAS_image_data ( geometry_boundaries, row, col ) = 0;
 	    }
 	}
     }
 
-    DEVA_gray_image_to_filename_png ( geometry_boundaries_file_name,
+    DeVAS_gray_image_to_filename_png ( geometry_boundaries_file_name,
 	    geometry_boundaries );
 
     /* clean up */
-    DEVA_coordinates_delete ( coordinates );
-    DEVA_XYZ_image_delete ( xyz );
-    DEVA_float_image_delete ( dist );
-    DEVA_XYZ_image_delete ( nor );
-    DEVA_gray_image_delete ( geometry_boundaries );
+    DeVAS_coordinates_delete ( coordinates );
+    DeVAS_XYZ_image_delete ( xyz );
+    DeVAS_float_image_delete ( dist );
+    DeVAS_XYZ_image_delete ( nor );
+    DeVAS_gray_image_delete ( geometry_boundaries );
 
     return ( EXIT_SUCCESS );	/* normal exit */
 }

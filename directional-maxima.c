@@ -1,11 +1,11 @@
 #include <stdlib.h>
-#include "deva-image.h"
+#include "devas-image.h"
 #include "directional-maxima.h"
-#include "deva-license.h"       /* DEVA open source license */
+#include "devas-license.h"       /* DeVAS open source license */
 
-DEVA_gray_image *
+DeVAS_gray_image *
 find_directional_maxima ( int patch_size, double threshold,
-	DEVA_float_image *values )
+	DeVAS_float_image *values )
 /*
  * Find direction local maxima of an array of floating point values.
  *
@@ -22,7 +22,7 @@ find_directional_maxima ( int patch_size, double threshold,
  * 		an above threshold directional local maxima.
  */
 {
-    DEVA_gray_image *directional_maxima;
+    DeVAS_gray_image *directional_maxima;
     int		    n_rows, n_cols;
     int		    row, col;
     int		    i;
@@ -34,24 +34,24 @@ find_directional_maxima ( int patch_size, double threshold,
 	fprintf ( stderr,
 		"find_directional_maxima: invalid patch_size (%d)!\n",
 		patch_size );
-	DEVA_print_file_lineno ( __FILE__, __LINE__ );
+	DeVAS_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
     if ( ( patch_size % 2 ) != 1 ) {
 	fprintf ( stderr,
 		"find_directional_maxima: patch_size must be odd!\n" );
-	DEVA_print_file_lineno ( __FILE__, __LINE__ );
+	DeVAS_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
-    n_rows = DEVA_image_n_rows ( values );
-    n_cols = DEVA_image_n_cols ( values );
+    n_rows = DeVAS_image_n_rows ( values );
+    n_cols = DeVAS_image_n_cols ( values );
 
-    directional_maxima = DEVA_gray_image_new ( n_rows, n_cols );
+    directional_maxima = DeVAS_gray_image_new ( n_rows, n_cols );
 
     for ( row = 0; row < n_rows; row++ ) {
 	for ( col = 0; col < n_cols; col++ ) {
-	    DEVA_image_data ( directional_maxima, row, col ) = FALSE;
+	    DeVAS_image_data ( directional_maxima, row, col ) = FALSE;
 	}
     }
 
@@ -73,31 +73,31 @@ find_directional_maxima ( int patch_size, double threshold,
     if ( patch_size == 3 ) {
 	for ( row = pad_size; row < n_rows - pad_size; row++ ) {
 	    for ( col = pad_size; col < n_cols - pad_size; col++ ) {
-		center_value = DEVA_image_data ( values, row, col );
+		center_value = DeVAS_image_data ( values, row, col );
 
 		if ( center_value < threshold ) {
 		    continue;
 		}
 
 		if ( ( ( center_value >=		/* up-down */
-				DEVA_image_data ( values, row-1, col ) ) &&
+				DeVAS_image_data ( values, row-1, col ) ) &&
 			    ( center_value >
-			      DEVA_image_data ( values, row+1, col ) ) ) ||
+			      DeVAS_image_data ( values, row+1, col ) ) ) ||
 #ifdef EIGHT_CONNECTED
 			( ( center_value >		/* negative diagonal */
-			    DEVA_image_data ( values, row-1, col-1 ) ) &&
+			    DeVAS_image_data ( values, row-1, col-1 ) ) &&
 			  ( center_value >=
-			    DEVA_image_data ( values, row+1, col+1 ) ) ) ||
+			    DeVAS_image_data ( values, row+1, col+1 ) ) ) ||
 			( ( center_value >		/* positive diagonal */
-			    DEVA_image_data ( values, row-1, col+1 ) ) &&
+			    DeVAS_image_data ( values, row-1, col+1 ) ) &&
 			  ( center_value >=
-			    DEVA_image_data ( values, row+1, col-1 ) ) ) ||
+			    DeVAS_image_data ( values, row+1, col-1 ) ) ) ||
 #endif	/* EIGHT_CONNECTED */
 			( ( center_value >=		/* side-to-side */
-			    DEVA_image_data ( values, row, col-1 ) ) &&
+			    DeVAS_image_data ( values, row, col-1 ) ) &&
 			  ( center_value >
-			    DEVA_image_data ( values, row, col+1 ) ) ) ) {
-		    DEVA_image_data ( directional_maxima, row, col ) = TRUE;
+			    DeVAS_image_data ( values, row, col+1 ) ) ) ) {
+		    DeVAS_image_data ( directional_maxima, row, col ) = TRUE;
 		}
 	    }
 	}
@@ -106,7 +106,7 @@ find_directional_maxima ( int patch_size, double threshold,
 	/* search over arbitrarily sized patch */
 	for ( row = pad_size; row < n_rows - pad_size; row++ ) {
 	    for ( col = pad_size; col < n_cols - pad_size; col++ ) {
-		center_value = DEVA_image_data ( values, row, col );
+		center_value = DeVAS_image_data ( values, row, col );
 
 		if ( center_value < threshold )
 		    continue;
@@ -117,16 +117,16 @@ find_directional_maxima ( int patch_size, double threshold,
 
 		for ( i = 1; i < pad_size; i++ ) {
 		    if ( ( center_value <
-				DEVA_image_data ( values, row-i, col ) ) ||
+				DeVAS_image_data ( values, row-i, col ) ) ||
 			    ( center_value <=
-			      DEVA_image_data ( values, row+i, col ) ) ) {
+			      DeVAS_image_data ( values, row+i, col ) ) ) {
 			local_maxima = FALSE;
 			break;
 		    }
 		}
 
 		if ( local_maxima ) {
-		    DEVA_image_data ( directional_maxima, row, col ) = TRUE;
+		    DeVAS_image_data ( directional_maxima, row, col ) = TRUE;
 		    continue;
 		}
 
@@ -136,16 +136,16 @@ find_directional_maxima ( int patch_size, double threshold,
 
 		for ( i = 1; i < pad_size; i++ ) {
 		    if ( ( center_value <
-				DEVA_image_data ( values, row, col-i ) ) ||
+				DeVAS_image_data ( values, row, col-i ) ) ||
 			    ( center_value <=
-			      DEVA_image_data ( values, row, col+i ) ) ) {
+			      DeVAS_image_data ( values, row, col+i ) ) ) {
 			local_maxima = FALSE;
 			break;
 		    }
 		}
 
 		if ( local_maxima ) {
-		    DEVA_image_data ( directional_maxima, row, col ) = TRUE;
+		    DeVAS_image_data ( directional_maxima, row, col ) = TRUE;
 		    continue;
 		}
 
@@ -157,16 +157,16 @@ find_directional_maxima ( int patch_size, double threshold,
 
 		for ( i = 1; i < pad_size; i++ ) {
 		    if ( ( center_value >
-				DEVA_image_data ( values, row-i, col-i ) ) ||
+				DeVAS_image_data ( values, row-i, col-i ) ) ||
 			    ( center_value >=
-			      DEVA_image_data ( values, row+i, col+i ) ) ) {
+			      DeVAS_image_data ( values, row+i, col+i ) ) ) {
 			local_maxima = FALSE;
 			break;
 		    }
 		}
 
 		if ( local_maxima ) {
-		    DEVA_image_data ( directional_maxima, row, col ) = TRUE;
+		    DeVAS_image_data ( directional_maxima, row, col ) = TRUE;
 		    continue;
 		}
 
@@ -176,16 +176,16 @@ find_directional_maxima ( int patch_size, double threshold,
 
 		for ( i = 1; i < pad_size; i++ ) {
 		    if ( ( center_value <	
-				DEVA_image_data ( values, row-i, col+i ) ) ||
+				DeVAS_image_data ( values, row-i, col+i ) ) ||
 			    ( center_value <=
-			      DEVA_image_data ( values, row+i, col-i ) ) ) {
+			      DeVAS_image_data ( values, row+i, col-i ) ) ) {
 			local_maxima = FALSE;
 			break;
 		    }
 		}
 
 		if ( local_maxima ) {
-		    DEVA_image_data ( directional_maxima, row, col ) = TRUE;
+		    DeVAS_image_data ( directional_maxima, row, col ) = TRUE;
 		    continue;
 		}
 
@@ -198,14 +198,14 @@ find_directional_maxima ( int patch_size, double threshold,
     return ( directional_maxima );
 }
 
-DEVA_float_image *
-gblur_3x3 ( DEVA_float_image *values )
+DeVAS_float_image *
+gblur_3x3 ( DeVAS_float_image *values )
 /*
  * 3x3 Gaussian blur of float values, with sigma=0.5.
  * Kernel values from <http://dev.theomader.com/gaussian-kernel-calculator/>.
  */
 {
-    DEVA_float_image	*blurred_image;
+    DeVAS_float_image	*blurred_image;
     float		kernel[3][3] = {
 	{0.024879, 0.107973, 0.024879},
 	{0.107973, 0.468592, 0.107973},
@@ -216,15 +216,15 @@ gblur_3x3 ( DEVA_float_image *values )
     int			i, j;
     double		sum;
 
-    n_rows = DEVA_image_n_rows ( values );
-    n_cols = DEVA_image_n_cols ( values );
+    n_rows = DeVAS_image_n_rows ( values );
+    n_cols = DeVAS_image_n_cols ( values );
     if ( ( n_rows < 3 ) || ( n_cols < 3 ) ) {
 	fprintf ( stderr, "gblur_3x3: image too small!\n" );
-	DEVA_print_file_lineno ( __FILE__, __LINE__ );
+	DeVAS_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
-    blurred_image = DEVA_float_image_new ( n_rows, n_cols );
+    blurred_image = DeVAS_float_image_new ( n_rows, n_cols );
 
     for ( row = 1; row < n_rows - 1; row++ ) {
 	for ( col = 1; col < n_cols -1; col++ ) {
@@ -232,48 +232,48 @@ gblur_3x3 ( DEVA_float_image *values )
 	    for ( i = 0; i < 3; i++ ) {
 		for ( j = 0; j < 3; j++ ) {
 		    sum += kernel[i][j] *
-			DEVA_image_data ( values, row-1+i, col-1+j );
+			DeVAS_image_data ( values, row-1+i, col-1+j );
 		}
 	    }
 
-	    DEVA_image_data ( blurred_image, row, col ) = sum;
+	    DeVAS_image_data ( blurred_image, row, col ) = sum;
 	}
     }
 
     for ( row = 1; row < n_rows - 1; row++ ) {
-	DEVA_image_data ( blurred_image, row, 0 ) = 
-	    DEVA_image_data ( blurred_image, row, 1 );
-	DEVA_image_data ( blurred_image, row, n_cols-1 ) =
-	    DEVA_image_data ( blurred_image, row, n_cols-2 );
+	DeVAS_image_data ( blurred_image, row, 0 ) = 
+	    DeVAS_image_data ( blurred_image, row, 1 );
+	DeVAS_image_data ( blurred_image, row, n_cols-1 ) =
+	    DeVAS_image_data ( blurred_image, row, n_cols-2 );
     }
 
     for ( col = 1; col < n_cols -1; col++ ) {
-	DEVA_image_data ( blurred_image, 0, col ) =
-	    DEVA_image_data ( blurred_image, 1, col );
-	DEVA_image_data ( blurred_image, n_rows-1, col ) =
-	    DEVA_image_data ( blurred_image, n_rows-2, col );
+	DeVAS_image_data ( blurred_image, 0, col ) =
+	    DeVAS_image_data ( blurred_image, 1, col );
+	DeVAS_image_data ( blurred_image, n_rows-1, col ) =
+	    DeVAS_image_data ( blurred_image, n_rows-2, col );
     }
 
-    DEVA_image_data ( blurred_image, 0, 0 ) =
-	DEVA_image_data ( blurred_image, 1, 1 );
-    DEVA_image_data ( blurred_image, 0, n_cols - 1 ) =
-	DEVA_image_data ( blurred_image, 1, n_cols - 2 );
-    DEVA_image_data ( blurred_image, n_rows - 1 , 0 ) =
-	DEVA_image_data ( blurred_image, n_rows - 2, 1 );
-    DEVA_image_data ( blurred_image, n_rows - 1 , n_cols - 1 ) =
-	DEVA_image_data ( blurred_image, n_rows - 2, n_cols - 2 );
+    DeVAS_image_data ( blurred_image, 0, 0 ) =
+	DeVAS_image_data ( blurred_image, 1, 1 );
+    DeVAS_image_data ( blurred_image, 0, n_cols - 1 ) =
+	DeVAS_image_data ( blurred_image, 1, n_cols - 2 );
+    DeVAS_image_data ( blurred_image, n_rows - 1 , 0 ) =
+	DeVAS_image_data ( blurred_image, n_rows - 2, 1 );
+    DeVAS_image_data ( blurred_image, n_rows - 1 , n_cols - 1 ) =
+	DeVAS_image_data ( blurred_image, n_rows - 2, n_cols - 2 );
 
     return ( blurred_image );
 }
 
-DEVA_XYZ_image *
-gblur_3x3_3d ( DEVA_XYZ_image *values )
+DeVAS_XYZ_image *
+gblur_3x3_3d ( DeVAS_XYZ_image *values )
 /*
  * 3x3 Gaussian blur of XYZ (3 x float) values, with sigma=0.5.
  * Kernel values from <http://dev.theomader.com/gaussian-kernel-calculator/>.
  */
 {
-    DEVA_XYZ_image	*blurred_image;
+    DeVAS_XYZ_image	*blurred_image;
     double		kernel[3][3] = {
 	{0.024879, 0.107973, 0.024879},
 	{0.107973, 0.468592, 0.107973},
@@ -283,17 +283,17 @@ gblur_3x3_3d ( DEVA_XYZ_image *values )
     int			row, col;
     int			i, j;
     double		sum_X, sum_Y, sum_Z;	/* no double XYZ format */
-    DEVA_XYZ		smoothed_value;
+    DeVAS_XYZ		smoothed_value;
 
-    n_rows = DEVA_image_n_rows ( values );
-    n_cols = DEVA_image_n_cols ( values );
+    n_rows = DeVAS_image_n_rows ( values );
+    n_cols = DeVAS_image_n_cols ( values );
     if ( ( n_rows < 3 ) || ( n_cols < 3 ) ) {
 	fprintf ( stderr, "gblur_3x3: image too small!\n" );
-	DEVA_print_file_lineno ( __FILE__, __LINE__ );
+	DeVAS_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
-    blurred_image = DEVA_XYZ_image_new ( n_rows, n_cols );
+    blurred_image = DeVAS_XYZ_image_new ( n_rows, n_cols );
 
     for ( row = 1; row < n_rows - 1; row++ ) {
 	for ( col = 1; col < n_cols -1; col++ ) {
@@ -301,11 +301,11 @@ gblur_3x3_3d ( DEVA_XYZ_image *values )
 	    for ( i = 0; i < 3; i++ ) {
 		for ( j = 0; j < 3; j++ ) {
 		    sum_X += kernel[i][j] *
-			DEVA_image_data ( values, row-1+i, col-1+j ) . X;
+			DeVAS_image_data ( values, row-1+i, col-1+j ) . X;
 		    sum_Y += kernel[i][j] *
-			DEVA_image_data ( values, row-1+i, col-1+j ) . Y;
+			DeVAS_image_data ( values, row-1+i, col-1+j ) . Y;
 		    sum_Z += kernel[i][j] *
-			DEVA_image_data ( values, row-1+i, col-1+j ) . Z;
+			DeVAS_image_data ( values, row-1+i, col-1+j ) . Z;
 		}
 	    }
 
@@ -313,33 +313,33 @@ gblur_3x3_3d ( DEVA_XYZ_image *values )
 	    smoothed_value.Y = sum_Y;
 	    smoothed_value.Z = sum_Z;
 
-	    DEVA_image_data ( blurred_image, row, col ) = smoothed_value;
+	    DeVAS_image_data ( blurred_image, row, col ) = smoothed_value;
 
 	}
     }
 
     for ( row = 1; row < n_rows - 1; row++ ) {
-	DEVA_image_data ( blurred_image, row, 0 ) = 
-	    DEVA_image_data ( blurred_image, row, 1 );
-	DEVA_image_data ( blurred_image, row, n_cols-1 ) =
-	    DEVA_image_data ( blurred_image, row, n_cols-2 );
+	DeVAS_image_data ( blurred_image, row, 0 ) = 
+	    DeVAS_image_data ( blurred_image, row, 1 );
+	DeVAS_image_data ( blurred_image, row, n_cols-1 ) =
+	    DeVAS_image_data ( blurred_image, row, n_cols-2 );
     }
 
     for ( col = 1; col < n_cols -1; col++ ) {
-	DEVA_image_data ( blurred_image, 0, col ) =
-	    DEVA_image_data ( blurred_image, 1, col );
-	DEVA_image_data ( blurred_image, n_rows-1, col ) =
-	    DEVA_image_data ( blurred_image, n_rows-2, col );
+	DeVAS_image_data ( blurred_image, 0, col ) =
+	    DeVAS_image_data ( blurred_image, 1, col );
+	DeVAS_image_data ( blurred_image, n_rows-1, col ) =
+	    DeVAS_image_data ( blurred_image, n_rows-2, col );
     }
 
-    DEVA_image_data ( blurred_image, 0, 0 ) =
-	DEVA_image_data ( blurred_image, 1, 1 );
-    DEVA_image_data ( blurred_image, 0, n_cols - 1 ) =
-	DEVA_image_data ( blurred_image, 1, n_cols - 2 );
-    DEVA_image_data ( blurred_image, n_rows - 1 , 0 ) =
-	DEVA_image_data ( blurred_image, n_rows - 2, 1 );
-    DEVA_image_data ( blurred_image, n_rows - 1 , n_cols - 1 ) =
-	DEVA_image_data ( blurred_image, n_rows - 2, n_cols - 2 );
+    DeVAS_image_data ( blurred_image, 0, 0 ) =
+	DeVAS_image_data ( blurred_image, 1, 1 );
+    DeVAS_image_data ( blurred_image, 0, n_cols - 1 ) =
+	DeVAS_image_data ( blurred_image, 1, n_cols - 2 );
+    DeVAS_image_data ( blurred_image, n_rows - 1 , 0 ) =
+	DeVAS_image_data ( blurred_image, n_rows - 2, 1 );
+    DeVAS_image_data ( blurred_image, n_rows - 1 , n_cols - 1 ) =
+	DeVAS_image_data ( blurred_image, n_rows - 2, n_cols - 2 );
 
     return ( blurred_image );
 }

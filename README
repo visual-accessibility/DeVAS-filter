@@ -1,31 +1,31 @@
-This repository provides source code for seven programs: deva-filter,
-deva-visibility, make-coordinates-file, deva-visualize-geometry,
-deva-compare-boundaries, luminance-boundaries, and geometry-boundaries.
+This repository provides source code for seven programs: devas-filter,
+devas-visibility, make-coordinates-file, devas-visualize-geometry,
+devas-compare-boundaries, luminance-boundaries, and geometry-boundaries.
 
-- deva-filter simulates visibility under reduced acuity and contrast
+- devas-filter simulates visibility under reduced acuity and contrast
   sensitivity.  It is intended to assist architects and lighting
   designers identify mobility hazards and important navigational
   landmarks that may not be visible to those with low vision.
-  deva-filter only accepts Radiance HDR files with correct VIEW records
+  devas-filter only accepts Radiance HDR files with correct VIEW records
   as input.  It only outputs Radiance HDR files.
 
-- deva-visibility provides the full functionality of deva-filter, plus
-  also provides an analysis combining the output of deva-filter with
+- devas-visibility provides the full functionality of devas-filter, plus
+  also provides an analysis combining the output of devas-filter with
   information about scene geometry to automatically estimate likely
   visual hazards associated with mobility impediments invisible to those
-  with a particular level of visual impairment.  deva-visibility accepts
+  with a particular level of visual impairment.  devas-visibility accepts
   as input Radiance HDR files, plus Radiance ASCII files providing
   information about scene geometry.  It outputs a Radiance HDR file, as
-  with deva-filter, and a separate PNG file with a visualization of
+  with devas-filter, and a separate PNG file with a visualization of
   estimated visual hazards.
 
 - make-coordinates-file is a helper program used to create one of the
-  input files needed by deva-visibility.
+  input files needed by devas-visibility.
 
-- deva-visualize-geometry is a utility program to display geometry files
-  used by deva-visibility.
+- devas-visualize-geometry is a utility program to display geometry files
+  used by devas-visibility.
 
-- deva-compare-boundaries creates a visualization of how well one set of
+- devas-compare-boundaries creates a visualization of how well one set of
   boundary elements is predicted by another set of boundary elements.
   It inputs PNG files plus a coordinates file as produced by
   make-coordinates-file and outputs a PNG file.
@@ -39,7 +39,7 @@ deva-compare-boundaries, luminance-boundaries, and geometry-boundaries.
 The software can be built on either Linux or MacOS.  Windows binaries
 are also provided, cross complied on a Linux system using Mingw-w64.
 
-The deva-filter is described in W.B. Thompson, G.E. Legge, D.J. Kersten,
+The devas-filter is described in W.B. Thompson, G.E. Legge, D.J. Kersten,
 R.A. Shakespeare, and Q. Lei, "Simulating Visibility Under Reduced
 Acuity and Contrast Sensitivity, Journal of the Optical Society of
 America A, 34(4), 2017.  This paper is available under an open access
@@ -58,7 +58,7 @@ and the use of HDR imagery.
 
 Documentation is in the "man" directory.
 
-Open source license is at "deva-license.h".
+Open source license is at "devas-license.h".
 
 This product includes Radiance software (http://radsite.lbl.gov/)
 developed by the Lawrence Berkeley National Laboratory
@@ -68,10 +68,10 @@ and zlib <http://www.zlib.net/>.
 
 For other licenses, see:
 
-    deva-filter/external-libs/fftw-3.3.7/COPYRIGHT
-    deva-filter/external-libs/fftw-3.3.7/COPYING
-    deva-filter/radiance/copyright.h
-    deva-filter/external-libs/libpng-1.6.34/LICENSE
-    deva-filter/external-libs/zlib-1.2.11/README
+    devas-filter/external-libs/fftw-3.3.7/COPYRIGHT
+    devas-filter/external-libs/fftw-3.3.7/COPYING
+    devas-filter/radiance/copyright.h
+    devas-filter/external-libs/libpng-1.6.34/LICENSE
+    devas-filter/external-libs/zlib-1.2.11/README
 
 ---------------------------------------------------------------------

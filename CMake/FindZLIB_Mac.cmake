@@ -1,4 +1,4 @@
-# DEVA version of FindZLIB that supports MacOS build
+# DeVAS version of FindZLIB that supports MacOS build
 
 if ( NOT CMAKE_SYSTEM_NAME STREQUAL "Darwin" )
   message ( FATAL_ERROR "FindZLIB_Mac: not MacOS build!" )

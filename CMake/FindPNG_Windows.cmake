@@ -1,4 +1,4 @@
-# DEVA version of FindPNG that supports Windows cross-build
+# DeVAS version of FindPNG that supports Windows cross-build
 
 if ( NOT CMAKE_SYSTEM_NAME STREQUAL "Windows" )
   message ( FATAL_ERROR "FindZLIB_Windows: not Windows cross-compile!" )

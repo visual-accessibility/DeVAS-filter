@@ -1,9 +1,9 @@
 #! /bin/sh
 
-man -t ./deva-filter.1 | ps2pdf - deva-filter.pdf
-man -t ./deva-visibility.1 | ps2pdf - deva-visibility.pdf
+man -t ./devas-filter.1 | ps2pdf - devas-filter.pdf
+man -t ./devas-visibility.1 | ps2pdf - devas-visibility.pdf
 man -t ./make-coordinates-file.1 | ps2pdf - make-coordinates-file.pdf
-man -t ./deva-visualize-geometry.1 | ps2pdf - deva-visualize-geometry.pdf
-man -t ./deva-compare-boundaries.1 | ps2pdf - deva-compare-boundaries.pdf
+man -t ./devas-visualize-geometry.1 | ps2pdf - devas-visualize-geometry.pdf
+man -t ./devas-compare-boundaries.1 | ps2pdf - devas-compare-boundaries.pdf
 man -t ./luminance-boundaries.1 | ps2pdf - luminance-boundaries.pdf
 man -t ./geometry-boundaries.1 | ps2pdf - geometry-boundaries.pdf

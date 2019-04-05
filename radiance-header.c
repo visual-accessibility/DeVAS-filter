@@ -16,13 +16,13 @@
 #include "radiance/resolu.h"
 #include "radiance/fvect.h"	/* must preceed include of view.h */
 #include "radiance/view.h"
-#include "deva-license.h"	/* DEVA open source license */
+#include "devas-license.h"	/* DeVAS open source license */
 
 #define NULLVIEW	{'\0',{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}, \
 				0.,0.,0.,0.,0.,0.,0., \
 				{0.,0.,0.},{0.,0.,0.},0.,0.}
 
-VIEW DEVA_null_view = NULLVIEW;	/* available to calling programs */
+VIEW DeVAS_null_view = NULLVIEW;	/* available to calling programs */
 
 /* need to be global because of the way Radiance reads header lines */
 char	    		    *progname = "radianceIO";
@@ -53,7 +53,7 @@ static int	view_comp ( VIEW *v1,  VIEW *v2 );
 #endif	/* VIEW_COMP */
 
 void
-DEVA_read_radiance_header ( FILE *radiance_fp, int *n_rows_p, int *n_cols_p,
+DeVAS_read_radiance_header ( FILE *radiance_fp, int *n_rows_p, int *n_cols_p,
 	RadianceColorFormat *color_format_p, VIEW *view_p, int *exposure_set_p,
 	double *exposure_p, char **header_text_p )
 /*
@@ -98,7 +98,7 @@ DEVA_read_radiance_header ( FILE *radiance_fp, int *n_rows_p, int *n_cols_p,
      */
     if ( getheader ( radiance_fp, headline, NULL ) < 0 ) {
 	fprintf ( stderr,
-		"DEVA_read_radiance_header: invalid file header!\n" );
+		"DeVAS_read_radiance_header: invalid file header!\n" );
 	exit ( EXIT_FAILURE );
     }
 
@@ -106,13 +106,13 @@ DEVA_read_radiance_header ( FILE *radiance_fp, int *n_rows_p, int *n_cols_p,
     if ( ( scanline_ordering =
 		fgetresolu ( &n_cols, &n_rows, radiance_fp ) ) < 0 ) {
 	fprintf ( stderr,
-		"DEVA_read_radiance_header: invalid file header!\n" );
+		"DeVAS_read_radiance_header: invalid file header!\n" );
 	exit ( EXIT_FAILURE );
     }
 
     if ( scanline_ordering != PIXSTANDARD ) {
 	fprintf ( stderr,
-	    "DEVA_read_radiance_header: non-standard scanline ordering!\n" );
+	    "DeVAS_read_radiance_header: non-standard scanline ordering!\n" );
 	exit ( EXIT_FAILURE );
     }
 
@@ -173,9 +173,9 @@ initialize_headline ( void )
 {
     header_line_number = 0;
     color_format = radcolor_unknown;
-    view = DEVA_null_view;
+    view = DeVAS_null_view;
     view_set = FALSE;
-    indented_view = DEVA_null_view;
+    indented_view = DeVAS_null_view;
     indented_view_set = FALSE;
     if ( header_text != NULL ) {
 	free ( header_text );
@@ -216,7 +216,7 @@ headline ( char *s, void *p )
 	/* get pixel type (rgbe or xyze) */
 	if ( color_format != radcolor_unknown ) {
 	    fprintf ( stderr,
-		    "DEVA_read_radiance_header: multiple format records!\n" );
+		    "DeVAS_read_radiance_header: multiple format records!\n" );
 	    exit ( EXIT_FAILURE );
 	} else if ( strcmp ( fmt, COLRFMT) == 0 ) {
 	    color_format = radcolor_rgbe;
@@ -224,7 +224,7 @@ headline ( char *s, void *p )
 	    color_format = radcolor_xyze;
 	} else {
 	    fprintf ( stderr,
-		    "DEVA_read_radiance_header: unrecognized format!\n" );
+		    "DeVAS_read_radiance_header: unrecognized format!\n" );
 	    exit ( EXIT_FAILURE );
 	}
 
@@ -303,7 +303,7 @@ strcat_safe ( char *dest, char *src )
 }
 
 void
-DEVA_write_radiance_header ( FILE *radiance_fp, int n_rows, int n_cols,
+DeVAS_write_radiance_header ( FILE *radiance_fp, int n_rows, int n_cols,
 	RadianceColorFormat color_format, VIEW view, int exposure_set,
 	double exposure, char *other_info )
 /*
@@ -356,7 +356,7 @@ DEVA_write_radiance_header ( FILE *radiance_fp, int n_rows, int n_cols,
 
 	default:
 	    fprintf ( stderr,
-		    "DEVA_write_radiance_header: unknown format code!\n" );
+		    "DeVAS_write_radiance_header: unknown format code!\n" );
 	    break;
     }
 

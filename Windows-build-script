@@ -51,7 +51,7 @@
     make install
     cd ../..
 
-# Build deva-filter.exe and deva-visibility.exe
+# Build devas-filter.exe and devas-visibility.exe
 
     cd build-windows
     cmake -DCMAKE_TOOLCHAIN_FILE=../Windows-toolchain.cmake ..

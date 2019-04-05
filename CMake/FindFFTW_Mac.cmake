@@ -1,4 +1,4 @@
-# DEVA version of FindPNG that supports MacOS build
+# DeVAS version of FindPNG that supports MacOS build
 
 # - Find FFTW
 # Find the native FFTW includes and library

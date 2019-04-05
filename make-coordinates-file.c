@@ -1,6 +1,6 @@
 /*
  * Make a coordinates file specifing units of distance, coordinate system
- * orientation, and viewpoint for a set of DEVA geometry files.
+ * orientation, and viewpoint for a set of DeVAS geometry files.
  *
  * Units can be meters, centimeters, feet, or inches.  If desired, the
  * standard_units function can be used to converts these to a canonical
@@ -17,7 +17,7 @@
 #include <string.h>
 #include "radiance-header.h"
 #include "read-geometry.h"
-#include "deva-license.h"	/* DEVA open source license */
+#include "devas-license.h"	/* DeVAS open source license */
 
 char	*Usage =
 	    "make-coordinates-file units radiance-file.hdr coordinates-file";
@@ -66,7 +66,7 @@ main ( int argc, char *argv[] )
     }
 
     /* get VIEW record from Radiance file header */
-    DEVA_read_radiance_header ( radiance_fp, NULL, NULL, NULL, &view,
+    DeVAS_read_radiance_header ( radiance_fp, NULL, NULL, NULL, &view,
 	    NULL, NULL, NULL );
 
     if ( view.type == 0 ) {

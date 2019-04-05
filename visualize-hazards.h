@@ -1,10 +1,10 @@
-#ifndef __DEVA_VIS_HAZ_H
-#define __DEVA_VIS_HAZ_H
+#ifndef __DeVAS_VIS_HAZ_H
+#define __DeVAS_VIS_HAZ_H
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "deva-image.h"
-#include "DEVA-sRGB.h"
+#include "devas-image.h"
+#include "devas-sRGB.h"
 
 /*
  * Measurement types:
@@ -70,15 +70,15 @@ typedef	enum {
 extern "c" {
 #endif
 
-DEVA_RGB_image	*visualize_hazards ( DEVA_float_image *hazards,
+DeVAS_RGB_image	*visualize_hazards ( DeVAS_float_image *hazards,
        		    Measurement_type measurement_type, double scale_parameter,
 		    Visualization_type visualization_type,
-		    DEVA_gray_image *mask, DEVA_gray_image *ROI,
-		    DEVA_gray_image **geometry_boundaries,
+		    DeVAS_gray_image *mask, DeVAS_gray_image *ROI,
+		    DeVAS_gray_image **geometry_boundaries,
 		    double *hazard_average );
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif	/* __DEVA_VIS_HAZ_H */
+#endif	/* __DeVAS_VIS_HAZ_H */

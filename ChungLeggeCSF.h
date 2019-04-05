@@ -10,12 +10,12 @@
  * ranging from logMAR 0.2 to logMAR 1.6.
  */
 
-#ifndef	__DEVA_ChungLeggeCSF_H
-#define	__DEVA_ChungLeggeCSF_H
+#ifndef	__DeVAS_ChungLeggeCSF_H
+#define	__DeVAS_ChungLeggeCSF_H
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "deva-license.h"	/* DEVA open source license */
+#include "devas-license.h"	/* DeVAS open source license */
 
 /*
  * Values for 20/20 vision:
@@ -68,4 +68,4 @@ void	ChungLeggeCSF_set_peak_frequency ( double new_peak_frequency );
 }
 #endif
 
-#endif  /* __DEVA_ChungLeggeCSF_H */
+#endif  /* __DeVAS_ChungLeggeCSF_H */

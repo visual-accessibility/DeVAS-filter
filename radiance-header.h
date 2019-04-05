@@ -1,5 +1,5 @@
-#ifndef __DEVA_RADIANCE_HEADER_H
-#define __DEVA_RADIANCE_HEADER_H
+#ifndef __DeVAS_RADIANCE_HEADER_H
+#define __DeVAS_RADIANCE_HEADER_H
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -11,7 +11,7 @@
 #include "radiance/resolu.h"
 #include "radiance/fvect.h"	/* must preceed include of view.h */
 #include "radiance/view.h"
-#include "deva-license.h"	/* DEVA open source license */
+#include "devas-license.h"	/* DeVAS open source license */
 
 #ifndef	TRUE
 #define	TRUE		1
@@ -32,12 +32,12 @@ extern "C" {
 #endif
 
 void
-DEVA_read_radiance_header ( FILE *radiance_fp, int *n_rows_p, int *n_cols_p,
+DeVAS_read_radiance_header ( FILE *radiance_fp, int *n_rows_p, int *n_cols_p,
 	RadianceColorFormat *color_format_p, VIEW *view_p, int *exposure_set_p,
 	double *exposure_p, char **header_text_p );
 
 void
-DEVA_write_radiance_header ( FILE *radiance_fp, int n_rows, int n_cols,
+DeVAS_write_radiance_header ( FILE *radiance_fp, int n_rows, int n_cols,
 	RadianceColorFormat color_format, VIEW view, int set_exposure,
 	double exposure, char *other_info );
 
@@ -45,4 +45,4 @@ DEVA_write_radiance_header ( FILE *radiance_fp, int n_rows, int n_cols,
 }
 #endif
 
-#endif	/* __DEVA_RADIANCE_HEADER_H */
+#endif	/* __DeVAS_RADIANCE_HEADER_H */

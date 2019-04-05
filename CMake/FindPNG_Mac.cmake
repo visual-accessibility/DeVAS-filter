@@ -1,4 +1,4 @@
-# DEVA version of FindPNG that supports MacOS cross-build
+# DeVAS version of FindPNG that supports MacOS cross-build
 
 if ( NOT CMAKE_SYSTEM_NAME STREQUAL "Darwin" )
   message ( FATAL_ERROR "FindPNG_Mac: not MacOS build!" )

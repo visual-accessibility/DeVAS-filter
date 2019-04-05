@@ -1,4 +1,4 @@
-# DEVA version of FindPNG that supports Windows build
+# DeVAS version of FindPNG that supports Windows build
 
 # - Find FFTW
 # Find the native FFTW includes and library

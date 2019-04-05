@@ -5,21 +5,21 @@ To build the software for Linux:
     liibpng-devel, libcairo2, and cairo-devel from the appropriate
     repositories.
 
-2.  Run the following commands from the top level of the deva-filter
+2.  Run the following commands from the top level of the devas-filter
     directory tree:
 
       cd build
       cmake ..
       make
 
-3.  Copy the executable files deva-filter, deva-visibility,
-    make-coordinates-file, deva-visualize-geometry,
-    deva-compare-boundaries, luminance-boundaries, and
-    geometry-boundaries from the deva-filer/build to wherever you want
+3.  Copy the executable files devas-filter, devas-visibility,
+    make-coordinates-file, devas-visualize-geometry,
+    devas-compare-boundaries, luminance-boundaries, and
+    geometry-boundaries from the devas-filer/build to wherever you want
     them.
 
 4.  To remove everything generated in the build process, run the
-    following command from top level of deva-filter source directory:
+    following command from top level of devas-filter source directory:
 
       distclean
 
@@ -37,25 +37,25 @@ To build the software for MacOS:
       make
       sudo make install
 
-2.  If you want annotated output from deva-compare-boundaries, install
+2.  If you want annotated output from devas-compare-boundaries, install
     libcairo following the directions at <https://cairographics.org/>
     and edit the 11th line of CMakeLists.txt in the directory where the
-    deva-filter source has been unpacked to turn ON use of the Cairo
+    devas-filter source has been unpacked to turn ON use of the Cairo
     library.
 
-3.  In directory where the deva-filter source has been unpacked, run the
+3.  In directory where the devas-filter source has been unpacked, run the
     script:
 
       Mac-build-script
 
-4.  Copy the executable files deva-filter, deva-visibility,
-    make-coordinates-file, deva-visualize-geometry,
-    deva-compare-boundaries, luminance-boundaries, and
+4.  Copy the executable files devas-filter, devas-visibility,
+    make-coordinates-file, devas-visualize-geometry,
+    devas-compare-boundaries, luminance-boundaries, and
     geometry-boundaries from the build directory to wherever you want
     them.
 
 5.  To remove everything generated in the build process, run the
-    following command from top level of deva-filter source directory:
+    following command from top level of devas-filter source directory:
 
       distclean
 
@@ -69,14 +69,14 @@ doable with some work if you have Cmake and Mingw-w64 running on
 Windows.
 
 As currently structured, the Windows build produces a directly
-executable versions of deva-filter, deva-visibility,
-make-coordinates-file, deva-visualize-geometry, and
-deva-compare-boundaries.  No installer or special permisions are
-required.  On the other hand, you'll need to put deva-filter.exe in
+executable versions of devas-filter, devas-visibility,
+make-coordinates-file, devas-visualize-geometry, and
+devas-compare-boundaries.  No installer or special permisions are
+required.  On the other hand, you'll need to put devas-filter.exe in
 whatever current directory you have for the command window or put the
 .exe file in some fixed place and list the folder in your PATH variable.
 
-Text annotation of files output by deva-compare-boundaries is currently
+Text annotation of files output by devas-compare-boundaries is currently
 not supported on Windows.
 
 To build the Windows software by cross compiling on Linux:
@@ -88,13 +88,13 @@ To build the Windows software by cross compiling on Linux:
 
       Windows-build-script
 
-3.  Copy the executable files deva-filter, deva-visibility,
-    make-coordinates-file, deva-visualize-geometry,
-    deva-compare-boundaries, luminance-boundaries, and
+3.  Copy the executable files devas-filter, devas-visibility,
+    make-coordinates-file, devas-visualize-geometry,
+    devas-compare-boundaries, luminance-boundaries, and
     geometry-boundaries from the build directory to wherever you want
     them.
 
 4.  To remove everything generated in the build process, run the
-    following command from top level of deva-filter source directory:
+    following command from top level of devas-filter source directory:
 
       distclean

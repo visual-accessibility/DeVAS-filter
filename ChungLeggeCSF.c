@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "ChungLeggeCSF.h"
-#include "deva-license.h"	/* DEVA open source license */
+#include "devas-license.h"	/* DeVAS open source license */
 
 #define	SQ(x)		( (x) * (x) )
 #define	exp10(x)	pow ( 10.0, x )		/* can't count on availablility
@@ -219,7 +219,7 @@ ChungLeggeCSF_print_stats ( double acuity_adjust,
     double  cutoff_frequency;
     double  logMAR;
 
-    printf ( "ChungLeggeCSF: peak_sensitivity: %.1f at %.2f c/d (logMAR %.2f)\n",
+  printf ( "ChungLeggeCSF: peak_sensitivity: %.1f at %.2f c/d (logMAR %.2f)\n",
 		ChungLeggeCSF_peak_sensitivity ( acuity_adjust,
 		    contrast_sensitivity_adjust ),
 		ChungLeggeCSF_peak_frequency ( acuity_adjust,

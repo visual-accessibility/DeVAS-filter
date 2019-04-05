@@ -1,17 +1,17 @@
 cmake_minimum_required(VERSION 3.0)
-PROJECT ( DEVA_FILTER )
+PROJECT ( DeVAS_FILTER )
 
 message ( STATUS "CMAKE_SYSTEM_NAME = " ${CMAKE_SYSTEM_NAME} )
 
 if ( CMAKE_SYSTEM_NAME STREQUAL "Linux" )
   # Linux
-  option (DEVA_FILTER_USE_CAIRO "Build using Cairo library" ON )
+  option (DeVAS_FILTER_USE_CAIRO "Build using Cairo library" ON )
 elseif ( CMAKE_SYSTEM_NAME STREQUAL "Darwin" )
   # MacOS
-  option (DEVA_FILTER_USE_CAIRO "Build using Cairo library" OFF )
+  option (DeVAS_FILTER_USE_CAIRO "Build using Cairo library" OFF )
 elseif ( CMAKE_SYSTEM_NAME STREQUAL "Windows" )
   # Windows
-  option (DEVA_FILTER_USE_CAIRO "Build using Cairo library" OFF )
+  option (DeVAS_FILTER_USE_CAIRO "Build using Cairo library" OFF )
 else ( )
   message ( FATAL_ERROR "unknown CMAKE_SYSTEM_NAME (" ${CMAKE_SYSTEM_NAME} ")" )
 endif ( )
@@ -33,7 +33,7 @@ elseif ( CMAKE_SYSTEM_NAME STREQUAL "Darwin" )
   include ( ${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindFFTW_Mac.cmake )
 elseif ( CMAKE_SYSTEM_NAME STREQUAL "Linux" )
   find_package ( PNG REQUIRED )
-  if ( DEVA_FILTER_USE_CAIRO )
+  if ( DeVAS_FILTER_USE_CAIRO )
     include ( ${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindCairo.cmake )
   endif ( )
   include ( ${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindFFTW.cmake )
@@ -41,7 +41,7 @@ else ( )
   message ( FATAL_ERROR "unknown CMAKE_SYSTEM_NAME (" ${CMAKE_SYSTEM_NAME} ")" )
 endif ( )
 
-if ( DEVA_FILTER_USE_CAIRO )
+if ( DeVAS_FILTER_USE_CAIRO )
   INCLUDE_DIRECTORIES (
   ${FFTW_INCLUDE_DIR}
   ${PNG_INCLUDE_DIR}
@@ -54,13 +54,13 @@ else ( )
   )
 endif ( )
 
-ADD_EXECUTABLE ( deva-filter deva-commandline.c
-	deva-filter.c
+ADD_EXECUTABLE ( devas-filter devas-commandline.c
+	devas-filter.c
 	ChungLeggeCSF.c
 	dilate.c
-	deva-image.c
-	deva-utils.c
-	deva-margin.c
+	devas-image.c
+	devas-utils.c
+	devas-margin.c
 	radianceIO.c
 	radiance-header.c
 	acuity-conversion.c
@@ -75,24 +75,24 @@ ADD_EXECUTABLE ( deva-filter deva-commandline.c
 	radiance/words.c
 	radiance/timegm.c
 	)
-TARGET_COMPILE_DEFINITIONS ( deva-filter PRIVATE DEVA_USE_FFTW3_ALLOCATORS )
-TARGET_LINK_LIBRARIES ( deva-filter
+TARGET_COMPILE_DEFINITIONS ( devas-filter PRIVATE DeVAS_USE_FFTW3_ALLOCATORS )
+TARGET_LINK_LIBRARIES ( devas-filter
 	${FFTW_LIBRARIES}
 	-lm
 	)
 
-if ( DEVA_FILTER_USE_CAIRO )
+if ( DeVAS_FILTER_USE_CAIRO )
 
-    ADD_EXECUTABLE ( deva-visibility deva-commandline.c
-	deva-filter.c
+    ADD_EXECUTABLE ( devas-visibility devas-commandline.c
+	devas-filter.c
 	ChungLeggeCSF.c
-	deva-image.c
-	deva-margin.c
-	deva-utils.c
+	devas-image.c
+	devas-margin.c
+	devas-utils.c
 	dilate.c
-	deva-canny.c
-	deva-gblur.c
-	deva-gblur-fft.c
+	devas-canny.c
+	devas-gblur.c
+	devas-gblur-fft.c
 	radianceIO.c
 	radiance-header.c
 	acuity-conversion.c
@@ -107,18 +107,18 @@ if ( DEVA_FILTER_USE_CAIRO )
 	radiance/words.c
 	radiance/timegm.c
 	read-geometry.c
-	deva-visibility.c
+	devas-visibility.c
 	geometry-discontinuities.c
 	directional-maxima.c
 	visualize-hazards.c
-	DEVA-sRGB.c
-	DEVA-png.c
-	deva-add-text.c
+	devas-sRGB.c
+	devas-png.c
+	devas-add-text.c
 	)
-    TARGET_COMPILE_DEFINITIONS ( deva-visibility PRIVATE DEVA_VISIBILITY )
-    TARGET_COMPILE_DEFINITIONS ( deva-visibility PRIVATE DEVA_USE_FFTW3_ALLOCATORS )
-    TARGET_COMPILE_DEFINITIONS ( deva-visibility PRIVATE DEVA_USE_CAIRO )
-    TARGET_LINK_LIBRARIES ( deva-visibility
+    TARGET_COMPILE_DEFINITIONS ( devas-visibility PRIVATE DeVAS_VISIBILITY )
+    TARGET_COMPILE_DEFINITIONS ( devas-visibility PRIVATE DeVAS_USE_FFTW3_ALLOCATORS )
+    TARGET_COMPILE_DEFINITIONS ( devas-visibility PRIVATE DeVAS_USE_CAIRO )
+    TARGET_LINK_LIBRARIES ( devas-visibility
 	${FFTW_LIBRARIES}
 	${PNG_LIBRARIES}
 	${CAIRO_LIBRARIES}
@@ -127,16 +127,16 @@ if ( DEVA_FILTER_USE_CAIRO )
 
 else ( )
 
-   ADD_EXECUTABLE ( deva-visibility deva-commandline.c
-	deva-filter.c
+   ADD_EXECUTABLE ( devas-visibility devas-commandline.c
+	devas-filter.c
 	ChungLeggeCSF.c
-	deva-image.c
-	deva-margin.c
-	deva-utils.c
+	devas-image.c
+	devas-margin.c
+	devas-utils.c
 	dilate.c
-	deva-canny.c
-	deva-gblur.c
-	deva-gblur-fft.c
+	devas-canny.c
+	devas-gblur.c
+	devas-gblur-fft.c
 	radianceIO.c
 	radiance-header.c
 	acuity-conversion.c
@@ -151,16 +151,16 @@ else ( )
 	radiance/words.c
 	radiance/timegm.c
 	read-geometry.c
-	deva-visibility.c
+	devas-visibility.c
 	geometry-discontinuities.c
 	directional-maxima.c
 	visualize-hazards.c
-	DEVA-sRGB.c
-	DEVA-png.c
+	devas-sRGB.c
+	devas-png.c
 	)
-    TARGET_COMPILE_DEFINITIONS ( deva-visibility PRIVATE DEVA_VISIBILITY )
-    TARGET_COMPILE_DEFINITIONS ( deva-visibility PRIVATE DEVA_USE_FFTW3_ALLOCATORS )
-    TARGET_LINK_LIBRARIES ( deva-visibility
+    TARGET_COMPILE_DEFINITIONS ( devas-visibility PRIVATE DeVAS_VISIBILITY )
+    TARGET_COMPILE_DEFINITIONS ( devas-visibility PRIVATE DeVAS_USE_FFTW3_ALLOCATORS )
+    TARGET_LINK_LIBRARIES ( devas-visibility
 	${FFTW_LIBRARIES}
 	${PNG_LIBRARIES}
 	-lm
@@ -183,11 +183,11 @@ TARGET_LINK_LIBRARIES ( make-coordinates-file
 -lm
 	)
 
-ADD_EXECUTABLE ( deva-visualize-geometry deva-visualize-geometry.c
-	deva-image.c
+ADD_EXECUTABLE ( devas-visualize-geometry devas-visualize-geometry.c
+	devas-image.c
 	read-geometry.c
-	DEVA-sRGB.c
-	DEVA-png.c
+	devas-sRGB.c
+	devas-png.c
 	radiance-header.c
 	radiance/badarg.c
 	radiance/color.c
@@ -200,21 +200,21 @@ ADD_EXECUTABLE ( deva-visualize-geometry deva-visualize-geometry.c
 	radiance/words.c
 	radiance/timegm.c
 	)
-TARGET_LINK_LIBRARIES ( deva-visualize-geometry
+TARGET_LINK_LIBRARIES ( devas-visualize-geometry
 	${PNG_LIBRARIES}
 	-lm
 	)
 
-if ( DEVA_FILTER_USE_CAIRO )
+if ( DeVAS_FILTER_USE_CAIRO )
 
-  ADD_EXECUTABLE ( deva-compare-boundaries deva-compare-boundaries.c
-	deva-image.c
+  ADD_EXECUTABLE ( devas-compare-boundaries devas-compare-boundaries.c
+	devas-image.c
 	read-geometry.c
 	dilate.c
 	visualize-hazards.c
-	deva-add-text.c
-	DEVA-sRGB.c
-	DEVA-png.c
+	devas-add-text.c
+	devas-sRGB.c
+	devas-png.c
 	radiance-header.c
 	radiance/badarg.c
 	radiance/color.c
@@ -227,8 +227,8 @@ if ( DEVA_FILTER_USE_CAIRO )
 	radiance/words.c
 	radiance/timegm.c
 	)
-  TARGET_COMPILE_DEFINITIONS ( deva-compare-boundaries PRIVATE DEVA_USE_CAIRO )
-  TARGET_LINK_LIBRARIES ( deva-compare-boundaries
+  TARGET_COMPILE_DEFINITIONS ( devas-compare-boundaries PRIVATE DeVAS_USE_CAIRO )
+  TARGET_LINK_LIBRARIES ( devas-compare-boundaries
 	${PNG_LIBRARIES}
 	${CAIRO_LIBRARIES}
 	-lm
@@ -236,13 +236,13 @@ if ( DEVA_FILTER_USE_CAIRO )
 
 else ( )
 
-  ADD_EXECUTABLE ( deva-compare-boundaries deva-compare-boundaries.c
-	deva-image.c
+  ADD_EXECUTABLE ( devas-compare-boundaries devas-compare-boundaries.c
+	devas-image.c
 	read-geometry.c
 	dilate.c
 	visualize-hazards.c
-	DEVA-sRGB.c
-	DEVA-png.c
+	devas-sRGB.c
+	devas-png.c
 	radiance-header.c
 	radiance/badarg.c
 	radiance/color.c
@@ -255,7 +255,7 @@ else ( )
 	radiance/words.c
 	radiance/timegm.c
 	)
-  TARGET_LINK_LIBRARIES ( deva-compare-boundaries
+  TARGET_LINK_LIBRARIES ( devas-compare-boundaries
 	${PNG_LIBRARIES}
 	-lm
 	)
@@ -263,12 +263,12 @@ else ( )
 endif ( )
 
 ADD_EXECUTABLE ( geometry-boundaries geometry-boundaries.c
-	deva-image.c
+	devas-image.c
 	read-geometry.c
 	geometry-discontinuities.c
 	directional-maxima.c
-	deva-utils.c
-	DEVA-png.c
+	devas-utils.c
+	devas-png.c
 	radiance-header.c
 	radiance/badarg.c
 	radiance/color.c
@@ -287,9 +287,9 @@ TARGET_LINK_LIBRARIES ( geometry-boundaries
 	)
 
 ADD_EXECUTABLE ( luminance-boundaries luminance-boundaries.c
-	deva-image.c
-	deva-canny.c
-	deva-gblur.c
+	devas-image.c
+	devas-canny.c
+	devas-gblur.c
 	radianceIO.c
 	radiance-header.c
 	acuity-conversion.c
@@ -303,8 +303,8 @@ ADD_EXECUTABLE ( luminance-boundaries luminance-boundaries.c
 	radiance/spec_rgb.c
 	radiance/words.c
 	radiance/timegm.c
-	DEVA-sRGB.c
-	DEVA-png.c
+	devas-sRGB.c
+	devas-png.c
 	)
 TARGET_LINK_LIBRARIES ( luminance-boundaries
 	${PNG_LIBRARIES}

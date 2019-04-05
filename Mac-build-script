@@ -39,8 +39,8 @@
     make install
     cd ../..
 
-# Build deva-filter, deva-visibility, deva-compare-boundaries,
-# deva-visualize-geometry, geometry-boundaries, luminance-boundaries,
+# Build devas-filter, devas-visibility, devas-compare-boundaries,
+# devas-visualize-geometry, geometry-boundaries, luminance-boundaries,
 # and make-coordinates-file
 
     cd build-mac

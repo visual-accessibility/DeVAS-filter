@@ -1,4 +1,9 @@
-version 3.3.03
+version 4.0.00
+
+Renamed files and code objects from "DIVA" to "DeVAS" to avoid conflicts
+with DIVA for RHINO.
+
+version 3.3.04
 
 Added comment to deva-margin.c explaining how the margin pixels were
 computed.
@@ -11,7 +16,7 @@ Print version number on -v or --v.  Previously, needed  -version or
 version 3.3.02
 
 Issue --legalblind prompt when executing deva-visibility with no
-arguements.
+arguments.
 
 version 3.3.01
 

@@ -15,7 +15,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "dilate.h"
-#include "deva-license.h"	/* DEVA open source license */
+#include "devas-license.h"	/* DeVAS open source license */
 
 #define	SQ(x)	((x)*(x))
 
@@ -31,24 +31,24 @@ static float	inf;	/* larger than any valid distance^2 */
 
 static void	dt_euclid_sq_1d ( int size, float *input, float *output );
 
-DEVA_gray_image *
-DEVA_gray_dilate ( DEVA_gray_image *input, double radius )
+DeVAS_gray_image *
+DeVAS_gray_dilate ( DeVAS_gray_image *input, double radius )
 /*
  * Dilate a binary image by a fixed radius.
  */
 {
-    DEVA_gray_image  *output;
+    DeVAS_gray_image  *output;
 
-    output = DEVA_gray_image_new ( DEVA_image_n_rows ( input ),
-	    DEVA_image_n_cols ( input ) );
+    output = DeVAS_gray_image_new ( DeVAS_image_n_rows ( input ),
+	    DeVAS_image_n_cols ( input ) );
 
-    DEVA_gray_dilate_2 ( input, output, radius );
+    DeVAS_gray_dilate_2 ( input, output, radius );
 
     return ( output );
 }
 
 void
-DEVA_gray_dilate_2 ( DEVA_gray_image *input, DEVA_gray_image *output,
+DeVAS_gray_dilate_2 ( DeVAS_gray_image *input, DeVAS_gray_image *output,
 	double radius )
 /*
  * Dilate a binary image by a fixed radius, returning result in a previously
@@ -58,23 +58,23 @@ DEVA_gray_dilate_2 ( DEVA_gray_image *input, DEVA_gray_image *output,
     int			n_rows, n_cols;
     int			row, col;
     double		radius_squared;
-    DEVA_float_image	*euclid_sq;
+    DeVAS_float_image	*euclid_sq;
 
-    if ( !DEVA_gray_image_samesize ( input, output ) ) {
+    if ( !DeVAS_gray_image_samesize ( input, output ) ) {
 	fprintf ( stderr,
-	    "DEVA_gray_dilate2: input and output image sizes don't match!\n" );
-	DEVA_print_file_lineno ( __FILE__, __LINE__ );
+	    "DeVAS_gray_dilate2: input and output image sizes don't match!\n" );
+	DeVAS_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
     if ( radius < 1.0 ) {
-	fprintf ( stderr, "DEVA_gray_dilate: invalid radius (%f)!\n", radius );
-	DEVA_print_file_lineno ( __FILE__, __LINE__ );
+	fprintf ( stderr, "DeVAS_gray_dilate: invalid radius (%f)!\n", radius );
+	DeVAS_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
-    n_rows = DEVA_image_n_rows ( input );
-    n_cols = DEVA_image_n_cols ( input );
+    n_rows = DeVAS_image_n_rows ( input );
+    n_cols = DeVAS_image_n_cols ( input );
 
     euclid_sq = dt_euclid_sq ( input );
 
@@ -82,23 +82,23 @@ DEVA_gray_dilate_2 ( DEVA_gray_image *input, DEVA_gray_image *output,
 
     for ( row = 0; row < n_rows; row++ ) {
 	for ( col = 0; col < n_cols; col++ ) {
-	    DEVA_image_data ( output, row, col ) =
-		( DEVA_image_data ( euclid_sq, row, col ) <= radius_squared );
+	    DeVAS_image_data ( output, row, col ) =
+		( DeVAS_image_data ( euclid_sq, row, col ) <= radius_squared );
 	}
     }
 
     for ( row = 0; row < n_rows; row++ ) {
 	for ( col = 0; col < n_cols; col++ ) {
-	    DEVA_image_data ( euclid_sq, row, col ) =
-		sqrt ( DEVA_image_data ( euclid_sq, row, col ) );
+	    DeVAS_image_data ( euclid_sq, row, col ) =
+		sqrt ( DeVAS_image_data ( euclid_sq, row, col ) );
 	}
     }
 
-    DEVA_float_image_delete ( euclid_sq );
+    DeVAS_float_image_delete ( euclid_sq );
 }
 
-DEVA_float_image *
-dt_euclid_sq ( DEVA_gray_image *input )
+DeVAS_float_image *
+dt_euclid_sq ( DeVAS_gray_image *input )
 /*
  * Compute 2D squared Euclidean distance transform of binary image using
  * the method described in Felzenszwalb and Huttenlocher (2012), "Distance
@@ -110,10 +110,10 @@ dt_euclid_sq ( DEVA_gray_image *input )
  * output:  Distance to nearest pixel in input, in inter-pixel units.
  */
 {
-    DEVA_float_image	*output;
+    DeVAS_float_image	*output;
 
-    output = DEVA_float_image_new ( DEVA_image_n_rows ( input ),
-	    DEVA_image_n_cols ( input ) );
+    output = DeVAS_float_image_new ( DeVAS_image_n_rows ( input ),
+	    DeVAS_image_n_cols ( input ) );
 
     dt_euclid_sq_2 ( input, output );
 
@@ -121,18 +121,18 @@ dt_euclid_sq ( DEVA_gray_image *input )
 }
 
 void
-dt_euclid_sq_2 ( DEVA_gray_image *input, DEVA_float_image *output )
+dt_euclid_sq_2 ( DeVAS_gray_image *input, DeVAS_float_image *output )
 {
     unsigned int	n_rows, n_cols;
     unsigned int	row, col;
     unsigned int	max_n_rows_n_cols;
 
-    n_rows = DEVA_image_n_rows ( input );
-    n_cols = DEVA_image_n_cols ( input );
+    n_rows = DeVAS_image_n_rows ( input );
+    n_cols = DeVAS_image_n_cols ( input );
 
-    if ( !DEVA_image_samesize ( input, output ) ) {
+    if ( !DeVAS_image_samesize ( input, output ) ) {
 	fprintf ( stderr, "dt_euclid_sq_2: input and output not same size!\n" );
-	DEVA_print_file_lineno ( __FILE__, __LINE__ );
+	DeVAS_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -150,7 +150,7 @@ dt_euclid_sq_2 ( DEVA_gray_image *input, DEVA_float_image *output )
 
     if ( ( v == NULL ) || ( z == NULL ) || ( f == NULL ) || ( D_f == NULL ) ) {
 	fprintf ( stderr, "dt_euclid_sq: malloc failed!\n" );
-	DEVA_print_file_lineno ( __FILE__, __LINE__ );
+	DeVAS_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 
@@ -158,10 +158,10 @@ dt_euclid_sq_2 ( DEVA_gray_image *input, DEVA_float_image *output )
 
     for ( row = 0; row < n_rows; row++ ) {
 	for ( col = 0; col < n_cols; col++ ) {
-	    if ( DEVA_image_data ( input, row, col ) ) {
-		DEVA_image_data ( output, row, col ) = 0.0;
+	    if ( DeVAS_image_data ( input, row, col ) ) {
+		DeVAS_image_data ( output, row, col ) = 0.0;
 	    } else {
-		DEVA_image_data ( output, row, col ) = inf;
+		DeVAS_image_data ( output, row, col ) = inf;
 	    }
 	}
     }
@@ -169,26 +169,26 @@ dt_euclid_sq_2 ( DEVA_gray_image *input, DEVA_float_image *output )
     /* transform columns */
     for ( col = 0; col < n_cols; col++ ) {
 	for ( row = 0; row < n_rows; row++ ) {
-	    f[row] = DEVA_image_data ( output, row, col );
+	    f[row] = DeVAS_image_data ( output, row, col );
 	}
 
 	dt_euclid_sq_1d ( n_rows, f, D_f );
 
 	for ( row = 0; row < n_rows; row++ ) {
-	    DEVA_image_data ( output, row, col ) = D_f[row];
+	    DeVAS_image_data ( output, row, col ) = D_f[row];
 	}
     }
 
     /* transform rows */
     for ( row = 0; row < n_rows; row++ ) {
 	for ( col = 0; col < n_cols; col++ ) {
-	    f[col] = DEVA_image_data ( output, row, col );
+	    f[col] = DeVAS_image_data ( output, row, col );
 	}
 
 	dt_euclid_sq_1d ( n_cols, f, D_f );
 
 	for ( col = 0; col < n_cols; col++ ) {
-	    DEVA_image_data ( output, row, col ) = D_f[col];
+	    DeVAS_image_data ( output, row, col ) = D_f[col];
 	}
     }
 

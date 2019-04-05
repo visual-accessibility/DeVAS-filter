@@ -2,13 +2,13 @@
  * Convert acuity values between different measures.
  */
 
-#ifndef __DEVA_ACUITY_CONVERSION_H
-#define __DEVA_ACUITY_CONVERSION_H
+#ifndef __DeVAS_ACUITY_CONVERSION_H
+#define __DeVAS_ACUITY_CONVERSION_H
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include "deva-license.h"	/* DEVA open source license */
+#include "devas-license.h"	/* DeVAS open source license */
 
 #define	SNELLEN_NUMERATOR	20.0	/* U.S. standard */
 					/* change to 6.0 for metric */
@@ -32,5 +32,5 @@ double	parse_snellen ( char *snellen_string );
 }
 #endif
 
-#endif	/* __DEVA_ACUITY_CONVERSION_H */
+#endif	/* __DeVAS_ACUITY_CONVERSION_H */
 
