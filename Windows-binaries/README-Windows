@@ -1,6 +1,9 @@
-Current version of Windows binaries: 3.3.010
+Current version of Windows binaries: 4.4.00
 
 In general, the pre-built Windows binaries will only be updated when
-there are significant functional changes of bug fixes in the code.  A
-fully up to date version of the Windows binaries can always be created
+there are significant functional changes or bug fixes to the code.  A
+fully up-to-date version of the Windows binaries can always be created
 from the source code.
+
+Windows binaries for DeVAS code are cross-complies under OpenSUSE using
+ming64.
