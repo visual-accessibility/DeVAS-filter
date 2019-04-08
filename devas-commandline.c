@@ -70,8 +70,8 @@ char	*progname;	/* one radiance routine requires this as a global */
 #ifndef DeVAS_VISIBILITY	/* code specific to devas-filter */
 
 char	*Usage = /* devas-filter */
-	"--mild|--moderate|--severe|--profound|--legalblind [--margin=<value>]"
-	    "\n\tinput.hdr output.hdr";
+	"--mild|--moderate|--severe|--profound|--legalblind"
+	"\n\t[--margin=<value>] input.hdr output.hdr";
 char	*Usage2 = "[--snellen|--logMAR] [--sensitivity-ratio|--pelli-robson]"
     "\n\t[--autoclip|--clip=<level>] [--color|--grayscale|saturation=<value>]"
     "\n\t[--margin=<value>] [--verbose] [--version] [--presets]"
@@ -159,7 +159,8 @@ int	args_needed = 4;
 #else	/* code specific to devas-visibility */
 
 char	*Usage = /* devas-visibility */
-    "--mild|--moderate|--severe|--profound|--legalblind [--margin=<value>]"
+    "--mild|--moderate|--severe|--profound|--legalblind"
+    "\n\t[--margin=<value>]"
     "\n\t[--red-green|--red-gray] [--printaverage|--printaveragena]"
 #ifdef DeVAS_USE_CAIRO
     "\n\t[--quantscore] [--fontsize=<n>]"
@@ -1448,7 +1449,7 @@ main ( int argc, char *argv[] )
 #endif	/* UNIFORM_MARGINS */
 
 	/* add the margin */
-	margin_image =  DeVAS_xyY_add_margin ( v_margin, h_margin, input_image );
+	margin_image = DeVAS_xyY_add_margin ( v_margin, h_margin, input_image );
 
 	/* filter the padded image */
 	margin_filtered_image = devas_filter ( margin_image,
