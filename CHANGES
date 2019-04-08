@@ -1,5 +1,7 @@
 version 4.0.00
 
+Updated MacOS and Windows binaries to current versions of source.
+
 Renamed files and code objects from "DIVA" to "DeVAS" to avoid conflicts
 with DIVA for RHINO.
 
