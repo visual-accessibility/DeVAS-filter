@@ -19,7 +19,8 @@
  *  			    frequency.
  *
  *   contrast_sensitivity:  Ratio of desired peak contrast sensitivity to
- *  			    nominal normal vision peak contrast sensitivity.
+ *  			    nominal normal vision peak contrast sensitivity
+ *  			    (Michelson).
  *
  *   smoothing_flag:	    TRUE if thesholded contrast should be smoothed
  *

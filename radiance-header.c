@@ -85,6 +85,12 @@ DeVAS_read_radiance_header ( FILE *radiance_fp, int *n_rows_p, int *n_cols_p,
     int	    n_rows, n_cols;
     int	    scanline_ordering;
 
+    if ( radiance_fp == NULL ) {
+	fprintf ( stderr,
+		"DeVAS_read_radiance_header: invalid file pointer!\n" );
+	exit ( EXIT_FAILURE );
+    }
+
     SET_FILE_BINARY ( radiance_fp );	/* only affects Windows systems */
 
     /*

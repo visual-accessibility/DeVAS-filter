@@ -1,9 +1,38 @@
-version 4.0.00
+version 4.1.00
 
-Updated MacOS and Windows binaries to current versions of source.
+Added an --approxCS option to devas-filter and devas-visibility to
+approximate an unknown contrast sensitivity from a known acuity.
+
+Request to filter images at close to normal acuity are now rejected.
+--normal preset has been removed.
+
+Added line number to ChungLeggeCSF error messages.
+
+Added a conversions spreadsheet for developers.
+
+Fixed a problem where low luminance indicator image was sometimes not
+output even when requested.
+
+Fixed fatal error if DeVAS_read_radiance_header is called with a NULL
+pointer.
+
+Added to doc subdirectory, moved man pages to that subdirectory, updated
+several man pages and added a brief README on how to create geometry
+files for use by devas-visibility.
+
+INSTALLATION instructions updated to acknowledge Homebrew.
+
+Copyright date updated in devas-license.h.
+
+version 4.0.00
 
 Renamed files and code objects from "DIVA" to "DeVAS" to avoid conflicts
 with DIVA for RHINO.
+
+Added devas-add-res-to-ASCII to help with workflow in generating
+geometry files on Windows systems.
+
+Updated MacOS and Windows binaries to current versions of source.
 
 version 3.3.04
 

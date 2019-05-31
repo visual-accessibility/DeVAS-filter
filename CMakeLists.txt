@@ -180,8 +180,25 @@ ADD_EXECUTABLE ( make-coordinates-file make-coordinates-file.c
 	radiance/timegm.c
 	)
 TARGET_LINK_LIBRARIES ( make-coordinates-file
--lm
+	-lm
 	)
+
+# if ( CMAKE_SYSTEM_NAME STREQUAL "Windows" )
+    ADD_EXECUTABLE ( devas-add-res-to-ASCII devas-add-res-to-ASCII.c
+	radiance-header.c
+	radiance/badarg.c
+	radiance/fputword.c
+	radiance/fvect.c
+	radiance/header.c
+	radiance/image.c
+	radiance/resolu.c
+	radiance/words.c
+	radiance/timegm.c
+	)
+    TARGET_LINK_LIBRARIES ( devas-add-res-to-ASCII
+	-lm
+	)
+# endif ( )
 
 ADD_EXECUTABLE ( devas-visualize-geometry devas-visualize-geometry.c
 	devas-image.c

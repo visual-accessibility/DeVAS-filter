@@ -2,6 +2,10 @@
  * Command line interface for two related programs, the devas-filter simulation
  * of reduced acuity and contrast sensitivity and the devas-visibility
  * estimation of visibility hazards.
+ *
+ * The code is currently a tangled mix of user interface processing and
+ * top-level specification of the processing steps.  These should be split
+ * apart!
  */
 
 /*
@@ -74,7 +78,7 @@ char	*Usage = /* devas-filter */
 	"\n\t[--margin=<value>] input.hdr output.hdr";
 char	*Usage2 = "[--snellen|--logMAR] [--sensitivity-ratio|--pelli-robson]"
     "\n\t[--autoclip|--clip=<level>] [--color|--grayscale|saturation=<value>]"
-    "\n\t[--margin=<value>] [--verbose] [--version] [--presets]"
+    "\n\t[--margin=<value>] [--verbose] [--version] [--presets] [--approxCS]"
 	    "\n\t\tacuity contrast input.hdr output.hdr";
 int	args_needed = 4;
 
@@ -110,7 +114,23 @@ int	args_needed = 4;
  *   		Michaelson contrast sensitivity to normal vision contrast
  *   		sensitivity (--sensitivity-ratio) or as a Pelli-Robson Chart
  *   		score (--pelli-robson).  --sensitivity-ratio is the default.
-
+ *   		
+ *   --approxCS
+ *   --approxCSquiet
+ *
+ *   		Often, the only available property for specifying a particular
+ *   		level of low vision is acuity.  Low vision very often also
+ *   		involves a loss of contrast sensitivity.  Including one of
+ *   		these options causes the program to estimate a level of
+ *   		contrast sensitivity loss appropriate to the specified loss of
+ *   		acuity.  It is important to note that this is just a rough
+ *   		estimate, and may be far from the actual contrast sensitivity
+ *   		of an individual with the specified acuity.  The --approxCS
+ *   		flag causes a message to be written to stderr giving the value
+ *   		of contrast sensitivity that was chosen.  --approxCSquiet skips
+ *   		this informative message.  In either case, do not explicitly
+ *   		specify a contrast value.
+ *
  *   --autoclip | --clip=<level>
  *
  *   		Large magnitude input luminance values are reduced to a lower
@@ -177,6 +197,9 @@ char	*Usage2 = "[--snellen|--logMAR] [--sensitivity-ratio|--pelli-robson]"
     "\n\t[--autoclip|--clip=<level>] [--color|--grayscale|saturation=<value>]"
     "\n\t[--margin=<value>] [--verbose] [--version] [--presets]"
     "\n\t[--red-green|--red-gray] [--printaverage|--printaveragena]"
+#ifdef DeVAS_USE_CAIRO
+    "\n\t[--quantscore] [--fontsize=<n>]"
+#endif	/* DeVAS_USE_CAIRO */
     "\n\t[--ROI=<filename>.png]"
     "\n\t[--Gaussian=<sigma>|--reciprocal=<scale>|--linear=<max>]"
     "\n\t[--luminanceboundaries=<filename>.png]"
@@ -320,7 +343,9 @@ typedef enum { undefined_smoothing, no_smoothing, smoothing } SmoothingType;
 #define FP_VISUALIZATION_TYPE		gray_cyan_type;
 
 #define	LOGMAR_MAX		2.3
-#define	LOGMAR_MIN		(-0.65)
+#define	LOGMAR_MIN		(-0.65)	/* The limit that really matters is */
+					/* LOGMAR_MIN_LIMIT in */
+					/* devas-presets.h  */
 #define	SNELLEN_MAX		4.0
 #define	SNELLEN_MIN		0.005
 
@@ -384,6 +409,8 @@ main ( int argc, char *argv[] )
     SensitivityType	sensitivity_type = undefined_sensitivity;
     ColorType		color_type = undefined_color;
     ClipType		clip_type = undefined_clip;
+    int			approxCS_flag = FALSE;
+    int			approxCSquiet_flag = FALSE;
     /* hidden option flags */
     AcuityType		acuity_type = undefined_acuity_type;
     SmoothingType	smoothing_type = undefined_smoothing;
@@ -397,13 +424,13 @@ main ( int argc, char *argv[] )
     double		acuity = -1.0;		/* ratio to normal */
     double		contrast_ratio = -1.0;	/* ratio to normal */
     int			smoothing_flag;		/* reduce banding artifacts */
-    /* due to thresholding */
+    						/* due to thresholding */
     double		acuity_adjustment;	/* CSF peak adjustment */
     double		logMAR_arg;		/* used for sanity check */
     double		pelli_robson_score;	/* log contrast */
     double		margin = -1.0;		/* width of margin to add */
-    /* to mitigate FFT */
-    /* wraparound artificats */
+    						/* to mitigate FFT */
+    						/* wraparound artificats */
     int			v_margin, h_margin;	/* in pixels */
     char		*input_file_name;
 
@@ -824,6 +851,16 @@ main ( int argc, char *argv[] )
 	    smoothing_type = no_smoothing;
 	    argpt++;
 
+	} else if ( ( strcasecmp ( argv[argpt], "--approxCS" ) == 0 ) ||
+		( strcasecmp ( argv[argpt], "-approxCS" ) == 0 ) ) {
+	    approxCS_flag = TRUE;
+	    argpt++;
+
+	} else if ( ( strcasecmp ( argv[argpt], "--approxCSquiet" ) == 0 ) ||
+		( strcasecmp ( argv[argpt], "-approxCSquiet" ) == 0 ) ) {
+	    approxCSquiet_flag = TRUE;
+	    argpt++;
+
 	} else if ( ( strcasecmp ( argv[argpt], "--CSF-parms" ) == 0 ) ||
 		( strcasecmp ( argv[argpt], "-CSF-parms" ) == 0 ) ) {
 	    /* print CSF parameters then exit */
@@ -1128,6 +1165,16 @@ main ( int argc, char *argv[] )
 	}
     }
 
+    if ( approxCS_flag && approxCSquiet_flag ) {
+	fprintf ( stderr,
+  "--approxCS and --approxCS_quiet both specified!  Assuming --approxCS\n" );
+	approxCSquiet_flag = FALSE;
+    }
+
+    if ( approxCS_flag || approxCSquiet_flag ) {
+	    args_needed--;	/* no contrast argument on command line */
+    }
+
     if ( ( argc - argpt ) != args_needed ) {
 	print_usage ( );
 	return ( EXIT_FAILURE );	/* error return */
@@ -1288,48 +1335,79 @@ main ( int argc, char *argv[] )
 		break;
 	}
 
-	switch ( sensitivity_type ) {
+	if ( approxCS_flag || approxCSquiet_flag ) {
+	    sensitivity_type = pelli_robson;
+	    contrast_ratio = PelliRobson2contrastratio ( VA2CS_ALL (
+		    Snellen_decimal_to_logMAR ( acuity ) ) );
+	}
 
-	    case sensitivity_ratio:
+	if ( approxCS_flag ) {
+	    fprintf ( stderr,
+  "%s: Estimated contrast sensitivity ratio = %.2f (%.2f Pelli-Robson)\n"
+  "based on acuity = logMAR %.2f (Snellen %d/%d)\n",
+	  progname,
+	  contrast_ratio,
+	  contrastratio2PelliRobson ( contrast_ratio ),
+	  Snellen_decimal_to_logMAR ( acuity ),
+	  (int) SNELLEN_NUMERATOR,
+	  (int) round ( Snellen_decimal_to_Snellen_denominator ( acuity ) ) );
+	} else {
 
-		contrast_ratio = atof ( argv[argpt++] );
-		if ( ( contrast_ratio > CONTRAST_RATIO_MAX ) || 
-			( contrast_ratio < CONTRAST_RATIO_MIN ) ) {
-		    fprintf ( stderr, "implausible contrast ratio (%f)!\n",
-			    contrast_ratio );
+	    switch ( sensitivity_type ) {
+
+		case sensitivity_ratio:
+
+		    contrast_ratio = atof ( argv[argpt++] );
+		    if ( ( contrast_ratio > CONTRAST_RATIO_MAX ) || 
+			    ( contrast_ratio < CONTRAST_RATIO_MIN ) ) {
+			fprintf ( stderr, "implausible contrast ratio (%f)!\n",
+				contrast_ratio );
+			DeVAS_print_file_lineno ( __FILE__, __LINE__ );
+			exit ( EXIT_FAILURE );
+		    }
+
+		    break;
+
+		case pelli_robson:
+
+		    pelli_robson_score = atof ( argv[argpt++] );
+		    if ( ( pelli_robson_score > PELLI_ROBSON_MAX ) || 
+			    ( pelli_robson_score < PELLI_ROBSON_MIN ) ) {
+			fprintf ( stderr,
+				"implausible Pelli-Robson score (%f)!\n",
+				pelli_robson_score );
+			DeVAS_print_file_lineno ( __FILE__, __LINE__ );
+			exit ( EXIT_FAILURE );
+		    }
+
+		    contrast_ratio =
+			PelliRobson2contrastratio ( pelli_robson_score );
+
+		    break;
+
+		case undefined_sensitivity:
+		default:
+
 		    DeVAS_print_file_lineno ( __FILE__, __LINE__ );
-		    exit ( EXIT_FAILURE );
-		}
+		    internal_error ( );
 
-		break;
-
-	    case pelli_robson:
-
-		pelli_robson_score = atof ( argv[argpt++] );
-		if ( ( pelli_robson_score > PELLI_ROBSON_MAX ) || 
-			( pelli_robson_score < PELLI_ROBSON_MIN ) ) {
-		    fprintf ( stderr, "implausible Pelli-Robson score (%f)!\n",
-			    pelli_robson_score );
-		    DeVAS_print_file_lineno ( __FILE__, __LINE__ );
-		    exit ( EXIT_FAILURE );
-		}
-
-		contrast_ratio =
-		    PelliRobson2contrastratio ( pelli_robson_score );
-
-		break;
-
-	    case undefined_sensitivity:
-	    default:
-
-		DeVAS_print_file_lineno ( __FILE__, __LINE__ );
-		internal_error ( );
-
-		break;
+		    break;
+	    }
 	}
     }
 
-    /* fine name of original Radiance file */
+    if ( Snellen_decimal_to_logMAR ( acuity ) < LOGMAR_MIN_LIMIT ) {
+	fprintf ( stderr, "Requested acuity = 20/%d (logMar %.2f).\n",
+	    (int) round ( Snellen_decimal_to_Snellen_denominator ( acuity ) ),
+		Snellen_decimal_to_logMAR ( acuity ) );
+	fprintf ( stderr,
+  "Our modeling does not address small differences in visibility over the\n"
+  "range of normal vision, i.e., from -0.3 logMAR to 0.3 logMAR.\n" );
+
+	exit ( EXIT_FAILURE );
+    }
+
+    /* find name of original Radiance file */
     input_file_name = argv[argpt++];
 
 #ifdef DeVAS_VISIBILITY	/* code specific to devas-visibility */
@@ -1549,6 +1627,18 @@ main ( int argc, char *argv[] )
 	low_luminance = luminance_threshold ( low_luminace_level,
 		luminance_smoothed );
 	DeVAS_float_image_delete ( luminance_smoothed );
+
+	if ( low_luminance_file_name != NULL ) {
+	    if ( low_luminance == NULL ) {
+		fprintf ( stderr,
+	"No low luminance pixels, so no low luminance file written\n" );
+	    } else {
+		make_visible ( low_luminance );
+
+		DeVAS_gray_image_to_filename_png ( low_luminance_file_name,
+			low_luminance );
+	    }
+	}
 #endif	/* DeVAS_VISIBILITY */
     /* code used by both devas-filter and devas-visibility */
 
@@ -1756,6 +1846,7 @@ PelliRobson2contrastratio ( double PelliRobson_score )
 /*
  * Converts Pelli-Robson Chart score to ratio of desired peak Michelson
  * contrast sensitivity to nominal normal vision peak contrast sensitivity.
+ * Pelli-Robson Chart scores assumed to be defined in terms of Weber contrast.
  */
 {
     double  requested_weber;	    /* low vision Weber contrast limit */
@@ -1766,7 +1857,7 @@ PelliRobson2contrastratio ( double PelliRobson_score )
     double  normal_michelson;	    /* normal vision Michelson contrast limit */
     double  normal_sensitivity;	    /* normal vision Michelson contrast */
     				    /* sensitivity */
-    double  contrast_ratio;	    /* ratio or requested Michelson */
+    double  contrast_ratio;	    /* ratio of requested Michelson */
     				    /* sensitivity to normal sensitivity */
 
     requested_weber = exp10 ( -PelliRobson_score );

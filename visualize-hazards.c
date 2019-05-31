@@ -157,7 +157,7 @@ visualize_hazards ( DeVAS_float_image *hazards,
 
 	    if ( ( mask != NULL ) && ( DeVAS_image_data ( mask, row, col ) ) ) {
 		if ( ( geometry_boundaries != NULL ) &&
-			( DeVAS_image_data ( geometry_thickened, row, col ) ) ) {
+		      ( DeVAS_image_data ( geometry_thickened, row, col ) ) ) {
 		    DeVAS_image_data ( visualization, row, col ) =
 			geometry_color;
 		} else {

@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "ChungLeggeCSF.h"
+#include "devas-image.h"	/* for DeVAS_print_file_lineno prototype */
 #include "devas-license.h"	/* DeVAS open source license */
 
 #define	SQ(x)		( (x) * (x) )
@@ -32,7 +33,7 @@ ChungLeggeCSF ( double spatial_frequency, double acuity_adjust,
 /*
  * Input:
  *
- *   spatial_frequency:	Spatial frequency in, in cycles/degree, for which
+ *   spatial_frequency:	Spatial frequency in cycles/degree, for which
  *   			sensitivity is to be calculated.
  *
  *   acuity_adjust:	Adustment for frequency at which peak sensitivity
@@ -61,6 +62,7 @@ ChungLeggeCSF ( double spatial_frequency, double acuity_adjust,
     if ( spatial_frequency <= 0.0 ) {
 	fprintf ( stderr, "ChungLeggeCSF: invalid spatial frequency (%g)!\n",
 	       spatial_frequency );
+	DeVAS_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
     /* if ( ( acuity_adjust > 1.0) || ( acuity_adjust <= 0.0 ) ) { */
@@ -68,12 +70,14 @@ ChungLeggeCSF ( double spatial_frequency, double acuity_adjust,
 	/* allow for hyper acuity? */
 	fprintf ( stderr, "ChungLeggeCSF: invalid acuity_adjust (%g)!\n",
 		acuity_adjust );
+	DeVAS_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
     if ( ( contrast_sensitivity_adjust <= 0.0) ||
 	    ( contrast_sensitivity_adjust > 1.0 ) ) {
 	fprintf ( stderr, "ChungLeggeCSF: invalid contrast sensitivity (%g)!\n",
 		contrast_sensitivity_adjust );
+	DeVAS_print_file_lineno ( __FILE__, __LINE__ );
 	exit ( EXIT_FAILURE );
     }
 

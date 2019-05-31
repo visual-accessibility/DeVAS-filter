@@ -26,16 +26,8 @@ To build the software for Linux:
 ---------------------------------------------------------------------
 To build the software for MacOS:
 
-1.  Install the package CMake <http://www.cmake.org/>
-
-    Download and unpack Unix/Linux source from
-    <http://www.cmake.org/download/>.
-
-    In directory where the CMake source has been unpacked:
-
-      ./bootstrap
-      make
-      sudo make install
+1.  Install gcc, gmake, and cmake.  This is probably best done using
+    Homebrew <https://brew.sh/>.
 
 2.  If you want annotated output from devas-compare-boundaries, install
     libcairo following the directions at <https://cairographics.org/>

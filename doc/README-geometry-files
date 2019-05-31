@@ -1,0 +1,32 @@
+The DeVAS visibility analysis makes use of a number of files that
+describe the local scene geometry corresponding to a particular view.
+In these geometry images, each pixel contains the value of a geometry
+property associated with the surface location of the corresponding pixel
+in the view.  The currently used geometric properties are the xyz
+position of the surface point in the model coordinate system, the
+distance from the viewpoint to the surface point, and the surface normal
+of surface point in the model coordinate system.
+
+DeVAS geometry files are constructed from a Radiance .hdr image and the
+oct tree from which is was generated.  [Include information about
+freezing the oct file once this is sorted out.]
+
+On Linux/unix and MacOS systems, the following command line will produce
+a geometry file for one of the possible geometry types:
+
+vwrays -fd scene.hdr | rtrace -fda `vwrays -d scene.hdr` -o? \
+	scene.oct > geom.txt
+
+where scene.hdr is the Radiance file containing the image of the scene,
+scene.oct is the oct file for the scene, and -o? is
+
+	-op	xyz position
+	-on	surface normal
+	-oL	distance
+
+The standard command window for Windows does not support command
+substitution, and pipes in Windows are sometimes flaky for binary data.
+As a result, the following should be used with Windows:
+
+vwrays -fa scene.hdr | rtrace -fa -ld- -oL scene.oct | ^
+        devas-add-res-to-ASCII - scene.hdr > geom.txt
