@@ -6,6 +6,11 @@ approximate an unknown contrast sensitivity from a known acuity.
 Request to filter images at close to normal acuity are now rejected.
 --normal preset has been removed.
 
+Added an --approxSaturation option to devas-filter and devas-visibility
+to approximate an unknown color sensitivity from a known acuity.  This
+is a hack that only affects the simulated views, not the visibility
+analysis.
+
 Added line number to ChungLeggeCSF error messages.
 
 Added a conversions spreadsheet for developers.

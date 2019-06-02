@@ -78,7 +78,8 @@ char	*Usage = /* devas-filter */
 	"\n\t[--margin=<value>] input.hdr output.hdr";
 char	*Usage2 = "[--snellen|--logMAR] [--sensitivity-ratio|--pelli-robson]"
     "\n\t[--autoclip|--clip=<level>] [--color|--grayscale|saturation=<value>]"
-    "\n\t[--margin=<value>] [--verbose] [--version] [--presets] [--approxCS]"
+    "\n\t[--margin=<value>] [--verbose] [--version] [--presets]"
+    "\n\t[--approxCS] [--approxSaturation]"
 	    "\n\t\tacuity contrast input.hdr output.hdr";
 int	args_needed = 4;
 
@@ -130,6 +131,27 @@ int	args_needed = 4;
  *   		of contrast sensitivity that was chosen.  --approxCSquiet skips
  *   		this informative message.  In either case, do not explicitly
  *   		specify a contrast value.
+ *
+ *   --approxSaturation
+ *   --approxSaturationquiet
+ *
+ *   		Signifcant loss of acuity and contrast sensitivity is often
+ *   		associated with color vision deficiencies, though there is
+ *   		little data on the correlation between the severity of acuity
+ *   		and contrast loss and the type and severity of color vision
+ *   		loss.  Visibility judgments made by devas-visibility depend
+ *   		only on luminance and so are unaffected by color deficits. For
+ *   		simulation of low vision views produced by devas-filter and
+ *   		devas-visibility, we have chosen to reduce the color saturation
+ *   		as a function of acuity using the following formula:
+ *
+ *   		    s = 1 - (0.667 * l ), where s is the fraction of
+ *   		       saturation retained, l is the logMAR value, and
+ *   		       s is constrained to s <= 1.
+ *
+ *		Note that this is not based on any impirical evidence and is
+ *		only an aesthetic judgment made by the devas-filter software
+ *		designer.
  *
  *   --autoclip | --clip=<level>
  *
@@ -411,6 +433,8 @@ main ( int argc, char *argv[] )
     ClipType		clip_type = undefined_clip;
     int			approxCS_flag = FALSE;
     int			approxCSquiet_flag = FALSE;
+    int			approxSaturation_flag = FALSE;
+    int			approxSaturationquiet_flag = FALSE;
     /* hidden option flags */
     AcuityType		acuity_type = undefined_acuity_type;
     SmoothingType	smoothing_type = undefined_smoothing;
@@ -861,6 +885,18 @@ main ( int argc, char *argv[] )
 	    approxCSquiet_flag = TRUE;
 	    argpt++;
 
+	} else if ( ( strcasecmp ( argv[argpt], "--approxSaturation" ) == 0 ) ||
+		( strcasecmp ( argv[argpt], "-approxSaturation" ) == 0 ) ) {
+	    approxSaturation_flag = TRUE;
+	    argpt++;
+
+	} else if ( ( strcasecmp ( argv[argpt],
+			"--approxSaturationquiet" ) == 0 ) ||
+		( strcasecmp ( argv[argpt],
+			       "-approxSaturationquiet" ) == 0 ) ) {
+	    approxSaturationquiet_flag = TRUE;
+	    argpt++;
+
 	} else if ( ( strcasecmp ( argv[argpt], "--CSF-parms" ) == 0 ) ||
 		( strcasecmp ( argv[argpt], "-CSF-parms" ) == 0 ) ) {
 	    /* print CSF parameters then exit */
@@ -1175,6 +1211,13 @@ main ( int argc, char *argv[] )
 	    args_needed--;	/* no contrast argument on command line */
     }
 
+    if ( approxSaturation_flag && approxSaturationquiet_flag ) {
+	fprintf ( stderr,
+  "--approxSaturation and --approxSaturation_quiet both specified!\n"
+  "Assuming --approxSaturation\n" );
+	approxSaturationquiet_flag = FALSE;
+    }
+
     if ( ( argc - argpt ) != args_needed ) {
 	print_usage ( );
 	return ( EXIT_FAILURE );	/* error return */
@@ -1341,6 +1384,16 @@ main ( int argc, char *argv[] )
 		    Snellen_decimal_to_logMAR ( acuity ) ) );
 	}
 
+	if ( approxSaturation_flag || approxSaturationquiet_flag ) {
+	    color_type = saturation_value;
+	    saturation =
+		REDUCED_COLOR_SAT ( Snellen_decimal_to_logMAR ( acuity ) );
+	}
+	if ( approxSaturation_flag ) {
+	    fprintf ( stderr,
+		    "Estimated color sensitivity value = %.2f\n", saturation );
+	}
+
 	if ( approxCS_flag ) {
 	    fprintf ( stderr,
   "%s: Estimated contrast sensitivity ratio = %.2f (%.2f Pelli-Robson)\n"
@@ -1351,6 +1404,7 @@ main ( int argc, char *argv[] )
 	  Snellen_decimal_to_logMAR ( acuity ),
 	  (int) SNELLEN_NUMERATOR,
 	  (int) round ( Snellen_decimal_to_Snellen_denominator ( acuity ) ) );
+
 	} else {
 
 	    switch ( sensitivity_type ) {

@@ -82,6 +82,18 @@ message to be written to stderr giving the value of contrast sensitivity
 that was chosen.  --approxCSquiet skips this informative message.  In
 either case, do not explicitly specify a contrast value.
 .TP
+\fB\-\-approxSaturation\fR | \fB\-\-approxSaturationquiet\fR Signifcant
+loss of acuity and contrast sensitivity is often associated with color
+vision deficiencies, though there is little data on the correlation
+between the severity of acuity and contrast loss and the type and
+severity of color vision loss.  Visibility judgments made by
+devas-visibility depend only on luminance and so are unaffected by color
+deficits. For simulation of low vision views produced by
+\fBdevas-filter\fR and \fBdevas-visibility\fR, we have chosen to reduce
+the color saturation as a function of acuity using an ad hoc formula
+that is not based on any impirical evidence and is only an aesthetic
+judgment made by the devas-filter software designer.
+.TP
 \fB\-\-color | \-\-grayscale | \-\-saturation=\fIvalue\fR
 Indicates amount of desaturation.  \fB\-\-color\fR: no desaturation.
 \fB\-\-grayscale\fR: full desaturation. \fB\-\-saturation=\fIvalue\fR:
