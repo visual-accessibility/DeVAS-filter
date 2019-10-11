@@ -76,15 +76,15 @@
 extern "C" {
 #endif
 
-DeVAS_gray_image	*devas_canny ( DeVAS_float_image *input, double st_dev,
-		    double high_threshold, double low_threshold,
-		    DeVAS_float_image **magnitude_p,
-		    DeVAS_float_image **orientation_p );
+DeVAS_gray_image    *devas_canny ( DeVAS_float_image *input, double st_dev,
+		        double high_threshold, double low_threshold,
+		        DeVAS_float_image **magnitude_p,
+		        DeVAS_float_image **orientation_p );
 
 DeVAS_gray_image    *devas_canny_autothresh ( DeVAS_float_image *input,
 			double st_dev,
-		    DeVAS_float_image **magnitude_p,
-		    DeVAS_float_image **orientation_p );
+		        DeVAS_float_image **magnitude_p,
+		        DeVAS_float_image **orientation_p );
 
 #ifdef __cplusplus
 }

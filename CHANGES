@@ -1,3 +1,13 @@
+version 4.1.01
+
+Added --approxSaturation.  Like --approxCS, except it's for color
+saturation.
+
+Clean up of devas-png.c, particularly strange behavior of
+png_image_begin_read_from_stdio for 1 channel PNG input images.
+
+Updated Mac and Windows binaries.
+
 version 4.1.00
 
 Added an --approxCS option to devas-filter and devas-visibility to
@@ -36,8 +46,6 @@ with DIVA for RHINO.
 
 Added devas-add-res-to-ASCII to help with workflow in generating
 geometry files on Windows systems.
-
-Updated MacOS and Windows binaries to current versions of source.
 
 version 3.3.04
 

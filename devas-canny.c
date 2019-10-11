@@ -121,7 +121,6 @@ devas_canny_autothresh ( DeVAS_float_image *input, double st_dev,
 		TRUE ) );
 }
 
-
 static DeVAS_gray_image *
 canny_base ( DeVAS_float_image *input, double st_dev, double high_threshold,
     double low_threshold, DeVAS_float_image **magnitude_p,
@@ -151,11 +150,11 @@ canny_base ( DeVAS_float_image *input, double st_dev, double high_threshold,
  *		    for detected edges, FALSE elsewhere.
  */
 {
-    int		      n_rows, n_cols;
-    DeVAS_float_image  *blurred_input;	/* smoothed original */
-    DeVAS_float_image  *magnitude;	/* gradient magnitude (A in Fleck) */
-    DeVAS_float_image  *grad_Y, *grad_X;	/* X and Y in Fleck */
-    DeVAS_gray_image   *edge_map;	/* detected edges */
+    int			n_rows, n_cols;
+    DeVAS_float_image	*blurred_input;	/* smoothed original */
+    DeVAS_float_image	*magnitude;	/* gradient magnitude (A in Fleck) */
+    DeVAS_float_image	*grad_Y, *grad_X;	/* X and Y in Fleck */
+    DeVAS_gray_image	*edge_map;	/* detected edges */
 #ifdef CANNY_LOG_MAGNITUDE
     int		      row, col;
 #endif	/* CANNY_LOG_MAGNITUDE */
@@ -403,7 +402,7 @@ auto_thresh_values ( DeVAS_float_image *magnitude, double *high_threshold,
  * whether or not they are local maxima.
  *
  * Percentile cutoffs are computed using a histogram method.  A large number
- * of bins are used due to the high dynamic range invovled and the nature
+ * of bins are used due to the high dynamic range involved and the nature
  * of the frequency distibution of gradient magnitudes.
  */
 {
@@ -440,21 +439,25 @@ auto_thresh_values ( DeVAS_float_image *magnitude, double *high_threshold,
 	    }
 	}
     }
-    if ( magnitude_max <= 0.0 ) {
-	fprintf ( stderr,
-		"canny_autothresh: no non-zero gradient magnitude!\n" );
-	DeVAS_print_file_lineno ( __FILE__, __LINE__ );
-	exit ( EXIT_FAILURE );
+    
+    if ( magnitude_max < 0.0 ) {
+	/* no contrast! */
+	*high_threshold = *low_threshold = -1.0;
+	return;
     }
 
     /* Spread out gradient magnitude values amoung histogram bins. */
-    norm = 1.0 / magnitude_max;
-    for ( row = 1; row < n_rows - 1; row++ ) {
-	for ( col = 1; col < n_cols - 1; col++ ) {
-	    bin_index = norm * DeVAS_image_data ( magnitude, row, col ) *
-		( ( (double) MAGNITUDE_HIST_NBINS ) - EPSILON );
-	    magnitude_hist[bin_index]++;
+    if ( magnitude_max > 0.0 ) {
+	norm = 1.0 / magnitude_max;
+	for ( row = 1; row < n_rows - 1; row++ ) {
+	    for ( col = 1; col < n_cols - 1; col++ ) {
+		bin_index = norm * DeVAS_image_data ( magnitude, row, col ) *
+		    ( ( (double) MAGNITUDE_HIST_NBINS ) - EPSILON );
+		magnitude_hist[bin_index]++;
+	    }
 	}
+    } else {
+	magnitude_hist[0]++;
     }
 
     percentile = 0.0;

@@ -82,7 +82,9 @@
 
 /*
  * This routine requires linking in the Radiance routines color.c and
- * spec_rgb.c to provide transform matricies.
+ * spec_rgb.c to provide transform matricies.  Portability would be enhanced
+ * if we simply copied over the needed Radiance values, instead of having to
+ * include and compile full Radiance routines.
  */
 
 #include <stdlib.h>
@@ -400,7 +402,7 @@ int									\
 TYPE##_image_samesize ( TYPE##_image *i1, TYPE##_image *i2 )		\
 {									\
     return ( ( DeVAS_image_n_rows ( i1 ) == DeVAS_image_n_rows ( i2 ) ) && \
-	    ( DeVAS_image_n_cols ( i1 ) == DeVAS_image_n_cols ( i2 ) ) );	\
+	    ( DeVAS_image_n_cols ( i1 ) == DeVAS_image_n_cols ( i2 ) ) ); \
 }
 
 DeVAS_IMAGE_SAMESIZE ( DeVAS_gray )
@@ -416,10 +418,13 @@ DeVAS_IMAGE_SAMESIZE ( DeVAS_complexf )
 #define	DeVAS_IMAGE_SETVALUE( TYPE )					\
 void									\
 TYPE##_image_setvalue ( TYPE##_image *image, TYPE value )		\
+/*									\
+ * Set every pixel to a given value.					\
+ */									\
 {									\
     int	    row, col;							\
 									\
-    for ( row = 0; row < DeVAS_image_n_rows ( image ); row++ ) {		\
+    for ( row = 0; row < DeVAS_image_n_rows ( image ); row++ ) {	\
 	for ( col = 0; col < DeVAS_image_n_cols ( image ); col++ ) {	\
 	    DeVAS_image_data ( image, row, col ) = value;		\
 	}								\

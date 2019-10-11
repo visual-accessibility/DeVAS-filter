@@ -887,7 +887,8 @@ DeVAS_xyY_image_to_radfile ( FILE *radiance_fp, DeVAS_xyY_image *xyY )
 
     for ( row = 0; row < n_rows; row++ ) {
 	for ( col = 0; col < n_cols; col++ ) {
-	    XYZ_DeVAS_pixel = DeVAS_xyY2XYZ ( DeVAS_image_data ( xyY, row,col ) );
+	    XYZ_DeVAS_pixel =
+		DeVAS_xyY2XYZ ( DeVAS_image_data ( xyY, row,col ) );
 	    colval ( XYZ_rad_pixel, CIEX ) =
 		XYZ_DeVAS_pixel.X / DeVAS_WHTEFFICACY;
 	    colval ( XYZ_rad_pixel, CIEY ) =

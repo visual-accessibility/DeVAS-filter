@@ -169,7 +169,7 @@ DeVAS_DEFINE_IMAGE_TYPE ( DeVAS_complexf )
 #define	DeVAS_image_exposure_set(devas_image)	(devas_image)->exposure_set
     			/* read/write */
 
-#define	DeVAS_image_exposure(devas_image)		(devas_image)->exposure
+#define	DeVAS_image_exposure(devas_image)	(devas_image)->exposure
     			/* read/write */
 
 /*

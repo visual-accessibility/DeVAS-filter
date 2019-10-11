@@ -22,13 +22,16 @@ optionally be "\-", indicating that the filtered picture should be
 written to standard output.
 .PP
 \fIacuity\fR is specified in terms of a Snellen ratio or a logMAR value.
-The modeling underlying \fBdevas-filter\fR does not address small
-differences in visibility over the range of normal vision, i.e., from
--0.3 to 0.3 logMAR.  As a result, specifying and acuity value less than
-0.3 logMAR (20/40 Snellen) is not allowed.
 \fIcontrast\fR is specified in terms of either the ratio of the desired
 Michaelson contrast sensitivity to normal vision contrast sensitivity or
 as a Pelli-Robson Chart score.
+.PP
+The modeling underlying \fBdevas-filter\fR does not address small
+differences in visibility over the range of normal vision, i.e., from
+-0.3 to 0.3 logMAR.  As a result, specifying and acuity value less than
+0.3 logMAR (20/40 Snellen) normally results in a fatal error.  See the
+option \fB\-\-approxCS\fR for one possible way to deal with low measured
+contrast sensitivity.
 .SH OPTIONS
 .TP
 \fIpreset-options:\fR \
@@ -82,11 +85,11 @@ message to be written to stderr giving the value of contrast sensitivity
 that was chosen.  --approxCSquiet skips this informative message.  In
 either case, do not explicitly specify a contrast value.
 .TP
-\fB\-\-approxSaturation\fR | \fB\-\-approxSaturationquiet\fR Signifcant
-loss of acuity and contrast sensitivity is often associated with color
-vision deficiencies, though there is little data on the correlation
-between the severity of acuity and contrast loss and the type and
-severity of color vision loss.  Visibility judgments made by
+\fB\-\-approxSaturation\fR | \fB\-\-approxSaturationquiet\fR
+Signifcant loss of acuity and contrast sensitivity is often associated
+with color vision deficiencies, though there is little data on the
+correlation between the severity of acuity and contrast loss and the
+type and severity of color vision loss.  Visibility judgments made by
 devas-visibility depend only on luminance and so are unaffected by color
 deficits. For simulation of low vision views produced by
 \fBdevas-filter\fR and \fBdevas-visibility\fR, we have chosen to reduce

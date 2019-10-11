@@ -16,7 +16,8 @@
  * is used by devas-visibility to annotate the image visualizing potential
  * visibility hazards.
  *
- * This is currently handled in CMakeLists.txt.
+ * The setting of DeVAS_VISIBILITY and DeVAS_USE_CAIRO is currently handled in
+ * CMakeLists.txt.
  */
 
 #include <stdlib.h>
@@ -77,9 +78,9 @@ char	*Usage = /* devas-filter */
 	"--mild|--moderate|--severe|--profound|--legalblind"
 	"\n\t[--margin=<value>] input.hdr output.hdr";
 char	*Usage2 = "[--snellen|--logMAR] [--sensitivity-ratio|--pelli-robson]"
+    "\n\t[--approxCS] [--approxSaturation]"
     "\n\t[--autoclip|--clip=<level>] [--color|--grayscale|saturation=<value>]"
     "\n\t[--margin=<value>] [--verbose] [--version] [--presets]"
-    "\n\t[--approxCS] [--approxSaturation]"
 	    "\n\t\tacuity contrast input.hdr output.hdr";
 int	args_needed = 4;
 
@@ -216,6 +217,7 @@ char	*Usage = /* devas-visibility */
     "\n\t\tinput.hdr coordinates xyz.txt dist.txt nor.txt"
     "\n\t\tsimulated-view.hdr hazards.png";
 char	*Usage2 = "[--snellen|--logMAR] [--sensitivity-ratio|--pelli-robson]"
+    "\n\t[--approxCS] [--approxSaturation]"
     "\n\t[--autoclip|--clip=<level>] [--color|--grayscale|saturation=<value>]"
     "\n\t[--margin=<value>] [--verbose] [--version] [--presets]"
     "\n\t[--red-green|--red-gray] [--printaverage|--printaveragena]"
@@ -435,6 +437,7 @@ main ( int argc, char *argv[] )
     int			approxCSquiet_flag = FALSE;
     int			approxSaturation_flag = FALSE;
     int			approxSaturationquiet_flag = FALSE;
+    int			allow_normal_vision = FALSE;
     /* hidden option flags */
     AcuityType		acuity_type = undefined_acuity_type;
     SmoothingType	smoothing_type = undefined_smoothing;
@@ -891,10 +894,17 @@ main ( int argc, char *argv[] )
 	    argpt++;
 
 	} else if ( ( strcasecmp ( argv[argpt],
-			"--approxSaturationquiet" ) == 0 ) ||
+				"--approxSaturationquiet" ) == 0 ) ||
 		( strcasecmp ( argv[argpt],
 			       "-approxSaturationquiet" ) == 0 ) ) {
 	    approxSaturationquiet_flag = TRUE;
+	    argpt++;
+
+	} else if ( ( strcasecmp ( argv[argpt],
+				"--allow_normal_vision" ) == 0 ) ||
+		( strcasecmp ( argv[argpt],
+				"-allow_normal_vision" ) == 0 ) ) {
+	    allow_normal_vision = TRUE;
 	    argpt++;
 
 	} else if ( ( strcasecmp ( argv[argpt], "--CSF-parms" ) == 0 ) ||
@@ -1450,15 +1460,17 @@ main ( int argc, char *argv[] )
 	}
     }
 
-    if ( Snellen_decimal_to_logMAR ( acuity ) < LOGMAR_MIN_LIMIT ) {
-	fprintf ( stderr, "Requested acuity = 20/%d (logMar %.2f).\n",
-	    (int) round ( Snellen_decimal_to_Snellen_denominator ( acuity ) ),
-		Snellen_decimal_to_logMAR ( acuity ) );
-	fprintf ( stderr,
-  "Our modeling does not address small differences in visibility over the\n"
-  "range of normal vision, i.e., from -0.3 logMAR to 0.3 logMAR.\n" );
+    if ( !allow_normal_vision ) {
+	if ( Snellen_decimal_to_logMAR ( acuity ) < LOGMAR_MIN_LIMIT ) {
+	    fprintf ( stderr, "Requested acuity = 20/%d (logMar %.2f).\n",
+	      (int) round ( Snellen_decimal_to_Snellen_denominator ( acuity ) ),
+		    Snellen_decimal_to_logMAR ( acuity ) );
+	    fprintf ( stderr,
+    "Our modeling does not address small differences in visibility over the\n"
+    "range of normal vision, i.e., from -0.3 logMAR to 0.3 logMAR.\n" );
 
-	exit ( EXIT_FAILURE );
+	    exit ( EXIT_FAILURE );
+	}
     }
 
     /* find name of original Radiance file */
@@ -1754,13 +1766,15 @@ main ( int argc, char *argv[] )
      */
 
     if ( false_positives_file_name != NULL ) {
-	hazards = devas_visibility ( filtered_image, coordinates, xyz, dist, nor,
+	hazards = devas_visibility ( filtered_image, coordinates, xyz, dist,
+		nor,
 		position_patch_size, orientation_patch_size,
 		position_threshold, orientation_threshold,
 		&luminance_boundaries, &geometry_boundaries,
 		&false_positive_hazards );
     } else {
-	hazards = devas_visibility ( filtered_image, coordinates, xyz, dist, nor,
+	hazards = devas_visibility ( filtered_image, coordinates, xyz, dist,
+		nor,
 		position_patch_size, orientation_patch_size,
 		position_threshold, orientation_threshold,
 		&luminance_boundaries, &geometry_boundaries, NULL );
@@ -1995,7 +2009,8 @@ auto_clip_level ( DeVAS_xyY_image *image )
 		max_luminance = DeVAS_image_data (image, row, col ) . Y;
 	    }
 
-	    average_luminance_initial += DeVAS_image_data (image, row, col ) . Y;
+	    average_luminance_initial +=
+		DeVAS_image_data (image, row, col ) . Y;
 	}
     }
 
