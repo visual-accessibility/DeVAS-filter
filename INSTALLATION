@@ -15,7 +15,7 @@ To build the software for Linux:
 3.  Copy the executable files devas-filter, devas-visibility,
     make-coordinates-file, devas-visualize-geometry,
     devas-compare-boundaries, and geometry-boundaries from
-    devas-filer/build to wherever you want them.
+    devas-filter/build to wherever you want them.
 
 4.  To remove everything generated in the build process, run the
     following command from top level of devas-filter source directory:
@@ -42,7 +42,7 @@ To build the software for MacOS:
 4.  Copy the executable files devas-filter, devas-visibility,
     make-coordinates-file, devas-visualize-geometry,
     devas-compare-boundaries, and geometry-boundaries from
-    devas-filer/build to wherever you want them.
+    devas-filter/build-mac to wherever you want them.
 
 5.  To remove everything generated in the build process, run the
     following command from top level of devas-filter source directory:
@@ -81,8 +81,8 @@ To build the Windows software by cross compiling on Linux:
 3.  Copy the executable files devas-filter, devas-visibility,
     make-coordinates-file, devas-visualize-geometry,
     devas-compare-boundaries, luminance-boundaries, geometry-boundaries,
-    and devas-add-res-to-ASCII from the build directory to wherever you
-    want them.
+    and devas-add-res-to-ASCII from build-windows to wherever you want
+    them.
 
 4.  To remove everything generated in the build process, run the
     following command from top level of devas-filter source directory:
