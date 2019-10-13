@@ -1,10 +1,12 @@
+version 4.1.02
+
+Clean up of devas-png.c, particularly strange behavior of
+png_image_begin_read_from_stdio for 1 channel PNG input images.
+
 version 4.1.01
 
 Added --approxSaturation.  Like --approxCS, except it's for color
 saturation.
-
-Clean up of devas-png.c, particularly strange behavior of
-png_image_begin_read_from_stdio for 1 channel PNG input images.
 
 Updated Mac and Windows binaries.
 
