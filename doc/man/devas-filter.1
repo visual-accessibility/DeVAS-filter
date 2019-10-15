@@ -29,9 +29,17 @@ as a Pelli-Robson Chart score.
 The modeling underlying \fBdevas-filter\fR does not address small
 differences in visibility over the range of normal vision, i.e., from
 -0.3 to 0.3 logMAR.  As a result, specifying and acuity value less than
-0.3 logMAR (20/40 Snellen) normally results in a fatal error.  See the
-option \fB\-\-approxCS\fR for one possible way to deal with low measured
-contrast sensitivity.
+0.3 logMAR (20/40 Snellen) normally results in a fatal error.  The flag
+--allow_normal_vision overrides the behaviour, but at the peril of the
+user if things go bad.  Missing contrast sensitivity values, which are
+common, are bad if you want calibrated results. Very small value of
+specified contrast sensitivity can also be bad, because the Pelli-Robson
+test and many other contrast sensitivity tests are inaccurate at low
+sensitivity levels.  If the --approxCS flag is given, an estimate of
+contrast sensitivity based on acuity is used and the value is also
+printed to \fIstdio\fR.  No contrast sensitivity
+value should be sepecified.  --approxCSquiet the estimated
+contrast sensitivity to be used, but does not generate any output message.
 .SH OPTIONS
 .TP
 \fIpreset-options:\fR \
@@ -76,14 +84,15 @@ cd/m^2.  Default is no clipping.
 \fB\-\-approxCS\fR | \fB\-\-approxCSquiet\fR
 Often, the only available property for specifying a particular level of
 low vision is acuity.  Low vision very often also involves a loss of
-contrast sensitivity.  Including one of these options causes the program
-to estimate a level of contrast sensitivity loss appropriate to the
-specified loss of acuity.  It is important to note that this is just a
-rough estimate, and may be far from the actual contrast sensitivity of
-an individual with the specified acuity.  The --approxCS flag causes a
-message to be written to stderr giving the value of contrast sensitivity
-that was chosen.  --approxCSquiet skips this informative message.  In
-either case, do not explicitly specify a contrast value.
+contrast sensitivity.  Including one of these option flats causes the
+program to estimate a level of contrast sensitivity loss appropriate to
+the specified loss of acuity given on the command line.  It is important
+to note that this is just a rough estimate, and may be far from the
+actual contrast sensitivity of an individual with the specified acuity.
+The --approxCS flag causes a message to be written to stderr giving the
+value of contrast sensitivity that was chosen.  --approxCSquiet skips
+this informative message.  In either case, do not explicitly specify a
+contrast value.
 .TP
 \fB\-\-approxSaturation\fR | \fB\-\-approxSaturationquiet\fR
 Signifcant loss of acuity and contrast sensitivity is often associated

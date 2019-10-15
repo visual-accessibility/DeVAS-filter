@@ -1,4 +1,4 @@
-/*
+make-pdf-man-pages/*
  * Implements contrast thesholding filter described in Eli Peli, "Contrast in
  * complex images," Journal of the Optical Society of America A, 7(10),
  * 2032-2040, 1990, with the following additions:
